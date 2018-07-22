@@ -347,39 +347,6 @@ echo "#define LH_TARGET \"$target\""     >> cenv.h
 echo "#define LH_CCNAME \"$ccname\""     >> cenv.h
 echo "#define LH_ABI_$target_abi"        >> cenv.h
 
-asmsetjmp="asm/setjmp_$target_abi$asm"
-asmfiles=""
-
-if test -f "../src/$asmsetjmp"; then
-  echo "Assembly setjmp found for this ABI: '$asmsetjmp'"
-  asmfiles="$asmsetjmp"
-  echo "#define HAS_ASMSETJMP" >> cenv.h
-  jmpbufsz=`grep -o '[0-9][0-9]*: *sizeof ' ../src/$asmsetjmp`
-  #echo "grep found: $jmpbufsz"
-  jmpbufsz=`expr "X$jmpbufsz" : 'X\([0-9]*\)'`
-  echo "#define ASM_JMPBUF_SIZE $jmpbufsz" >> cenv.h
-  echo "Jump buffer size: $jmpbufsz"
-  if grep _lh_get_exn_top "../src/$asmsetjmp" >/dev/null; then
-    echo "Use linked exception frames for C++ (and SEH)"
-    echo "#define ASM_HAS_EXN_FRAMES" >> cenv.h
-  else
-    echo "Do not use linked exception frames for C++"
-  fi;
-elif sh ./runtest has_sigsetjmp.c; then
-  echo "POSIX sigsetjmp found."
-  echo "#define HAS_SIGSETJMP" >> cenv.h;
-elif sh ./runtest has__setjmp.c; then
-  echo "BSD-style _setjmp found."
-  echo "#define HAS__SETJMP" >> cenv.h;
-elif sh ./runtest has_setjmp.c; then
-  echo "Regular setjmp found; this may be not most efficient."
-  echo "Consider adding an assembly definition as: src/$asmsetjmp."
-  echo "#define HAS_SETJMP" >> cenv.h;
-else
-  echo "Cannot find 'setjmp'! Cannot support this platform."
-  echo "Consider adding an assembly definition as: src/$asmsetjmp."  
-  exit 2;
-fi
 
 function has_function {
   def="$1"
@@ -394,8 +361,6 @@ function has_function {
     echo "// #define $def" >> cenv.h;
   fi
 };
-
-has_function HAS_STRNCAT_S strncat_s -i string.h
 
 if sh ./hasgot -i alloca.h "alloca(10)"; then
   echo "Function alloca: found"
