@@ -13,7 +13,7 @@ code {
 Warning: this library is still under active development and experimental.
 It is not yet ready for general use. Current development is mostly for Windows x64.
 
-`NodeC` is a _lean and mean_ version of [NodeJS] -- it aims to provide
+`NodeC` is a _lean and mean_ version of [NodeJS] which aims to provide
 similar functionality as NodeJS but using C. The main goal is improved
 efficiency and resource usage (in particular more predictable resource
 usage) but highly robust and asynchronous. 
@@ -39,7 +39,7 @@ in plain [libuv]:
 ```C
 int uv_fs_close(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb);
 ```
-We need to thread around a `loop` parameter everywhere, and create a fresh request 
+We need to pass around a `loop` parameter everywhere, and create a fresh request 
 object `req`. Then we can pass in the actualy file to close, `file`, but then need
 a top-level continuation function `cb`. If there are any locals you need in that
 callback you need to explicitly allocate them and store them into the request object
@@ -53,7 +53,8 @@ void async_fs_close( uv_file file );
 Yes! much better. We only pass the essential `file` parameter and that is it. 
 The call is still asynchronous but will continue at that exact point in the
 program when the file is closed (just like async/await). Furthermore, we provide
-exceptions and thus there is no need to check any return value.
+exceptions and thus there is no need to check any return value, and through
+the use implicit parameters there is no need to pass around a `loop` parameter anymore.
 
 
 # A `Hello World` Mini Server
@@ -117,11 +118,11 @@ home\dev\
 
 For the `test\libuv` example, you need to get the [libuv] project as:
 
-* Check out `libuv`
+* Check out `libuv`  
   `> git clone https://github.com/libuv/libuv.git`
 
-* And build a static library. On windows use:
-  `> cd libuv`
+* And build a static library. On windows use:  
+  `> cd libuv`  
   `> ./vcbuild debug x64 static`
 
 * You may need to install Python too.
@@ -141,7 +142,7 @@ There is no need to build it, it is included automatically by the NodeC project.
 
 The [libhandler] project is checked out as:
 
-* `> https://github.com/koka-lang/libhandler.git`
+* `> git clone https://github.com/koka-lang/libhandler.git`
 
 There is no need to build it, it is included automatically by the NodeC project.
 
