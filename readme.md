@@ -174,3 +174,24 @@ Using the Visual Studio IDE:
 Enabled in Visual Studio for x64 builds. You need to put the `libuv` headers
 and binaries in a `libuv` folder under the main `libhandler` folder. Binaries
 for Windows can be found on [`libuv.org`](https://dist.libuv.org/dist/v1.18.0).
+
+
+This directory contains any sub projects that are needed.
+You need to check these out separately.
+
+
+## LibUV
+
+For the `test\libuv` example, you need to get the [libuv] project as:
+
+* Check out `libuv`
+  `> git clone https://github.com/libuv/libuv.git`
+
+* And build a static library. On windows use:
+  `> cd libuv`
+  `> ./vcbuild debug x64 static`
+
+* You may need to install Python too.
+
+
+[libuv]: https://github.com/libuv/libuv
