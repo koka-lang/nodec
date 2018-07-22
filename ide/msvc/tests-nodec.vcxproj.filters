@@ -15,25 +15,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\nodec\test\main.c">
+    <ClCompile Include="..\..\test\debug.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\nodec\test\debug.c">
+    <ClCompile Include="..\..\test\kvp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\nodec\test\utils.c">
+    <ClCompile Include="..\..\test\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\nodec\test\kvp.c">
+    <ClCompile Include="..\..\test\request.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\nodec\test\request.c">
+    <ClCompile Include="..\..\test\sbuf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\nodec\test\sbuf.c">
+    <ClCompile Include="..\..\test\test_http.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\nodec\test\test_http.c">
+    <ClCompile Include="..\..\test\utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,19 +41,19 @@
     <Library Include="..\..\..\libuv\$(Configuration)\lib\libuv.lib" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\nodec\test\debug.h">
+    <ClInclude Include="..\..\test\debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\nodec\test\utils.h">
+    <ClInclude Include="..\..\test\kvp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\nodec\test\kvp.h">
+    <ClInclude Include="..\..\test\request.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\nodec\test\request.h">
+    <ClInclude Include="..\..\test\sbuf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\nodec\test\sbuf.h">
+    <ClInclude Include="..\..\test\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

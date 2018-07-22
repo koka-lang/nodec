@@ -40,48 +40,44 @@ ifeq ($(VALGRINDX),yes)
 VALGRINDX=valgrind --leak-check=full --show-leak-kinds=all --suppressions=./valgrind.supp 
 endif     
 
-# Uncomment to generate assembly for libhandler
+# Uncomment to generate assembly for nodec
 # SHOWASM    = -Wa,-aln=$@.s
 
 # -------------------------------------
 # Sources
 # -------------------------------------
 
-SRCFILES = libhandler.c
+SRCFILES = async.c channel.c dns.c fs.c http.c http_request.c http_url.c  \
+           interleave.c memory.c stream.c tcp.c timer.c tty.c
 
-CTESTS   = tests.c \
-	   test-exn.c test-state.c test-amb.c test-dynamic.c test-raise.c test-general.c \
-	    test-tailops.c test-state-alloc.c test-yieldn.c
+CTESTS   =  
 
-TESTFILES= main-tests.c	$(CTESTS)				 
+TESTFILES= main.c	$(CTESTS)				 
 
-BENCHFILES=main-perf.c perf.c tests.c test-state.c \
-	   perf-counter.c
+BENCHFILES=
 
 
 SRCS     = $(patsubst %,src/%,$(SRCFILES)) $(patsubst %,src/%,$(ASMFILES))
 OBJS  	 = $(patsubst %.c,$(OUTDIR)/%$(OBJ), $(SRCFILES)) $(patsubst %$(ASM),$(OUTDIR)/%$(OBJ),$(ASMFILES))
-HLIB     = $(OUTDIR)/libhandler$(LIB)
+HLIB     = $(OUTDIR)/nodec$(LIB)
 
 TESTSRCS = $(patsubst %,test/%,$(TESTFILES)) 
-TESTMAIN = $(OUTDIR)/libh-tests$(EXE)
+TESTMAIN = $(OUTDIR)/nodec-tests$(EXE)
 
 BENCHSRCS= $(patsubst %,test/%,$(BENCHFILES))
-BENCHMAIN= $(OUTDIR)/libh-bench$(EXE)
+BENCHMAIN= $(OUTDIR)/nodec-bench$(EXE)
 
 
 
-TESTFILESXX=main-tests.cpp \
-	    test-destructor.cpp test-try.cpp \
-	    $(CTESTS)
+TESTFILESXX=main.cpp
 
 OUTDIRXX = $(OUTDIR)xx
 SRCSXX   = $(patsubst %,src/%,$(SRCFILES)) $(patsubst %,src/%,$(ASMFILES))
 OBJSXX	 = $(patsubst %.c,$(OUTDIRXX)/%$(OBJ), $(SRCFILES)) $(patsubst %$(ASM),$(OUTDIRXX)/%$(OBJ),$(ASMFILES))
-HLIBXX   =$(OUTDIRXX)/libhandler++$(LIB)
+HLIBXX   =$(OUTDIRXX)/nodec++$(LIB)
 
 TESTSRCSXX = $(patsubst %,test/%,$(TESTFILESXX)) 
-TESTMAINXX = $(OUTDIRXX)/libh-tests++$(EXE)
+TESTMAINXX = $(OUTDIRXX)/nodec-tests++$(EXE)
 
 # -------------------------------------
 # Main targets

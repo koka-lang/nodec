@@ -194,4 +194,13 @@ For the `test\libuv` example, you need to get the [libuv] project as:
 * You may need to install Python too.
 
 
+## http-parser
+
+The [http-parser] project is checked out as:
+
+* `> git clone https://github.com/nodejs/http-parser.git`
+
+There is no need to build it, it is included automatically by the NodeC project.
+
 [libuv]: https://github.com/libuv/libuv
+[http-parser]: https://github.com/nodejs/http-parser

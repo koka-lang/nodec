@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\nodec\test\main-client.c">
+    <ClCompile Include="..\..\test\main-client.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\..\libuv\$(Configuration)\lib\libuv.lib" />
   </ItemGroup>
-  <ItemGroup>    
+  <ItemGroup>
   </ItemGroup>
 </Project>
