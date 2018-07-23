@@ -96,7 +96,7 @@ static const char* http_headers_lookup_from(http_headers_t* headers, const char*
         // append comma and the current value
         newvalue.base[newvalue.len] = ',';
         memcpy(newvalue.base + newvalue.len + 1, h->value, n);
-        newvalue.len += (uv_buf_len_t)n;
+        newvalue.len += (uv_buf_len_t)n + 1;
         newvalue.base[newvalue.len] = 0;
         http_header_clear(h);  // clear the current entry
       }
