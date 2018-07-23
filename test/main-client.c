@@ -132,7 +132,7 @@ static void test_client_file(const char* path) {
 static void entry() {
   printf("in the main loop\n");
   //test_as_client_one_byte_at_a_time();
-  const char* path = ".\\..\\..\\nodec\\test\\example1.txt";
+  const char* path = ".\\..\\..\\test\\examples\\example1.http";
   test_client_file(path);
 }
 
