@@ -240,7 +240,7 @@ const char* nodec_http_method_str(http_method_t method);
 
 typedef void (nodec_http_servefun)(int strand_id, http_in_t* in, http_out_t* out, lh_value arg);
 
-void async_http_server_at(const struct sockaddr* addr, int backlog, int max_interleaving, 
+void async_http_server_at(const char* host, int backlog, int max_interleaving, 
                           uint64_t timeout, nodec_http_servefun* servefun, lh_value arg);
 
 
@@ -318,11 +318,8 @@ void nodec_url_freev(lh_value urlv);
 nodec_url_t*  nodecx_parse_url(const char* url, bool hostonly);
 nodec_url_t*  nodec_parse_url(const char* url, bool hostonly);
 
-#define using_url(urlstr,url)  nodec_url_t* url = nodec_parse_url(urlstr,false); defer(nodec_url_freev,lh_value_ptr(url))
-#define withx_url(urlstr,url)  nodec_url_t* url = nodec_parsex_url(urlstr,false); defer(nodec_url_freev,lh_value_ptr(url))
-
-#define using_host_url(urlstr,url)  nodec_url_t* url = nodec_parse_url(urlstr,true); defer(nodec_url_freev,lh_value_ptr(url))
-#define withx_host_url(urlstr,url)  nodec_url_t* url = nodec_parsex_url(urlstr,true); defer(nodec_url_freev,lh_value_ptr(url))
+#define using_url(url)        defer(nodec_url_freev,lh_value_ptr(url))
+#define usingx_url(url)       defer(nodec_url_freev,lh_value_ptr(url))
 
 const char* nodec_url_schema(const nodec_url_t* url);
 const char* nodec_url_host(const nodec_url_t* url);
@@ -330,8 +327,8 @@ const char* nodec_url_path(const nodec_url_t* url);
 const char* nodec_url_query(const nodec_url_t* url);
 const char* nodec_url_fragment(const nodec_url_t* url);
 const char* nodec_url_userinfo(const nodec_url_t* url);
-uint16_t nodec_url_port(const nodec_url_t* url);
-
+uint16_t    nodec_url_port(const nodec_url_t* url);
+bool        nodec_url_is_ip6(const nodec_url_t* url);
 
 
 /* ----------------------------------------------------------------------------

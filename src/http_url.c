@@ -100,3 +100,6 @@ const char* nodec_url_userinfo(const nodec_url_t* url) {
 uint16_t nodec_url_port(const nodec_url_t* url) {
   return url->parts.port;
 }
+bool nodec_url_is_ip6(const nodec_url_t* url) {
+  return (strchr(nodec_url_host(url), ':') != NULL);
+}

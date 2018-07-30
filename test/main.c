@@ -148,8 +148,7 @@ static void test_http_serve(int strand_id, http_in_t* in, http_out_t* out, lh_va
 }
 
 static void test_tcp() {
-  define_ip4_addr("127.0.0.1", 8080,addr);
-  async_http_server_at( addr, 0, 3, 0, &test_http_serve, lh_value_null );
+  async_http_server_at( "127.0.0.1:8080", 0, 3, 0, &test_http_serve, lh_value_null );
 }
 
 
@@ -300,7 +299,8 @@ void test_as_client() {
 -----------------------------------------------------------------*/
 
 static void url_print(const char* urlstr) {
-  {using_url(urlstr, url) {
+  nodec_url_t* url = nodec_parse_url(urlstr, false);
+  {using_url(url) {
     printf("url: %s\n schema: %s\n userinfo: %s\n host: %s\n port: %u\n path: %s\n query: %s\n fragment: %s\n\n",
       urlstr,
       nodec_url_schema(url), nodec_url_userinfo(url), nodec_url_host(url), 
@@ -311,7 +311,8 @@ static void url_print(const char* urlstr) {
 }
 
 static void host_url_print(const char* urlstr) {
-  {using_host_url(urlstr, url) {
+  nodec_url_t* url = nodec_parse_url(urlstr, true);
+  {using_url(url) {
     printf("url: %s\n host: %s\n port: %u\n\n",
       urlstr, nodec_url_host(url), nodec_url_port(url)
     );
@@ -325,7 +326,7 @@ static void test_url() {
   host_url_print("localhost:8080");
   host_url_print("my.server.com:80");
   host_url_print("127.0.0.1:80");
-  host_url_print("[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443")
+  host_url_print("[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443"); 
   //host_url_print("http://127.0.0.1"); // invalid
   //host_url_print("127.0.0.1");        // invalid
 }
@@ -348,8 +349,8 @@ static void entry() {
   //test_http();
   //test_as_client();
   //test_connect();
-  //test_tcp_tty();
-  test_url();
+  test_tcp_tty();
+  //test_url();
 }
 
 int main() {
