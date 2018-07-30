@@ -118,10 +118,10 @@ void async_fclose(uv_file file) {
   }}
 }
 
-size_t async_fread(uv_file file, uv_buf_t* buf, int64_t file_offset) {
+static size_t _async_fread_into(uv_file file, uv_buf_t buf, int64_t file_offset) {
   size_t read = 0;
   {using_fs_req(req, loop) {
-    nodec_check(uv_fs_read(loop, req, file, buf, 1, file_offset, &async_fs_resume));
+    nodec_check(uv_fs_read(loop, req, file, &buf, 1, file_offset, &async_fs_resume));
     async_await_file(req, file);
     read = (size_t)req->result;
   }}
@@ -155,34 +155,40 @@ lh_value async_using_fopen(const char* path, int flags, int mode, nodec_file_fun
   );
 }
 
-lh_value _async_fread_full(uv_file file, lh_value _arg) {
+void async_fread_into(uv_file file, uv_buf_t buf , int64_t file_offset) {
+  size_t total = 0;
+  while (total < buf.len) {
+    uv_buf_t view = nodec_buf(buf.base + total, buf.len - total);
+    size_t nread = _async_fread_into(file, view, -1);
+    if (nread == 0) break;
+    total += nread;
+    if (total > buf.len) total = buf.len; // paranoia
+  }
+  buf.base[total] = 0;
+}
+
+uv_buf_t async_fread_buf(uv_file file, size_t max, int64_t file_offset) {
+  uv_buf_t buf = nodec_buf_alloc(max);
+  {using_on_abort_free_buf(&buf) {
+    async_fread_into(file, buf, file_offset);
+  }}
+  return buf;
+}
+
+uv_buf_t async_fread_buf_all(uv_file file, size_t max ) {
   uv_stat_t stat = async_fstat(file);
   if (stat.st_size >= MAXSIZE_T) nodec_check(UV_E2BIG);
-  size_t    size = (size_t)stat.st_size;
-  char*     buffer = nodec_alloc_n(size + 1, char);
-  {on_abort(nodec_freev, lh_value_ptr(buffer)) {
-    uv_buf_t buf = nodec_buf(buffer, size);
-    size_t read = 0;
-    size_t total = 0;
-    while (total < size) {
-      size_t read = async_fread(file, &buf, -1);
-      if (read == 0) break;
-      total += read;
-      if (total > size) {
-        total = size;
-      }
-      else {
-        buf = nodec_buf(buffer + total, size - total);
-      }
-    }
-    buffer[total] = 0;
-  }}
-  return lh_value_ptr(buffer);
+  size_t size = (size_t)stat.st_size;
+  return async_fread_buf(file, (max > 0 && size > max ? max : size), -1);
+}
+
+static lh_value async_fread_allv(uv_file file, lh_value _arg) {
+  return lh_value_ptr(async_fread_buf_all(file, 0).base);
 }
 
 
-char* async_fread_full(const char* path) {
-  lh_value result = async_using_fopen(path, O_RDONLY, 0, &_async_fread_full, lh_value_null);  
+char* async_fread(const char* path) {
+  lh_value result = async_using_fopen(path, O_RDONLY, 0, &async_fread_allv, lh_value_null);  
   return (char*)lh_ptr_value(result);
 }
 

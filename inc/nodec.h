@@ -82,9 +82,13 @@ void async_yield();
 uv_errno_t  asyncx_stat(const char* path, uv_stat_t* stat);
 uv_stat_t   async_stat(const char* path);
 uv_stat_t   async_fstat(uv_file file);
+
 uv_file     async_fopen(const char* path, int flags, int mode);
 void        async_fclose(uv_file file);
-size_t      async_fread(uv_file file, uv_buf_t* buf, int64_t offset);
+
+void        async_fread_into(uv_file file, uv_buf_t buf, int64_t file_offset);
+uv_buf_t    async_fread_buf(uv_file file, size_t max, int64_t file_offset);
+uv_buf_t    async_fread_all(uv_file file, size_t max);
 
 typedef uv_fs_t nodec_scandir_t;
 void        nodec_scandir_free(nodec_scandir_t* scanreq);
@@ -97,7 +101,7 @@ bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
 // ----------------------------------
 // File system convenience functions
 
-char*       async_fread_full(const char* path);
+char*       async_fread(const char* path);
 
 typedef lh_value(nodec_file_fun)(uv_file file, lh_value arg);
 lh_value    async_using_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
