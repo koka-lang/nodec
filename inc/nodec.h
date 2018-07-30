@@ -211,10 +211,19 @@ uv_stream_t*    async_tcp_channel_receive(tcp_channel_t* ch);
 
 // Convenience:
 
+
+typedef struct _tcp_server_config_t {
+  int       backlog;           // maximal pending request queue length
+  int       max_interleaving;  // maximal number concurrent requests
+  uint64_t  timeout;           // ms between connection requests allowed; 0 = infinite
+  uint64_t  timeout_total;     // total allowed connection time in ms; 0 = infinite
+} tcp_server_config_t;
+
+#define tcp_server_config()    { 0, 0, 0, 0 }
+
 typedef void    (nodec_tcp_servefun)(int id, uv_stream_t* client, lh_value arg);
 
-void async_tcp_server_at(const struct sockaddr* addr, int backlog, int max_interleaving, 
-                          uint64_t timeout, 
+void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config,
                           nodec_tcp_servefun* servefun, lh_actionfun* on_exn,
                           lh_value arg);
 
@@ -238,10 +247,10 @@ const char* nodec_http_status_str(http_status_t code);
 const char* nodec_http_method_str(http_method_t method);
 
 
+
 typedef void (nodec_http_servefun)(int strand_id, http_in_t* in, http_out_t* out, lh_value arg);
 
-void async_http_server_at(const char* host, int backlog, int max_interleaving, 
-                          uint64_t timeout, nodec_http_servefun* servefun, lh_value arg);
+void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_http_servefun* servefun, lh_value arg);
 
 
 typedef lh_value (http_connect_fun)(http_in_t* in, http_out_t* out, lh_value arg);
@@ -315,8 +324,10 @@ typedef struct _nodec_url_t nodec_url_t;
 void nodec_url_free(nodec_url_t* url);
 void nodec_url_freev(lh_value urlv);
 
-nodec_url_t*  nodecx_parse_url(const char* url, bool hostonly);
-nodec_url_t*  nodec_parse_url(const char* url, bool hostonly);
+nodec_url_t*  nodecx_parse_url(const char* url);
+nodec_url_t*  nodecx_parse_host(const char* host);
+nodec_url_t*  nodec_parse_url(const char* url);
+nodec_url_t*  nodec_parse_host(const char* host);
 
 #define using_url(url)        defer(nodec_url_freev,lh_value_ptr(url))
 #define usingx_url(url)       defer(nodec_url_freev,lh_value_ptr(url))

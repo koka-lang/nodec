@@ -24,7 +24,7 @@ void nodec_url_freev(lh_value urlv) {
   nodec_url_free((nodec_url_t*)lh_ptr_value(urlv));
 }
 
-nodec_url_t*  nodecx_parse_url(const char* url, bool onlyhost) {
+static nodec_url_t*  nodecx_parse_urlx(const char* url, bool onlyhost) {
   int err;
   nodec_url_t* nurl = nodec_zero_alloc(nodec_url_t);
   {on_abort(nodec_url_freev, lh_value_ptr(nurl)) {
@@ -56,14 +56,30 @@ nodec_url_t*  nodecx_parse_url(const char* url, bool onlyhost) {
   }
 }
 
-nodec_url_t*  nodec_parse_url(const char* url, bool onlyhost) {
-  nodec_url_t* nurl = nodecx_parse_url(url, onlyhost);
+static nodec_url_t*  nodec_parse_urlx(const char* url, bool onlyhost) {
+  nodec_url_t* nurl = nodecx_parse_urlx(url, onlyhost);
   if (nurl == NULL) {
     char buf[256];
     snprintf(buf, 256, "invalid url: %s", url);
     lh_throw_strdup(EINVAL, buf);
   }
   return nurl;
+}
+
+nodec_url_t*  nodecx_parse_url(const char* url) {
+  return nodecx_parse_urlx(url, false);
+}
+
+nodec_url_t*  nodecx_parse_host(const char* host) {
+  return nodecx_parse_urlx(host, true);
+}
+
+nodec_url_t*  nodec_parse_url(const char* url) {
+  return nodec_parse_urlx(url, false);
+}
+
+nodec_url_t*  nodec_parse_host(const char* host) {
+  return nodec_parse_urlx(host,true);
 }
 
 static const char* nodec_url_field(const nodec_url_t* url, enum http_parser_url_field f) {

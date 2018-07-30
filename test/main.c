@@ -148,7 +148,9 @@ static void test_http_serve(int strand_id, http_in_t* in, http_out_t* out, lh_va
 }
 
 static void test_tcp() {
-  async_http_server_at( "127.0.0.1:8080", 0, 3, 0, &test_http_serve, lh_value_null );
+  tcp_server_config_t config = tcp_server_config();
+  config.max_interleaving = 3;
+  async_http_server_at( "127.0.0.1:8080", &config, &test_http_serve, lh_value_null );
 }
 
 
@@ -299,7 +301,7 @@ void test_as_client() {
 -----------------------------------------------------------------*/
 
 static void url_print(const char* urlstr) {
-  nodec_url_t* url = nodec_parse_url(urlstr, false);
+  nodec_url_t* url = nodec_parse_url(urlstr);
   {using_url(url) {
     printf("url: %s\n schema: %s\n userinfo: %s\n host: %s\n port: %u\n path: %s\n query: %s\n fragment: %s\n\n",
       urlstr,
@@ -311,7 +313,7 @@ static void url_print(const char* urlstr) {
 }
 
 static void host_url_print(const char* urlstr) {
-  nodec_url_t* url = nodec_parse_url(urlstr, true);
+  nodec_url_t* url = nodec_parse_host(urlstr);
   {using_url(url) {
     printf("url: %s\n host: %s\n port: %u\n\n",
       urlstr, nodec_url_host(url), nodec_url_port(url)

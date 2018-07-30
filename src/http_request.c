@@ -595,15 +595,14 @@ static void http_serve(int id, uv_stream_t* client, lh_value argsv) {
 }
 
 
-void async_http_server_at(const char* host, int backlog,
-  int n, uint64_t timeout,
-  nodec_http_servefun* servefun,
-  lh_value arg)
+void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_http_servefun* servefun, lh_value arg)
 {
+  tcp_server_config_t default_config = tcp_server_config();
+  if (config == NULL) config = &default_config;
   struct sockaddr_in  addr4;
   struct sockaddr_in6 addr6;
   struct sockaddr*    addr = NULL;
-  nodec_url_t* url = nodec_parse_url(host, true);
+  nodec_url_t* url = nodec_parse_host(host);
   {using_url(url) {
     if (nodec_url_is_ip6(url)) {
       nodec_ip6_addr(nodec_url_host(url), nodec_url_port(url), &addr6);
@@ -615,7 +614,7 @@ void async_http_server_at(const char* host, int backlog,
     }
   }}
   server_args_t args = { servefun, arg };
-  async_tcp_server_at(addr, backlog, n, timeout, http_serve,
+  async_tcp_server_at(addr, config, http_serve,
     &async_write_http_exnv, lh_value_any_ptr(&args));
 }
 

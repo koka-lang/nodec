@@ -268,25 +268,27 @@ static lh_value tcp_servev(lh_value argsv) {
   return lh_value_null;
 }
 
-void async_tcp_server_at(const struct sockaddr* addr, int backlog, int max_interleaving, uint64_t timeout, 
+void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config,
                            nodec_tcp_servefun* servefun, lh_actionfun* on_exn,
                            lh_value arg) 
 {
-  tcp_channel_t* ch = nodec_tcp_listen_at(addr, backlog);
+  tcp_server_config_t default_config = tcp_server_config();
+  if (config == NULL) config = &default_config;
+  tcp_channel_t* ch = nodec_tcp_listen_at(addr, config->backlog);
   {using_tcp_channel(ch) {
     {using_alloc(tcp_serve_args, sargs) {
       sargs->ch = ch;
-      sargs->timeout = timeout;
+      sargs->timeout = config->timeout;
       sargs->serve = servefun;
       sargs->arg = arg;
       sargs->on_exn = (on_exn == NULL ? &async_log_tcp_exn : on_exn);
-      {using_alloc_n(max_interleaving, lh_actionfun*, actions) {
-        {using_alloc_n(max_interleaving, lh_value, args) {
-          for (int i = 0; i < max_interleaving; i++) {
+      {using_alloc_n(config->max_interleaving, lh_actionfun*, actions) {
+        {using_alloc_n(config->max_interleaving, lh_value, args) {
+          for (int i = 0; i < config->max_interleaving; i++) {
             actions[i] = &tcp_servev;
             args[i] = lh_value_any_ptr(sargs);
           }
-          interleave(max_interleaving, actions, args);
+          interleave(config->max_interleaving, actions, args);
         }}
       }}
     }}
