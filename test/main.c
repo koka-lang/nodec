@@ -18,7 +18,7 @@ static void test_stat() {
 static void test_fileread() {
   const char* path = "cenv.h";
   printf("opening file: %s\n", path);
-  char* contents = async_fread_full(path);
+  char* contents = async_fread(path);
   {using_free(contents) {
     printf("read %Ii bytes from %s:\n...\n", strlen(contents), path);    
   }}
@@ -325,6 +325,9 @@ static void test_url() {
   host_url_print("localhost:8080");
   host_url_print("my.server.com:80");
   host_url_print("127.0.0.1:80");
+  host_url_print("[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443")
+  //host_url_print("http://127.0.0.1"); // invalid
+  //host_url_print("127.0.0.1");        // invalid
 }
 
 /*-----------------------------------------------------------------
@@ -345,8 +348,8 @@ static void entry() {
   //test_http();
   //test_as_client();
   //test_connect();
-  test_tcp_tty();
-  //test_url();
+  //test_tcp_tty();
+  test_url();
 }
 
 int main() {

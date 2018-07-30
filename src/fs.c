@@ -144,7 +144,7 @@ static lh_value _fopen_action(lh_value argsv) {
   return args->action(args->file, args->arg);
 }
 
-lh_value async_using_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg ) {
+lh_value using_async_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg ) {
   _fopen_args args;
   args.arg = arg;
   args.action = action;
@@ -188,7 +188,7 @@ static lh_value async_fread_allv(uv_file file, lh_value _arg) {
 
 
 char* async_fread(const char* path) {
-  lh_value result = async_using_fopen(path, O_RDONLY, 0, &async_fread_allv, lh_value_null);  
+  lh_value result = using_async_fopen(path, O_RDONLY, 0, &async_fread_allv, lh_value_null);  
   return (char*)lh_ptr_value(result);
 }
 

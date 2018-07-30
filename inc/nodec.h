@@ -104,7 +104,7 @@ bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
 char*       async_fread(const char* path);
 
 typedef lh_value(nodec_file_fun)(uv_file file, lh_value arg);
-lh_value    async_using_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
+lh_value    using_async_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
 
 
 /* ----------------------------------------------------------------------------
