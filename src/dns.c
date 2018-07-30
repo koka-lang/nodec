@@ -15,7 +15,7 @@ static void addrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
 
 struct addrinfo* async_getaddrinfo(const char* node, const char* service, const struct addrinfo* hints) {
   struct addrinfo* info = NULL;
-  {with_req(uv_getaddrinfo_t,req) {
+  {using_req(uv_getaddrinfo_t,req) {
     nodec_check(uv_getaddrinfo(async_loop(), req, &addrinfo_cb, node, service, hints));
     async_await_once((uv_req_t*)req);
     info = req->addrinfo;
@@ -38,7 +38,7 @@ static void nameinfo_cb(uv_getnameinfo_t* req, int status, const char* hostname,
 void async_getnameinfo(const struct sockaddr* addr, int flags, char** node, char** service) {
   if (node != NULL) *node = NULL;
   if (service != NULL) *service = NULL;
-  {with_req(uv_getnameinfo_t, req) {
+  {using_req(uv_getnameinfo_t, req) {
     nodec_check(uv_getnameinfo(async_loop(), req, &nameinfo_cb, addr, flags));
     async_await_once((uv_req_t*)req);
     if (node != NULL) *node = nodec_strndup(req->host, NI_MAXHOST);

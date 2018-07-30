@@ -20,8 +20,8 @@
     "nodec_" : synchronous functions that might throw exeptions or use other effects.
     "nodecx_": synchronous functions that return an explicit error result.
     "..._t"  : for types
-    "with_"  : for scoped combinators, to be used with double curly braces:
-               i.e. "{with_alloc(tp,name){ ... <use name> ... }}"
+    "using_"  : for scoped combinators, to be used with double curly braces:
+               i.e. "{using_alloc(tp,name){ ... <use name> ... }}"
 
   - an `lh_value` is used to mimic polymorphism. There are a host of 
     conversion functions, like `lh_ptr_value` (from value to pointer)
@@ -46,7 +46,7 @@ implicit_declare(_cancel_scope)
 lh_value _cancel_scope_alloc();
 
 // execute under a cancelation scope
-#define with_cancel_scope()        with_implicit_defer(nodec_freev,_cancel_scope_alloc(),_cancel_scope)
+#define using_cancel_scope()        using_implicit_defer(nodec_freev,_cancel_scope_alloc(),_cancel_scope)
 
 // Asynchronously cancel all outstanding requests under the same
 // cancelation scope.
@@ -89,7 +89,7 @@ size_t      async_fread(uv_file file, uv_buf_t* buf, int64_t offset);
 typedef uv_fs_t nodec_scandir_t;
 void        nodec_scandir_free(nodec_scandir_t* scanreq);
 void        nodec_scandir_freev(lh_value scanreqv);
-#define with_scandir(req)  defer(nodec_scandir_freev,lh_value_ptr(req))
+#define using_scandir(req)  defer(nodec_scandir_freev,lh_value_ptr(req))
 
 nodec_scandir_t* async_scandir(const char* path);
 bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
@@ -100,7 +100,7 @@ bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
 char*       async_fread_full(const char* path);
 
 typedef lh_value(nodec_file_fun)(uv_file file, lh_value arg);
-lh_value    async_with_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
+lh_value    async_using_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
 
 
 /* ----------------------------------------------------------------------------
@@ -119,16 +119,16 @@ uv_buf_t nodec_buf_null();
 uv_buf_t nodec_buf_alloc(size_t len);
 uv_buf_t nodec_buf_realloc(uv_buf_t buf, size_t len);
 
-void nodec_buf_ensure(uv_buf_t* buf, size_t needed);
-void nodec_buf_ensure_ex(uv_buf_t* buf, size_t needed, size_t initial_size, size_t max_increase);
+uv_buf_t nodec_buf_ensure(uv_buf_t buf, size_t needed);
+uv_buf_t nodec_buf_ensure_ex(uv_buf_t buf, size_t needed, size_t initial_size, size_t max_increase);
 
 bool nodec_buf_is_null(uv_buf_t buf);
 void nodec_buf_free(uv_buf_t buf);
 void nodec_bufref_free(uv_buf_t* buf);
 void nodec_bufref_freev(lh_value bufref);
 
-#define with_buf(buf)                 uv_buf_t buf = nodec_buf_null(); defer(nodec_bufref_freev,lh_value_any_ptr(&buf))
-#define with_on_abort_free_buf(buf)   uv_buf_t buf = nodec_buf_null(); on_abort(nodec_bufref_freev,lh_value_any_ptr(&buf))
+#define using_buf(buf)                 defer(nodec_bufref_freev,lh_value_any_ptr(buf))
+#define using_on_abort_free_buf(buf)   on_abort(nodec_bufref_freev,lh_value_any_ptr(buf))
 
 /* ----------------------------------------------------------------------------
   Streams
@@ -139,7 +139,7 @@ void        nodec_stream_free(uv_stream_t* stream);
 void        nodec_stream_freev(lh_value streamv);
 void        async_shutdown(uv_stream_t* stream);
  
-#define with_stream(s) \
+#define using_stream(s) \
     defer_exit(async_shutdown(s),&nodec_stream_freev,lh_value_ptr(s))
 
 void        nodec_read_start(uv_stream_t* stream, size_t read_max, size_t alloc_init, size_t alloc_max);
@@ -187,7 +187,7 @@ struct addrinfo* async_getaddrinfo(const char* node, const char* service, const 
 
 void nodec_free_addrinfo(struct addrinfo* info);
 void nodec_free_addrinfov(lh_value infov);
-#define with_addrinfo(name)  defer(nodec_free_addrinfov,lh_value_ptr(name))
+#define using_addrinfo(name)  defer(nodec_free_addrinfov,lh_value_ptr(name))
 
 
 /* ----------------------------------------------------------------------------
@@ -195,7 +195,7 @@ void nodec_free_addrinfov(lh_value infov);
 -----------------------------------------------------------------------------*/
 typedef struct _channel_t tcp_channel_t;
 void            channel_freev(lh_value vchannel);
-#define with_tcp_channel(ch)  defer(channel_freev,lh_value_ptr(ch))
+#define using_tcp_channel(ch)  defer(channel_freev,lh_value_ptr(ch))
 
 uv_tcp_t*       nodec_tcp_alloc();
 void            nodec_tcp_free(uv_tcp_t* tcp);
@@ -281,7 +281,7 @@ void http_out_init_client(http_out_t* out, uv_stream_t* stream, const char* host
 void http_out_clear(http_out_t* out);
 void http_out_clearv(lh_value respv);
 
-#define with_http_out(stream,out)  http_out_t _resp; http_out_t* out = &_resp; http_out_init(out,stream); defer(http_out_clearv,lh_value_any_ptr(out))
+#define using_http_out(stream,out)  http_out_t _resp; http_out_t* out = &_resp; http_out_init(out,stream); defer(http_out_clearv,lh_value_any_ptr(out))
 
 // Add headers
 void http_out_add_header(http_out_t* out, const char* field, const char* value);
@@ -314,10 +314,10 @@ void nodec_url_freev(lh_value urlv);
 nodec_url_t*  nodecx_parse_url(const char* url, bool hostonly);
 nodec_url_t*  nodec_parse_url(const char* url, bool hostonly);
 
-#define with_url(urlstr,url)  nodec_url_t* url = nodec_parse_url(urlstr,false); defer(nodec_url_freev,lh_value_ptr(url))
+#define using_url(urlstr,url)  nodec_url_t* url = nodec_parse_url(urlstr,false); defer(nodec_url_freev,lh_value_ptr(url))
 #define withx_url(urlstr,url)  nodec_url_t* url = nodec_parsex_url(urlstr,false); defer(nodec_url_freev,lh_value_ptr(url))
 
-#define with_host_url(urlstr,url)  nodec_url_t* url = nodec_parse_url(urlstr,true); defer(nodec_url_freev,lh_value_ptr(url))
+#define using_host_url(urlstr,url)  nodec_url_t* url = nodec_parse_url(urlstr,true); defer(nodec_url_freev,lh_value_ptr(url))
 #define withx_host_url(urlstr,url)  nodec_url_t* url = nodec_parsex_url(urlstr,true); defer(nodec_url_freev,lh_value_ptr(url))
 
 const char* nodec_url_schema(const nodec_url_t* url);
@@ -339,8 +339,8 @@ void     _nodec_tty_freev(lh_value ttyv);
 
 implicit_declare(tty)
 
-#define with_tty()  \
-    with_implicit_defer_exit(async_tty_shutdown(),_nodec_tty_freev,_nodec_tty_allocv(),tty)
+#define using_tty()  \
+    using_implicit_defer_exit(async_tty_shutdown(),_nodec_tty_freev,_nodec_tty_allocv(),tty)
 
 char* async_tty_readline();
 void  async_tty_write(const char* s);
@@ -362,7 +362,7 @@ uv_errno_t  async_main( nodec_main_fun_t* entry );
   Safe allocation
   These raise an exception on failure
   The code:
-    {with_alloc(mystruct,name){
+    {using_alloc(mystruct,name){
       ...
     }}
   will safely allocate a `mystruct*` to `name` which can be used inside `...`
@@ -420,11 +420,11 @@ const void* nodec_memmem(const void* src, size_t src_len, const void* pat, size_
 #define nodec_zero_alloc(tp)      nodec_zero_alloc_n(1,tp)
 #define nodec_realloc_n(p,n,tp)   ((tp*)(nodec_realloc(p,(n)*sizeof(tp))))
 
-#define with_free(name)               defer(nodec_freev,lh_value_ptr(name))
-#define with_alloc(tp,name)           tp* name = nodec_alloc(tp); with_free(name)
-#define with_alloc_n(n,tp,name)       tp* name = nodec_alloc_n(n,tp); with_free(name)
-#define with_zero_alloc_n(n,tp,name)  tp* name = nodec_zero_alloc_n(n,tp); with_free(name)
-#define with_zero_alloc(tp,name)      with_zero_alloc_n(1,tp,name)
+#define using_free(name)               defer(nodec_freev,lh_value_ptr(name))
+#define using_alloc(tp,name)           tp* name = nodec_alloc(tp); using_free(name)
+#define using_alloc_n(n,tp,name)       tp* name = nodec_alloc_n(n,tp); using_free(name)
+#define using_zero_alloc_n(n,tp,name)  tp* name = nodec_zero_alloc_n(n,tp); using_free(name)
+#define using_zero_alloc(tp,name)      using_zero_alloc_n(1,tp,name)
 
 #define nodec_zero(tp,ptr)        memset(ptr,0,sizeof(tp));
 

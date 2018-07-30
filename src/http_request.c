@@ -356,7 +356,8 @@ uv_buf_t async_http_in_read_body_buf(http_in_t* req)
 // The initial_size can be 0 in which case the content_length or initially read buffer length is used.
 uv_buf_t async_http_in_read_body(http_in_t* req, size_t initial_size) {
   uv_buf_t result = nodec_buf_null();
-  {with_on_abort_free_buf(body){
+  uv_buf_t body = nodec_buf_null();
+  {using_on_abort_free_buf(&body){
     size_t   offset = 0;
     // keep reading bufs into the target body buffer, reallocating as needed
     uv_buf_t buf;
@@ -364,7 +365,7 @@ uv_buf_t async_http_in_read_body(http_in_t* req, size_t initial_size) {
       if (initial_size == 0) {
         initial_size = (http_in_content_length(req) > 0 ? (uv_buf_len_t)http_in_content_length(req) : buf.len);
       }
-      nodec_buf_ensure_ex(&body, buf.len + offset, initial_size, 0);
+      body = nodec_buf_ensure_ex(body, buf.len + offset, initial_size, 0);
       assert(body.len >= offset + buf.len);
 
       // we cannot avoid memcpy due to chunking which breaks up the body
@@ -455,7 +456,7 @@ void http_out_add_header(http_out_t* out, const char* field, const char* value) 
   size_t n = strlen(field);
   size_t m = strlen(value);
   size_t extra = n + m + 3; // :\r\n
-  nodec_buf_ensure(&out->head, out->head_offset + extra);
+  out->head = nodec_buf_ensure(out->head, out->head_offset + extra);
   char* p = out->head.base + out->head_offset;
   size_t available = out->head.len - out->head_offset;
   strncpy_s(p, available, field, n);
@@ -467,7 +468,7 @@ void http_out_add_header(http_out_t* out, const char* field, const char* value) 
 
 static void http_out_add_header_buf(http_out_t* out, uv_buf_t buf) {
   if (nodec_buf_is_null(buf)) return;
-  nodec_buf_ensure(&out->head, out->head_offset + buf.len);
+  out->head = nodec_buf_ensure(out->head, out->head_offset + buf.len);
   size_t available = out->head.len - out->head_offset;
   memcpy(out->head.base + out->head_offset, buf.base, buf.len);
   out->head_offset += buf.len;
@@ -607,7 +608,7 @@ void async_http_server_at(const struct sockaddr* addr, int backlog,
 lh_value async_http_connect(const char* host, http_connect_fun* connectfun, lh_value arg) {
   lh_value result = lh_value_null;
   uv_stream_t* conn = async_tcp_connect(host, "http");
-  {with_stream(conn) {
+  {using_stream(conn) {
     http_in_t in;
     http_in_init(&in, conn, false);
     {defer(http_in_clearv, lh_value_any_ptr(&in)) {

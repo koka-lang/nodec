@@ -149,8 +149,8 @@ lh_value _cancel_scope_alloc() {
 }
 
 
-// #define with_cancel_scope()        with_implicit_defer(nodec_freev,_cancel_scope_alloc(),_cancel_scope)
-#define with_outer_cancel_scope()  with_implicit(lh_value_null,_cancel_scope)
+// #define using_cancel_scope()        using_implicit_defer(nodec_freev,_cancel_scope_alloc(),_cancel_scope)
+#define using_outer_cancel_scope()  using_implicit(lh_value_null,_cancel_scope)
 
 static bool in_scope_of(const cancel_scope_t* scope, const cancel_scope_t* top ) {
   while (scope != NULL && scope != top) {
@@ -575,7 +575,7 @@ static lh_value uv_main_action(lh_value ventry) {
 
 static lh_value uv_main_try_action(lh_value entry) {
   lh_exception* exn;
-  {with_outer_cancel_scope() {
+  {using_outer_cancel_scope() {
     lh_try(&exn, uv_main_action, entry);
     if (exn != NULL) {
       fprintf(stderr,"NodeC: unhandled exception: %s\n", exn->msg);

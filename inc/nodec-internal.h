@@ -34,13 +34,13 @@ void       nodec_req_freev(lh_value uvreq);
 
 void       nodec_owner_release(void* owner);
 
-#define with_req(req_tp,name) \
+#define using_req(req_tp,name) \
   req_tp* name = nodec_zero_alloc(req_tp); \
   defer(nodec_req_freev,lh_value_ptr(name))
 
 // A request that is always freed even when canceled. Use this only if
 // it is guaranteed that the request is never used again (for example for timers)
-#define with_free_req(req_tp,name) \
+#define using_free_req(req_tp,name) \
   req_tp* name = nodec_zero_alloc(req_tp); \
   defer(nodec_req_force_freev,lh_value_ptr(name))
 

@@ -162,7 +162,7 @@ static channel_elem channel_receive_ex(channel_t* channel, bool nocancel) {
   else {
     // await the next emit
     uv_channel_req_t* req = nodec_zero_alloc_n(1, uv_channel_req_t);
-    {with_free(req){ // always free our request
+    {using_free(req){ // always free our request
       if (channel->lcount >= channel->lsize) {
         ssize_t newsize = (channel->lsize > 0 ? 2 * channel->lsize : 2);
         channel->listeners = (channel->listeners == NULL ? nodec_alloc_n(newsize, channel_listener)

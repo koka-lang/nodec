@@ -33,8 +33,8 @@ static void async_fs_resume(uv_fs_t* uvreq) {
 }
 
 
-#define with_fs_req(req,loop)  uv_loop_t* loop = async_loop(); \
-                               with_req(uv_fs_t,req)
+#define using_fs_req(req,loop)  uv_loop_t* loop = async_loop(); \
+                               using_req(uv_fs_t,req)
 
 
 
@@ -52,7 +52,7 @@ void async_await_file(uv_fs_t* req, uv_file owner) {
 uv_errno_t asyncx_stat(const char* path, uv_stat_t* stat ) {
   nodec_zero(uv_stat_t,stat);
   uv_errno_t err = 0;
-  {with_fs_req(req, loop){
+  {using_fs_req(req, loop){
     nodec_check(uv_fs_stat(loop, req, path, &async_fs_resume));
     err = asyncx_await_fs(req);
     if (err == 0) *stat = req->statbuf;
@@ -69,7 +69,7 @@ uv_stat_t async_stat(const char* path) {
 uv_stat_t async_fstat(uv_file file) {
   uv_stat_t stat; 
   nodec_zero(uv_stat_t, &stat);
-  {with_fs_req(req, loop) {
+  {using_fs_req(req, loop) {
     nodec_check(uv_fs_fstat(loop, req, file, &async_fs_resume));
     async_await_fs(req);
     stat = req->statbuf;
@@ -86,7 +86,7 @@ uv_stat_t async_fstat(uv_file file) {
 uv_errno_t asyncx_fopen(const char* path, int flags, int mode, uv_file* file) {
   *file = -1;
   uv_errno_t err = 0;
-  {with_fs_req(req, loop) {
+  {using_fs_req(req, loop) {
     nodec_check_msg(uv_fs_open(loop, req, path, flags, mode, &async_fs_resume), path);
     err = asyncx_await_fs(req);
     if (err == 0) *file = (uv_file)(req->result);
@@ -111,7 +111,7 @@ void nodec_fclosev(lh_value filev) {
 void async_fclose(uv_file file) {
   if (file < 0) return;
   {defer(nodec_fclosev, lh_value_int(file)) {
-    {with_fs_req(req, loop) {
+    {using_fs_req(req, loop) {
       nodec_check(uv_fs_close(loop, req, file, &async_fs_resume));
       async_await_file(req, file);
     }}
@@ -120,7 +120,7 @@ void async_fclose(uv_file file) {
 
 size_t async_fread(uv_file file, uv_buf_t* buf, int64_t file_offset) {
   size_t read = 0;
-  {with_fs_req(req, loop) {
+  {using_fs_req(req, loop) {
     nodec_check(uv_fs_read(loop, req, file, buf, 1, file_offset, &async_fs_resume));
     async_await_file(req, file);
     read = (size_t)req->result;
@@ -144,7 +144,7 @@ static lh_value _fopen_action(lh_value argsv) {
   return args->action(args->file, args->arg);
 }
 
-lh_value async_with_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg ) {
+lh_value async_using_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg ) {
   _fopen_args args;
   args.arg = arg;
   args.action = action;
@@ -182,7 +182,7 @@ lh_value _async_fread_full(uv_file file, lh_value _arg) {
 
 
 char* async_fread_full(const char* path) {
-  lh_value result = async_with_fopen(path, O_RDONLY, 0, &_async_fread_full, lh_value_null);  
+  lh_value result = async_using_fopen(path, O_RDONLY, 0, &_async_fread_full, lh_value_null);  
   return (char*)lh_ptr_value(result);
 }
 

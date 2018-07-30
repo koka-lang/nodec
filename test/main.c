@@ -19,7 +19,7 @@ static void test_fileread() {
   const char* path = "cenv.h";
   printf("opening file: %s\n", path);
   char* contents = async_fread_full(path);
-  {with_free(contents) {
+  {using_free(contents) {
     printf("read %Ii bytes from %s:\n...\n", strlen(contents), path);    
   }}
 }
@@ -113,7 +113,8 @@ void http_in_print(http_in_t* in) {
   while ((name = http_in_header_next(in, &value, &iter)) != NULL) {
     printf(" %s: %s\n", name, value);
   }
-  {with_buf(buf) {
+  uv_buf_t buf = nodec_buf_null();
+  {using_buf(&buf) {
     buf = async_http_in_read_body(in, 0);
     if (buf.base != NULL) {
       buf.base[buf.len] = 0;
@@ -158,7 +159,7 @@ static lh_value test_tcpv(lh_value _arg) {
 }
 
 static lh_value test_ttyv(lh_value _arg) {
-  {with_tty() {
+  {using_tty() {
     async_tty_write("press enter to quit the server...");
     const char* s = async_tty_readline();
     nodec_free(s);
@@ -180,15 +181,15 @@ static void test_tcp_tty() {
 -----------------------------------------------------------------*/
 static void test_tty_raw() {
   uv_tty_t* tty_in = nodec_zero_alloc(uv_tty_t);
-  {with_stream((uv_stream_t*)tty_in){
+  {using_stream((uv_stream_t*)tty_in){
     nodec_check(uv_tty_init(async_loop(), tty_in, 0, true));
     nodec_read_start((uv_stream_t*)tty_in, 0, 255, 255);
     const char* s = async_read_line((uv_stream_t*)tty_in);
-    {with_free(s) {
+    {using_free(s) {
       printf("I got: %s\n", s);
     }}
     s = async_read_line((uv_stream_t*)tty_in);
-    {with_free(s) {
+    {using_free(s) {
       printf("Now I got: %s\n", s);
     }}
     printf("The end");
@@ -196,16 +197,16 @@ static void test_tty_raw() {
 }
 
 static void test_tty() {
-  {with_tty() {
+  {using_tty() {
     async_tty_write("\033[41;37m");
     async_tty_write("what is your name? ");
     const char* s = async_tty_readline();
-    {with_free(s) {
+    {using_free(s) {
       printf("I got: %s\n", s);
     }}
     async_tty_write("and your age? ");
     s = async_tty_readline();
-    {with_free(s) {
+    {using_free(s) {
       printf("Now I got: %s\n", s);
     }}   
   }}
@@ -217,7 +218,7 @@ Test scandir
 
 void test_scandir() {
   nodec_scandir_t* scan = async_scandir(".");
-  {with_scandir(scan) {
+  {using_scandir(scan) {
     uv_dirent_t dirent;
     while (async_scandir_next(scan, &dirent)) {
       printf("entry %i: %s\n", dirent.type, dirent.name);
@@ -231,13 +232,13 @@ Test dns
 
 void test_dns() {
   struct addrinfo* info = async_getaddrinfo("iana.org", NULL, NULL);
-  {with_addrinfo(info) {
+  {using_addrinfo(info) {
     for (struct addrinfo* current = info; current != NULL; current = current->ai_next) {
       char sockname[128];
       nodec_sockname(current->ai_addr, sockname, sizeof(sockname));
       char* host = NULL;
       async_getnameinfo(current->ai_addr, 0, &host, NULL);
-      {with_free(host) {
+      {using_free(host) {
         printf("info: protocol %i at %s, reverse host: %s\n", current->ai_protocol, sockname, host);        
       }}
     }
@@ -279,7 +280,7 @@ const char* http_request_parts[] = {
 
 void test_as_client() {
   uv_stream_t* conn = async_tcp_connect("127.0.0.1", "8080");
-  {with_stream(conn) {
+  {using_stream(conn) {
     const char* s;
     for (size_t i = 0; (s = http_request_parts[i]) != NULL; i++) {
       printf("write: %s\n", s);
@@ -288,7 +289,7 @@ void test_as_client() {
     }
     printf("await response...\n");
     char* body = async_read_all(conn);
-    {with_free(body) {
+    {using_free(body) {
       printf("received:\n%s", body);
     }}
   }}
@@ -299,7 +300,7 @@ void test_as_client() {
 -----------------------------------------------------------------*/
 
 static void url_print(const char* urlstr) {
-  {with_url(urlstr, url) {
+  {using_url(urlstr, url) {
     printf("url: %s\n schema: %s\n userinfo: %s\n host: %s\n port: %u\n path: %s\n query: %s\n fragment: %s\n\n",
       urlstr,
       nodec_url_schema(url), nodec_url_userinfo(url), nodec_url_host(url), 
@@ -310,7 +311,7 @@ static void url_print(const char* urlstr) {
 }
 
 static void host_url_print(const char* urlstr) {
-  {with_host_url(urlstr, url) {
+  {using_host_url(urlstr, url) {
     printf("url: %s\n host: %s\n port: %u\n\n",
       urlstr, nodec_url_host(url), nodec_url_port(url)
     );

@@ -65,22 +65,22 @@ bool nodec_buf_is_null(uv_buf_t buf) {
   return (buf.base == NULL || buf.len == 0);
 }
 
-void nodec_buf_ensure_ex(uv_buf_t* buf, size_t needed, size_t initial_size, size_t max_increase) {
-  if (buf->len >= needed) return;  // already big enough
+uv_buf_t nodec_buf_ensure_ex(uv_buf_t buf, size_t needed, size_t initial_size, size_t max_increase) {
+  if (buf.len >= needed) return buf;  // already big enough
   size_t newlen = 0;
-  if (nodec_buf_is_null(*buf)) {
+  if (nodec_buf_is_null(buf)) {
     newlen = (initial_size == 0 ? 8*1024 : initial_size);    // 8KB default
   }
   else {
     if (max_increase == 0) max_increase = 4 * 1024 * 1024; // 4MB max increase default
-    newlen = buf->len + (buf->len > max_increase ? max_increase : buf->len);  // double up to max increase
+    newlen = buf.len + (buf.len > max_increase ? max_increase : buf.len);  // double up to max increase
   }
   if (newlen < needed)  newlen = needed;   // ensure at least `needed` space
-  *buf = nodec_buf_realloc(*buf, newlen);  // and reallocate
+  return nodec_buf_realloc(buf, newlen);  // and reallocate
 }
 
-void nodec_buf_ensure(uv_buf_t* buf, size_t needed) {
-  nodec_buf_ensure_ex(buf, needed, 0, 0);
+uv_buf_t nodec_buf_ensure(uv_buf_t buf, size_t needed) {
+  return nodec_buf_ensure_ex(buf, needed, 0, 0);
 }
 
 

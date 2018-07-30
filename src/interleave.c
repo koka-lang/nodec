@@ -39,7 +39,7 @@ static void  _interleave_n(size_t n, lh_actionfun** actions, lh_value* arg_resul
   volatile size_t* todo = nodec_alloc(size_t);
   {defer(nodec_freev, lh_value_ptr((void*)todo)){
     *todo = n;
-    {with_channel(channel) {      
+    {using_channel(channel) {      
       for (size_t i = 0; i < n; i++) {
         interleave_strand_args args = {
           actions[i],
@@ -96,7 +96,7 @@ void interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]) {
   }
   else {
     lh_exception* exn = NULL;
-    {with_zero_alloc_n(n, lh_exception*, exceptions) {
+    {using_zero_alloc_n(n, lh_exception*, exceptions) {
       interleave_n(n, actions, arg_results, exceptions);
       // rethrow the first exception and release the others
       for (size_t i = 0; i < n; i++) {
@@ -131,7 +131,7 @@ lh_value async_firstof(lh_actionfun* action1, lh_value arg1, lh_actionfun* actio
   lh_actionfun* actions[2]     = { &firstof_action, &firstof_action };
   lh_value      arg_results[2] = { lh_value_any_ptr(&args[0]), lh_value_any_ptr(&args[1]) };
   lh_exception* exceptions[2]  = { NULL, NULL };
-  {with_cancel_scope() {
+  {using_cancel_scope() {
     interleave_n(2, actions, arg_results, exceptions);
   }}
   if (exceptions[0] != NULL) {

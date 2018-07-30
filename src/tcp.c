@@ -160,7 +160,7 @@ static void connect_cb(uv_connect_t* req, int status) {
 uv_stream_t* async_tcp_connect_at(const struct sockaddr* addr) {
   uv_tcp_t* tcp = nodec_tcp_alloc();
   {on_abort(nodec_tcp_freev, lh_value_ptr(tcp)) {
-    {with_req(uv_connect_t, req) {
+    {using_req(uv_connect_t, req) {
       nodec_check(uv_tcp_connect(req, tcp, addr, &connect_cb));
       async_await_once((uv_req_t*)req);
     }}
@@ -172,7 +172,7 @@ uv_stream_t* async_tcp_connect(const char* host, const char* service) {
   struct addrinfo* info = async_getaddrinfo(host, (service==NULL ? "http" : service), NULL);
   if (info==NULL) nodec_check(UV_EINVAL);
   uv_stream_t* tcp = NULL;
-  {with_addrinfo(info) {
+  {using_addrinfo(info) {
     tcp = async_tcp_connect_at(info->ai_addr);
   }}
   return tcp;
@@ -249,7 +249,7 @@ static lh_value tcp_servev(lh_value argsv) {
   tcp_serve_args args = *((tcp_serve_args*)lh_ptr_value(argsv));  
   do {
     uv_stream_t* client = async_tcp_channel_receive(args.ch);
-    {with_stream(client) {
+    {using_stream(client) {
       lh_exception* exn;
       tcp_client_args cargs = { id, args.timeout, client, args.serve, 5, args.arg };
       lh_try( &exn, &tcp_serve_keepalive, lh_value_any_ptr(&cargs)); 
@@ -273,15 +273,15 @@ void async_tcp_server_at(const struct sockaddr* addr, int backlog, int max_inter
                            lh_value arg) 
 {
   tcp_channel_t* ch = nodec_tcp_listen_at(addr, backlog);
-  {with_tcp_channel(ch) {
-    {with_alloc(tcp_serve_args, sargs) {
+  {using_tcp_channel(ch) {
+    {using_alloc(tcp_serve_args, sargs) {
       sargs->ch = ch;
       sargs->timeout = timeout;
       sargs->serve = servefun;
       sargs->arg = arg;
       sargs->on_exn = (on_exn == NULL ? &async_log_tcp_exn : on_exn);
-      {with_alloc_n(max_interleaving, lh_actionfun*, actions) {
-        {with_alloc_n(max_interleaving, lh_value, args) {
+      {using_alloc_n(max_interleaving, lh_actionfun*, actions) {
+        {using_alloc_n(max_interleaving, lh_value, args) {
           for (int i = 0; i < max_interleaving; i++) {
             actions[i] = &tcp_servev;
             args[i] = lh_value_any_ptr(sargs);

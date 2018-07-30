@@ -46,7 +46,7 @@ static void _async_timer_resume(uv_timer_t* timer) {
 void async_wait(uint64_t timeout) {
   uv_timer_t* timer = nodec_timer_alloc();
   {defer(nodec_timer_freev, lh_value_ptr(timer)) {
-    {with_req(uv_req_t, req) {  // use a dummy request so we can await the timer handle
+    {using_req(uv_req_t, req) {  // use a dummy request so we can await the timer handle
       timer->data = req;
       nodec_check(uv_timer_start(timer, &_async_timer_resume, timeout, 0));
       async_await_owned(req, timer);
