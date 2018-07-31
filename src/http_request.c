@@ -82,6 +82,7 @@ static const char* http_headers_lookup_from(http_headers_t* headers, const char*
       }
       else {
         // found another entry.. we string append into the first entry and NULL this one out
+        if (nodec_buf_is_null(newvalue)) newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(found->value));
         newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(","));
         newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(h->value));
         http_header_clear(h);  // clear the current entry
