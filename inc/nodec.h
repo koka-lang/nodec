@@ -126,6 +126,8 @@ uv_buf_t nodec_buf_realloc(uv_buf_t buf, size_t len);
 uv_buf_t nodec_buf_ensure(uv_buf_t buf, size_t needed);
 uv_buf_t nodec_buf_ensure_ex(uv_buf_t buf, size_t needed, size_t initial_size, size_t max_increase);
 
+uv_buf_t nodec_buf_append_into(uv_buf_t buf1, uv_buf_t buf2);
+
 bool nodec_buf_is_null(uv_buf_t buf);
 void nodec_buf_free(uv_buf_t buf);
 void nodec_bufref_free(uv_buf_t* buf);

@@ -83,6 +83,13 @@ uv_buf_t nodec_buf_ensure(uv_buf_t buf, size_t needed) {
   return nodec_buf_ensure_ex(buf, needed, 0, 0);
 }
 
+uv_buf_t nodec_buf_append_into(uv_buf_t buf1, uv_buf_t buf2) {
+  size_t needed = buf1.len + buf2.len;
+  uv_buf_t buf = nodec_buf_ensure_ex(buf1, needed, needed, 0);
+  memcpy(buf.base + buf1.len, buf2.base, buf2.len);
+  buf.base[buf.len] = 0;
+  return buf;
+}
 
 
 

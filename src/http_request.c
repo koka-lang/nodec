@@ -82,28 +82,14 @@ static const char* http_headers_lookup_from(http_headers_t* headers, const char*
       }
       else {
         // found another entry.. we string append into the first entry and NULL this one out
-        size_t n = strlen(h->value);
-        // reallocate
-        if (newvalue.base == NULL) {
-          size_t m = strlen(found->value);
-          newvalue.base = nodec_alloc_n(m + n + 2, char);
-          memcpy(newvalue.base, found->value, m);
-          newvalue.len = (uv_buf_len_t)m;
-        }
-        else {
-          newvalue.base = nodec_realloc_n(newvalue.base, newvalue.len + n + 2, char);  // 2: , + 0
-        }
-        // append comma and the current value
-        newvalue.base[newvalue.len] = ',';
-        memcpy(newvalue.base + newvalue.len + 1, h->value, n);
-        newvalue.len += (uv_buf_len_t)n + 1;
-        newvalue.base[newvalue.len] = 0;
+        newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(","));
+        newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(h->value));
         http_header_clear(h);  // clear the current entry
       }
     }
   }
   if (found == NULL) return NULL;
-  if (newvalue.base != NULL) {
+  if (!nodec_buf_is_null(newvalue)) {
     // update our found entry with the new appended value
     if (found->_do_free) {
       nodec_free(found->value);
