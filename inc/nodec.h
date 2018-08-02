@@ -112,6 +112,11 @@ void async_wait(uint64_t timeout);
 // Yield asynchronously to other strands.
 void async_yield();
 
+
+// Get the current time as a RFC1123 internet date.
+// Caches previous results to increase efficiency.
+const char* nodec_inet_date_now();
+
 /* ----------------------------------------------------------------------------
   File system (fs)
 -----------------------------------------------------------------------------*/

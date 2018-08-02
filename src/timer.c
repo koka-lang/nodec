@@ -8,6 +8,7 @@
 #include "nodec-primitive.h"
 #include "nodec-internal.h"
 #include <assert.h>
+#include <time.h>
 
 static uv_handle_t* handle_of_timer(uv_timer_t* timer) {
   return (uv_handle_t*)timer;
@@ -92,3 +93,37 @@ uv_errno_t _uv_set_timeout(uv_loop_t* loop, uv_timeoutfun* cb, void* arg, uint64
 
 
 
+/* ----------------------------------------------------------------------------
+  Get current Date in fixed size RFC 1123 format; 
+  updated at most once a second for efficiency
+  Sun, 06 Nov 1994 08:49:37 GMT
+-----------------------------------------------------------------------------*/
+
+
+#define INET_DATE_LEN 29
+
+const char* nodec_inet_date( const time_t * const now )
+{
+  static char inet_date[INET_DATE_LEN + 1] = "Thu, 01 Jan 1972 00:00:00 GMT";
+  static time_t inet_time = 0;
+
+  static const char* days[7] =
+    { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+  static const char* months[12] =
+    { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+  if (*now == inet_time) return inet_date;
+  struct tm tm;
+  gmtime_s(&tm, now);
+  strftime(inet_date, INET_DATE_LEN + 1, "---, %d --- %Y %H:%M:%S GMT", &tm);
+  if (tm.tm_wday >= 0 && tm.tm_wday < 7) memcpy(inet_date, days[tm.tm_wday], 3);
+  if (tm.tm_mon >= 0 && tm.tm_mon < 12) memcpy(inet_date + 8, months[tm.tm_mon], 3);
+  return inet_date;
+}
+
+const char* nodec_inet_date_now() {
+  time_t now;
+  time(&now);
+  return nodec_inet_date(&now);
+}

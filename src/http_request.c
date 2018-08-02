@@ -482,14 +482,14 @@ void http_out_send_status_headers(http_out_t* out, http_status_t status, bool en
   // send status
   if (status == 0) status = HTTP_STATUS_OK;
   char line[256];
-  snprintf(line, 256, "HTTP/1.1 %i %s\r\n", status, nodec_http_status_str(status));
+  snprintf(line, 256, "HTTP/1.1 %i %s\r\nDate: %s\r\n", status, nodec_http_status_str(status), nodec_inet_date_now());
   line[255] = 0;
   http_out_send_headers(out, line, (end ? "Content-Length: 0\r\n\r\n" : NULL));
 }
 
 void http_out_send_request_headers(http_out_t* out, http_method_t method, const char* url, bool end) {
   char prefix[512];
-  snprintf(prefix, 512, "%s %s HTTP/1.1\r\n", nodec_http_method_str(method), url);
+  snprintf(prefix, 512, "%s %s HTTP/1.1\r\nDate: %s\r\n", nodec_http_method_str(method), url, nodec_inet_date_now());
   prefix[511] = 0;
   http_out_send_headers(out, prefix, (end ? "\r\n" : NULL));
 }
