@@ -16,9 +16,10 @@ static void addrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
 struct addrinfo* async_getaddrinfo(const char* node, const char* service, const struct addrinfo* hints) {
   struct addrinfo* info = NULL;
   {using_req(uv_getaddrinfo_t,req) {
-    nodec_check(uv_getaddrinfo(async_loop(), req, &addrinfo_cb, node, service, hints));
-    async_await_once((uv_req_t*)req);
-    info = req->addrinfo;
+    nodec_check_msg(uv_getaddrinfo(async_loop(), req, &addrinfo_cb, node, service, hints), node);
+    uv_errno_t err = asyncx_await_once((uv_req_t*)req);
+    if (err != UV_EAI_NONAME) nodec_check_msg(err, node);
+    if (err==0) info = req->addrinfo;
   }}
   return info;
 }

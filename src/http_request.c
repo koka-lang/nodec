@@ -607,7 +607,7 @@ void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_h
 
 lh_value async_http_connect(const char* host, http_connect_fun* connectfun, lh_value arg) {
   lh_value result = lh_value_null;
-  uv_stream_t* conn = async_tcp_connect(host, "http");
+  uv_stream_t* conn = async_tcp_connect(host);
   {using_stream(conn) {
     http_in_t in;
     http_in_init(&in, conn, false);

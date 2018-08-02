@@ -49,22 +49,24 @@ void async_await_file(uv_fs_t* req, uv_file owner) {
   Stat
 -----------------------------------------------------------------*/
 
-uv_errno_t asyncx_stat(const char* path, uv_stat_t* stat ) {
-  nodec_zero(uv_stat_t,stat);
-  uv_errno_t err = 0;
-  {using_fs_req(req, loop){
-    nodec_check(uv_fs_stat(loop, req, path, &async_fs_resume));
-    err = asyncx_await_fs(req);
-    if (err == 0) *stat = req->statbuf;
-  }}
-  return err; 
-}
 
 uv_stat_t async_stat(const char* path) {
   uv_stat_t stat;
   nodec_check_msg(asyncx_stat(path, &stat), path);
   return stat;
 }
+
+uv_errno_t asyncx_stat(const char* path, uv_stat_t* stat) {
+  nodec_zero(uv_stat_t, stat);
+  uv_errno_t err = 0;
+  {using_fs_req(req, loop) {
+    nodec_check(uv_fs_stat(loop, req, path, &async_fs_resume));
+    err = asyncx_await_fs(req);
+    if (err == 0) *stat = req->statbuf;
+  }}
+  return err;
+}
+
 
 uv_stat_t async_fstat(uv_file file) {
   uv_stat_t stat; 
@@ -100,11 +102,11 @@ uv_file async_fopen(const char* path, int flags, int mode) {
   return file;
 }
 
-void nodec_fclose(uv_file file) {
+static void nodec_fclose(uv_file file) {
   nodec_owner_release((void*)((intptr_t)file));
 }
 
-void nodec_fclosev(lh_value filev) {
+static void nodec_fclosev(lh_value filev) {
   nodec_fclose((uv_file)lh_int_value(filev));
 }
 
@@ -128,7 +130,7 @@ static size_t _async_fread_into(uv_file file, uv_buf_t buf, int64_t file_offset)
   return read;
 }
 
-static void async_file_closev(lh_value vfile) {
+static void async_fclosev(lh_value vfile) {
   uv_file file = lh_int_value(vfile);
   if (file >= 0) async_fclose(file);
 }
@@ -151,7 +153,7 @@ lh_value using_async_fopen(const char* path, int flags, int mode, nodec_file_fun
   args.file = async_fopen(path, flags, 0);
   return lh_finally(
     &_fopen_action, lh_value_any_ptr(&args),
-    &async_file_closev, lh_value_int(args.file)
+    &async_fclosev, lh_value_int(args.file)
   );
 }
 

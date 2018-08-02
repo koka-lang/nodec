@@ -69,8 +69,12 @@ uv_errno_t asyncx_await(uv_req_t* uvreq, uint64_t timeout, void* owner) {
   return err;
 }
 
+uv_errno_t asyncx_await_once(uv_req_t* uvreq) {
+  return asyncx_await(uvreq, 0, NULL);
+}
+
 void async_await_once(uv_req_t* uvreq) {
-  nodec_check(asyncx_await(uvreq,0,NULL));
+  nodec_check(asyncx_await_once(uvreq));
 }
 
 void async_await_owned(uv_req_t* uvreq, void* owner) {

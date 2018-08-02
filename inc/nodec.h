@@ -36,6 +36,43 @@ typedef struct _channel_t channel_t;
 void nodec_throw(int err);
 void nodec_throw_msg(int err, const char* msg);
 
+/* ----------------------------------------------------------------------------
+Buffers are `uv_buf_t` which contain a `base` pointer and the
+available `len` bytes. These buffers are usually passed by value.
+-----------------------------------------------------------------------------*/
+
+// Initialize a libuv buffer which is a record with a data pointer and its length.
+uv_buf_t nodec_buf(const void* data, size_t len);
+uv_buf_t nodec_buf_str(const char* s);
+uv_buf_t nodec_buf_strdup(const char* s);
+
+// Create a NULL buffer, i.e. `nodec_buf(NULL,0)`.
+uv_buf_t nodec_buf_null();
+
+// Create and allocate a buffer
+uv_buf_t nodec_buf_alloc(size_t len);
+uv_buf_t nodec_buf_realloc(uv_buf_t buf, size_t len);
+
+// Ensure a buffer has at least `needed` size.
+// If `buf` is null, use 8kb for initial size, and after that use doubling of at most 4mb increments.
+uv_buf_t nodec_buf_ensure(uv_buf_t buf, size_t needed);
+uv_buf_t nodec_buf_ensure_ex(uv_buf_t buf, size_t needed, size_t initial_size, size_t max_increase);
+// Fit a buffer to `needed` size. Might increase the buffer size, or
+// Reallocate to a smaller size if it was larger than 128 bytes with more than 20% wasted.
+uv_buf_t nodec_buf_fit(uv_buf_t buf, size_t needed);
+
+uv_buf_t nodec_buf_append_into(uv_buf_t buf1, uv_buf_t buf2);
+
+bool nodec_buf_is_null(uv_buf_t buf);
+void nodec_buf_free(uv_buf_t buf);
+void nodec_bufref_free(uv_buf_t* buf);
+void nodec_bufref_freev(lh_value bufref);
+
+// Use a scoped buffer; pass the buffer by reference so it will free
+// the final memory that `bufref->base` points to (and not the initial value)
+#define using_buf(bufref)                 defer(nodec_bufref_freev,lh_value_any_ptr(bufref))
+#define using_on_abort_free_buf(bufref)   on_abort(nodec_bufref_freev,lh_value_any_ptr(bufref))
+
 
 /* ----------------------------------------------------------------------------
   Cancelation scope
@@ -88,7 +125,7 @@ void        async_fclose(uv_file file);
 
 void        async_fread_into(uv_file file, uv_buf_t buf, int64_t file_offset);
 uv_buf_t    async_fread_buf(uv_file file, size_t max, int64_t file_offset);
-uv_buf_t    async_fread_all(uv_file file, size_t max);
+uv_buf_t    async_fread_buf_all(uv_file file, size_t max);
 
 typedef uv_fs_t nodec_scandir_t;
 void        nodec_scandir_free(nodec_scandir_t* scanreq);
@@ -107,34 +144,6 @@ typedef lh_value(nodec_file_fun)(uv_file file, lh_value arg);
 lh_value    using_async_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
 
 
-/* ----------------------------------------------------------------------------
-  Buffers are `uv_buf_t` which contain a `base` pointer and the
-  available `len` bytes. These buffers are usually passed by value.
------------------------------------------------------------------------------*/
-
-// Initialize a libuv buffer which is a record with a data pointer and its length.
-uv_buf_t nodec_buf(const void* data, size_t len);
-uv_buf_t nodec_buf_str(const char* s);
-
-// Create a NULL buffer, i.e. `nodec_buf(NULL,0)`.
-uv_buf_t nodec_buf_null();
-
-// Create and allocate a buffer
-uv_buf_t nodec_buf_alloc(size_t len);
-uv_buf_t nodec_buf_realloc(uv_buf_t buf, size_t len);
-
-uv_buf_t nodec_buf_ensure(uv_buf_t buf, size_t needed);
-uv_buf_t nodec_buf_ensure_ex(uv_buf_t buf, size_t needed, size_t initial_size, size_t max_increase);
-
-uv_buf_t nodec_buf_append_into(uv_buf_t buf1, uv_buf_t buf2);
-
-bool nodec_buf_is_null(uv_buf_t buf);
-void nodec_buf_free(uv_buf_t buf);
-void nodec_bufref_free(uv_buf_t* buf);
-void nodec_bufref_freev(lh_value bufref);
-
-#define using_buf(buf)                 defer(nodec_bufref_freev,lh_value_any_ptr(buf))
-#define using_on_abort_free_buf(buf)   on_abort(nodec_bufref_freev,lh_value_any_ptr(buf))
 
 /* ----------------------------------------------------------------------------
   Streams
@@ -148,23 +157,29 @@ void        async_shutdown(uv_stream_t* stream);
 #define using_stream(s) \
     defer_exit(async_shutdown(s),&nodec_stream_freev,lh_value_ptr(s))
 
+// Configure a stream for reading; Normally not necessary to call explicitly
+// unless special configuration needs exist.
 void        nodec_read_start(uv_stream_t* stream, size_t read_max, size_t alloc_init, size_t alloc_max);
 void        nodec_read_stop(uv_stream_t* stream);
 void        nodec_read_restart(uv_stream_t* stream);
+// Set the maximal amount of bytes that can be read from a stream (4Gb default)
 void        nodec_set_read_max(uv_stream_t* stream, size_t read_max);
 
+// Reading from a stream. `async_read_buf` is most efficient.
 uv_buf_t    async_read_buf(uv_stream_t* stream);
 uv_buf_t    async_read_buf_available(uv_stream_t* stream);
 uv_buf_t    async_read_buf_line(uv_stream_t* stream);
 uv_buf_t    async_read_buf_all(uv_stream_t* stream);
 size_t      async_read_into_all(uv_stream_t* stream, uv_buf_t buf, bool* at_eof);
+// Read a buffer from a stream up to and including the first occurrence of `pat`; the pattern
+// can be at most 8 bytes long. Returns the number of bytes read in `*idx` (if not NULL).
 uv_buf_t    async_read_buf_including(uv_stream_t* stream, size_t* idx, const void* pat, size_t pat_len);
 
 char*       async_read(uv_stream_t* stream);
 char*       async_read_all(uv_stream_t* stream);
 char*       async_read_line(uv_stream_t* stream);
 
-
+// Writing to a stream. `async_write_bufs` is most primitive.
 void        async_write(uv_stream_t* stream, const char* s);
 void        async_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count);
 void        async_write_strs(uv_stream_t* stream, const char* strings[], size_t string_count );
@@ -178,6 +193,7 @@ void        async_write_buf(uv_stream_t* stream, uv_buf_t buf);
 void nodec_ip4_addr(const char* ip, int port, struct sockaddr_in* addr);
 void nodec_ip6_addr(const char* ip, int port, struct sockaddr_in6* addr);
 
+// Define `name` as an ip4 or ip6 address
 #define define_ip4_addr(ip,port,name)  \
   struct sockaddr_in name##_ip4; nodec_ip4_addr(ip,port,&name##_ip4); \
   struct sockaddr* name = (struct sockaddr*)&name##_ip4;
@@ -211,8 +227,14 @@ void            nodec_tcp_bind(uv_tcp_t* handle, const struct sockaddr* addr, un
 tcp_channel_t*  nodec_tcp_listen(uv_tcp_t* tcp, int backlog, bool channel_owns_tcp);
 uv_stream_t*    async_tcp_channel_receive(tcp_channel_t* ch);
 
-// Convenience:
 
+// TCP connection
+
+uv_stream_t* async_tcp_connect_at(const struct sockaddr* addr, const char* host /* can be NULL, used for errors */);
+uv_stream_t* async_tcp_connect_at_host(const char* host, const char* service /*NULL="http"*/);
+uv_stream_t* async_tcp_connect(const char* host);
+
+// TCP server
 
 typedef struct _tcp_server_config_t {
   int       backlog;           // maximal pending request queue length
@@ -229,8 +251,6 @@ void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* confi
                           nodec_tcp_servefun* servefun, lh_actionfun* on_exn,
                           lh_value arg);
 
-uv_stream_t* async_tcp_connect_at(const struct sockaddr* addr);
-uv_stream_t* async_tcp_connect(const char* host, const char* service /*NULL="http"*/);
 
 
 /* ----------------------------------------------------------------------------
@@ -249,32 +269,42 @@ const char* nodec_http_status_str(http_status_t code);
 const char* nodec_http_method_str(http_method_t method);
 
 
+// HTTP(S) server
 
 typedef void (nodec_http_servefun)(int strand_id, http_in_t* in, http_out_t* out, lh_value arg);
 
 void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_http_servefun* servefun, lh_value arg);
 
 
+// HTTP(S) connection
+
 typedef lh_value (http_connect_fun)(http_in_t* in, http_out_t* out, lh_value arg);
 
 lh_value async_http_connect(const char* url, http_connect_fun* connectfun, lh_value arg);
 
 
+/* ----------------------------------------------------------------------------
+  HTTP incoming connection
+-----------------------------------------------------------------------------*/
+
 void   http_in_clear(http_in_t* in);
 void   http_in_clearv(lh_value inv);
+
+// Initialize a incoming connection at a server or client by reading the headers block
 size_t async_http_in_init(http_in_t* in, uv_stream_t* stream, bool is_request );
 
-const char*   http_in_url(http_in_t* in);
-http_status_t   http_in_status(http_in_t* in);
-http_method_t http_in_method(http_in_t* in);
-uint64_t      http_in_content_length(http_in_t* in);
+// Query the incoming connection
+const char*   http_in_url(http_in_t* in);            // server
+http_method_t http_in_method(http_in_t* in);         // server
+http_status_t   http_in_status(http_in_t* in);       // client
+uint64_t      http_in_content_length(http_in_t* in); 
 const char*   http_in_header(http_in_t* in, const char* name);
 const char*   http_in_header_next(http_in_t* in, const char** value, size_t* iter);
 
 // use this on connections to wait for a response
 size_t async_http_in_read_headers(http_in_t* in);
 
-// Read body in parts; returned buffer is only valid until the next read
+// Read HTTP body in parts; returned buffer is only valid until the next read
 // Returns a null buffer when the end is reached.
 uv_buf_t      async_http_in_read_body_buf(http_in_t* in);
 
@@ -285,9 +315,8 @@ uv_buf_t      async_http_in_read_body(http_in_t* in, size_t initial_size);
 
 
 /*-----------------------------------------------------------------
-
+  HTTP outgoing
 -----------------------------------------------------------------*/
-
 
 void http_out_init(http_out_t* out, uv_stream_t* stream);
 void http_out_init_server(http_out_t* out, uv_stream_t* stream, const char* server_name);
@@ -318,6 +347,7 @@ void http_out_send_chunk_buf(http_out_t* out, uv_buf_t buf);
 void http_out_send_chunk(http_out_t* out, const char* s);
 void http_out_send_chunked_end(http_out_t* out);
 
+
 /* ----------------------------------------------------------------------------
    URL's
 -----------------------------------------------------------------------------*/
@@ -340,6 +370,7 @@ const char* nodec_url_path(const nodec_url_t* url);
 const char* nodec_url_query(const nodec_url_t* url);
 const char* nodec_url_fragment(const nodec_url_t* url);
 const char* nodec_url_userinfo(const nodec_url_t* url);
+const char* nodec_url_port_str(const nodec_url_t* url);
 uint16_t    nodec_url_port(const nodec_url_t* url);
 bool        nodec_url_is_ip6(const nodec_url_t* url);
 

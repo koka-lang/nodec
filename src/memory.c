@@ -30,6 +30,11 @@ uv_buf_t nodec_buf_str(const char* s) {
   return nodec_buf(s, (s==NULL ? 0 : strlen(s)) );
 }
 
+uv_buf_t nodec_buf_strdup(const char* s) {
+  return nodec_buf_str(nodec_strdup(s));
+}
+
+
 uv_buf_t nodec_buf_null() {
   return nodec_buf(NULL, 0);
 }
@@ -91,7 +96,18 @@ uv_buf_t nodec_buf_append_into(uv_buf_t buf1, uv_buf_t buf2) {
   return buf;
 }
 
-
+uv_buf_t nodec_buf_fit(uv_buf_t buf, size_t needed) {
+  if (nodec_buf_is_null(buf) || buf.len < needed) {
+    return nodec_buf_ensure_ex(buf, needed, needed, 0);
+  }
+  else if (buf.len > 128 && (needed / 4) * 5 <= buf.len) {
+    // more than 128 bytes and more than 20% wasted; we reallocate if possible
+    return nodec_buf_realloc(buf, needed);
+  }
+  else {
+    return buf;
+  }
+}
 
 /*-----------------------------------------------------------------
   Wrappers for malloc

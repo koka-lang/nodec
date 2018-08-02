@@ -41,6 +41,8 @@ uv_loop_t* async_loop();
 // This is used for 'one of' callbacks, like `fs_stat`.
 void       async_await_once(uv_req_t* req);
 
+uv_errno_t asyncx_await_once(uv_req_t* uvreq);
+
 // Await an asynchronous request. 
 // If canceled, the request is deallocated when the `owner` (usually a `uv_handle_t*`)
 // is released. This is used for streams or timers.

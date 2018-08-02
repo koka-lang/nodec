@@ -157,25 +157,36 @@ static void connect_cb(uv_connect_t* req, int status) {
   async_req_resume((uv_req_t*)req, status >= 0 ? 0 : status);
 }
 
-uv_stream_t* async_tcp_connect_at(const struct sockaddr* addr) {
+uv_stream_t* async_tcp_connect_at(const struct sockaddr* addr, const char* host) {
   uv_tcp_t* tcp = nodec_tcp_alloc();
   {on_abort(nodec_tcp_freev, lh_value_ptr(tcp)) {
     {using_req(uv_connect_t, req) {
-      nodec_check(uv_tcp_connect(req, tcp, addr, &connect_cb));
-      async_await_once((uv_req_t*)req);
+      nodec_check_msg(uv_tcp_connect(req, tcp, addr, &connect_cb), host);
+      nodec_check_msg(asyncx_await_once((uv_req_t*)req),host);
     }}
   }}
   return (uv_stream_t*)tcp;
 }
 
-uv_stream_t* async_tcp_connect(const char* host, const char* service) {
+uv_stream_t* async_tcp_connect_at_host(const char* host, const char* service) {
   struct addrinfo* info = async_getaddrinfo(host, (service==NULL ? "http" : service), NULL);
-  if (info==NULL) nodec_check(UV_EINVAL);
+  if (info==NULL) nodec_check_msg(UV_EAI_NONAME,host);
   uv_stream_t* tcp = NULL;
   {using_addrinfo(info) {
-    tcp = async_tcp_connect_at(info->ai_addr);
+    tcp = async_tcp_connect_at(info->ai_addr, host);
   }}
   return tcp;
+}
+
+uv_stream_t* async_tcp_connect(const char* host) {
+  nodec_url_t* url = nodec_parse_url(host);
+  uv_stream_t* stream = NULL;
+  {using_url(url) {
+    const char* port = nodec_url_port_str(url);
+    if (port == NULL) port = nodec_url_schema(url);
+    stream = async_tcp_connect_at_host(nodec_url_host(url), port);
+  }}
+  return stream;
 }
 
 /*-----------------------------------------------------------------

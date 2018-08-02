@@ -28,8 +28,16 @@ static nodec_url_t*  nodecx_parse_urlx(const char* url, bool onlyhost) {
   int err;
   nodec_url_t* nurl = nodec_zero_alloc(nodec_url_t);
   {on_abort(nodec_url_freev, lh_value_ptr(nurl)) {
-    nurl->urlmem = nodec_buf_str(nodec_strdup(url));
+    // we prepend "http://" if no protocol is specified
+    if (strstr(url, "://") == NULL) {
+      uv_buf_t buf = nodec_buf_str(nodec_strdup("http://"));     
+      nurl->urlmem = nodec_buf_append_into(buf,nodec_buf_str(url));
+    }
+    else {
+      nurl->urlmem = nodec_buf_str(nodec_strdup(url));
+    }
     nurl->original = url;
+    // and parse it
     err = http_parser_parse_url(nurl->urlmem.base, nurl->urlmem.len, (onlyhost ? 1 : 0), &nurl->parts);
     if (err == 0) {
       // 0-terminate all fields in our private memory
@@ -113,6 +121,10 @@ const char* nodec_url_fragment(const nodec_url_t* url) {
 const char* nodec_url_userinfo(const nodec_url_t* url) {
   return nodec_url_field(url, UF_USERINFO);
 }
+const char* nodec_url_port_str(const nodec_url_t* url) {
+  return nodec_url_field(url, UF_PORT);
+}
+
 uint16_t nodec_url_port(const nodec_url_t* url) {
   return url->parts.port;
 }
