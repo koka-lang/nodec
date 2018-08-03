@@ -442,6 +442,24 @@ static lh_value _async_req_register(lh_resume r, lh_value localv, lh_value arg) 
   return lh_tail_resume(r, localv, lh_value_null);
 }
 
+static bool uvreq_is_pending(uv_req_t* uvreq) {
+  if (uvreq == NULL) return false;
+  switch (uvreq->type) {
+  case UV_WRITE: {
+    uv_stream_t* s = ((uv_write_t*)uvreq)->handle;
+#ifdef _WIN32
+    bool pending = s->reqs_pending > 0;
+#else
+    // TODO: do the right check for unix
+    bool pending = true; // conservative for now
+#endif
+    return pending;
+  }
+  default: 
+    return true; // conservate for now; this might delay deallocation of requests but is safe
+  }
+}
+
 // Deallocate outstanding requests when their owner is released
 // This usualy only happens for explicitly canceled requests
 static lh_value _async_owner_release(lh_resume r, lh_value localv, lh_value arg) {
@@ -452,7 +470,18 @@ static lh_value _async_owner_release(lh_resume r, lh_value localv, lh_value arg)
       async_request_t* next = req->next;
       if (req->canceled_err != 0 && req->owner == owner) {
         assert(req->uvreq != NULL && req->uvreq->data == (void*)(-1));
-        nodec_req_force_free(req->uvreq);
+        // We cannot always free a request at this point either.. it might
+        // still be in the pending request queue of the uv event loop
+        // we check for that first:
+        if (uvreq_is_pending(req->uvreq)) {
+          // assume it will be called later on, and set the data to -3 to be deallocated 
+          // at that time
+          req->uvreq->data = (void*)(-3);
+        }
+        else {
+          // free it now
+          nodec_req_force_free(req->uvreq);
+        }
         async_request_free(req);  // will unlink properly
       }
       req = next;
