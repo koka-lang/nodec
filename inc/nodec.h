@@ -276,9 +276,9 @@ const char* nodec_http_method_str(http_method_t method);
 
 // HTTP(S) server
 
-typedef void (nodec_http_servefun)(int strand_id, http_in_t* in, http_out_t* out, lh_value arg);
+typedef void (nodec_http_servefun)();
 
-void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_http_servefun* servefun, lh_value arg);
+void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_http_servefun* servefun);
 
 
 // HTTP(S) connection
@@ -351,6 +351,40 @@ void http_out_send_chunk_bufs(http_out_t* out, uv_buf_t bufs[], size_t count);
 void http_out_send_chunk_buf(http_out_t* out, uv_buf_t buf);
 void http_out_send_chunk(http_out_t* out, const char* s);
 void http_out_send_chunked_end(http_out_t* out);
+
+
+/*-----------------------------------------------------------------
+  HTTP server implicitly bound request and response
+-----------------------------------------------------------------*/
+
+int         http_strand_id();
+http_in_t*  http_req();
+http_out_t* http_resp();
+
+void http_resp_add_header(const char* field, const char* value);
+void http_resp_send(http_status_t status, const char* body /* can be NULL */);
+void http_resp_send_ok();
+void http_resp_send_bufs(http_status_t status, uv_buf_t bufs[], size_t count);
+void http_resp_send_buf(http_status_t status, uv_buf_t buf );
+
+const char*   http_req_url();
+http_method_t http_req_method();
+uint64_t      http_req_content_length();
+const char*   http_req_header(const char* name);
+const char*   http_req_header_next(const char** value, size_t* iter);
+
+// Read HTTP body in parts; returned buffer is only valid until the next read
+// Returns a null buffer when the end is reached.
+uv_buf_t      async_req_read_body_buf();
+
+// Read the full body; the returned buf should be deallocated by the caller.
+// Pass `initial_size` 0 to automatically use the content-length or initially
+// received buffer size.
+uv_buf_t      async_req_read_body_all(size_t initial_size);
+
+// Read the full body as a string. Only works if the body cannot contain 0 characters.
+const char*   async_req_read_body();
+
 
 
 /* ----------------------------------------------------------------------------

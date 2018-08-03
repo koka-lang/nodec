@@ -35,7 +35,7 @@ typedef struct _http_header_t {
 typedef struct _http_headers_t {
   size_t  count;         // how many are there
   size_t  size;          // how big is our array
-  http_header_t* elems;  // realloc on demand, perhaps start with size 8 and do +8 as it comes?  
+  http_header_t* elems;  // realloc on demand, start with size 16 and double as more comes  
 } http_headers_t;
 
 static void http_headers_add(http_headers_t* headers, const char* name, const char* value, bool strdup) {
@@ -561,28 +561,28 @@ void http_out_send_chunked_end(http_out_t* out) {
   HTTP server function
 -----------------------------------------------------------------*/
 
+implicit_define(http_current_req);
+implicit_define(http_current_resp);
+implicit_define(http_current_strand_id);
 
-typedef struct _server_args_t {
-  nodec_http_servefun* servefun;
-  lh_value arg;
-} server_args_t;
-
-static void http_serve(int id, uv_stream_t* client, lh_value argsv) {
-  server_args_t* args = (server_args_t*)lh_ptr_value(argsv);
-  http_in_t http_in;
-  http_in_init(&http_in, client, true);
-  {defer(http_in_clearv, lh_value_any_ptr(&http_in)) {
-    http_out_t http_out;
-    http_out_init_server(&http_out, client, "NodeC/0.1");
-    {defer(http_out_clearv, lh_value_any_ptr(&http_out)) {
-      async_http_in_read_headers(&http_in);
-      args->servefun(id, &http_in, &http_out, args->arg);
+static void http_serve(int id, uv_stream_t* client, lh_value servefunv) {
+  nodec_http_servefun* servefun = (nodec_http_servefun*)lh_ptr_value(servefunv);
+  {using_implicit(lh_value_int(id), http_current_strand_id) {
+    http_in_t http_in;
+    http_in_init(&http_in, client, true);
+    {using_implicit_defer(http_in_clearv, lh_value_any_ptr(&http_in), http_current_req) {
+      http_out_t http_out;
+      http_out_init_server(&http_out, client, "NodeC/0.1");
+      {using_implicit_defer(http_out_clearv, lh_value_any_ptr(&http_out), http_current_resp) {
+        async_http_in_read_headers(&http_in);
+        servefun();
+      }}
     }}
   }}
 }
 
 
-void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_http_servefun* servefun, lh_value arg)
+void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_http_servefun* servefun)
 {
   tcp_server_config_t default_config = tcp_server_config();
   if (config == NULL) config = &default_config;
@@ -600,9 +600,8 @@ void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_h
       addr = (struct sockaddr*)&addr4;
     }
   }}
-  server_args_t args = { servefun, arg };
   async_tcp_server_at(addr, config, http_serve,
-    &async_write_http_exnv, lh_value_any_ptr(&args));
+    &async_write_http_exnv, lh_value_ptr(servefun));
 }
 
 lh_value async_http_connect(const char* host, http_connect_fun* connectfun, lh_value arg) {
@@ -620,4 +619,92 @@ lh_value async_http_connect(const char* host, http_connect_fun* connectfun, lh_v
     }}
   }}
   return result;
+}
+
+
+/*-----------------------------------------------------------------
+HTTP server implicitly bound request and response
+-----------------------------------------------------------------*/
+
+
+int http_strand_id() {
+  return lh_int_value(implicit_get(http_current_strand_id));
+}
+
+http_in_t*  http_req() {
+  return (http_in_t*)lh_ptr_value(implicit_get(http_current_req));
+}
+
+http_out_t* http_resp() {
+  return (http_out_t*)lh_ptr_value(implicit_get(http_current_resp));
+}
+
+// Responses
+
+void http_resp_add_header(const char* field, const char* value) {
+  http_out_add_header(http_resp(), field, value);
+}
+
+void http_resp_send(http_status_t status, const char* body /* can be NULL */) {
+  http_out_t* resp = http_resp();
+  http_out_send_status_headers(resp, status, body == NULL);
+  if (body != NULL) http_out_send_body(resp, body);
+}
+
+void http_resp_send_ok() {
+  http_resp_send(HTTP_STATUS_OK, NULL);
+}
+
+
+void http_resp_send_bufs(http_status_t status, uv_buf_t bufs[], size_t count) {
+  http_out_t* resp = http_resp();
+  http_out_send_status_headers(resp, status, bufs == NULL || count == 0);
+  if (bufs != NULL && count > 0) http_out_send_body_bufs(resp, bufs, count);
+}
+
+void http_resp_send_buf(http_status_t status, uv_buf_t buf) {
+  http_out_t* resp = http_resp();
+  http_out_send_status_headers(resp, status, nodec_buf_is_null(buf));
+  if (!nodec_buf_is_null(buf)) http_out_send_body_buf(resp, buf);
+}
+
+
+// Requests
+
+const char* http_req_url() {
+  return http_in_url(http_req());
+}
+
+http_method_t http_req_method() {
+  return http_in_method(http_req());
+}
+
+uint64_t http_req_content_length() {
+  return http_in_content_length(http_req());
+}
+
+const char* http_req_header(const char* name) {
+  return http_in_header(http_req(), name);
+}
+
+const char* http_req_header_next(const char** value, size_t* iter) {
+  return http_in_header_next(http_req(), value, iter);
+}
+
+// Read HTTP body in parts; returned buffer is only valid until the next read
+// Returns a null buffer when the end is reached.
+uv_buf_t  async_req_read_body_buf() {
+  return async_http_in_read_body_buf(http_req());
+}
+
+// Read the full body; the returned buf should be deallocated by the caller.
+// Pass `initial_size` 0 to automatically use the content-length or initially
+// received buffer size.
+uv_buf_t async_req_read_body_all(size_t initial_size) {
+  return async_http_in_read_body(http_req(), initial_size);
+}
+
+// Read the full body as a string. Only works if the body cannot contain 0 characters.
+const char* async_req_read_body() {
+  return async_req_read_body_all(0).base;
 }
