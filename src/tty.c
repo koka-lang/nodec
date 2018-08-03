@@ -39,6 +39,7 @@ static void nodec_tty_free(tty_t* tty) {
 
 
 void _nodec_tty_freev(lh_value ttyv) {
+  async_tty_shutdown();
   uv_tty_reset_mode();
   nodec_tty_free((tty_t*)lh_ptr_value(ttyv));
 }

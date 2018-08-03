@@ -119,11 +119,13 @@ typedef struct _firstof_args_t {
   lh_value      arg;
 } firstof_args_t;
 
+static void firstof_cancel(lh_value _arg) {
+  async_scoped_cancel();
+}
+
 static lh_value firstof_action(lh_value argsv) {
   firstof_args_t* args = (firstof_args_t*)lh_ptr_value(argsv);
-  lh_value result = args->action(args->arg);
-  async_scoped_cancel();
-  return result;
+  return lh_finally( args->action, args->arg, &firstof_cancel, lh_value_null);
 }
 
 lh_value async_firstof(lh_actionfun* action1, lh_value arg1, lh_actionfun* action2, lh_value arg2, bool* first ) {
@@ -134,7 +136,8 @@ lh_value async_firstof(lh_actionfun* action1, lh_value arg1, lh_actionfun* actio
   {using_cancel_scope() {
     interleave_n(2, actions, arg_results, exceptions);
   }}
-  if (exceptions[0] != NULL) {
+  if (exceptions[0] != NULL && 
+      (exceptions[1]==NULL || lh_exception_is_cancel(exceptions[0]))) {
     if (first) *first = false;
     lh_exception_free(exceptions[0]);
     if (exceptions[1]!=NULL) lh_throw(exceptions[1]);

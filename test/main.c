@@ -129,12 +129,16 @@ void http_in_print(http_in_t* in) {
   }}
 }
 
+static void http_req_print() {
+  http_in_print(http_req());
+}
 
-static void test_http_serve(int strand_id, http_in_t* in, http_out_t* out, lh_value arg) {
+static void test_http_serve() {
+  int strand_id = http_strand_id();
   fprintf(stderr, "strand %i entered\n", strand_id);
   // input
-  printf("strand %i request, url: %s, content length: %llu\n", strand_id, http_in_url(in), http_in_content_length(in));
-  http_in_print(in);
+  printf("strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), http_req_content_length());
+  http_req_print();
 
   // work
   printf("waiting %i secs...\n", 2 + strand_id); 
@@ -142,15 +146,15 @@ static void test_http_serve(int strand_id, http_in_t* in, http_out_t* out, lh_va
   //check_uverr(UV_EADDRINUSE);
 
   // response
-  http_out_add_header(out,"Content-Type","text/html; charset=utf-8");
-  http_out_send_status_headers(out,HTTP_STATUS_OK,true);
+  http_resp_add_header("Content-Type","text/html; charset=utf-8");
+  http_resp_send_ok();
   printf("request handled\n\n\n");
 }
 
 static void test_tcp() {
   tcp_server_config_t config = tcp_server_config();
   config.max_interleaving = 3;
-  async_http_server_at( "127.0.0.1:8080", &config, &test_http_serve, lh_value_null );
+  async_http_server_at( "127.0.0.1:8080", &config, &test_http_serve);
 }
 
 
@@ -171,7 +175,7 @@ static lh_value test_ttyv(lh_value _arg) {
 
 static void test_tcp_tty() {
   bool first;
-  async_firstof(&test_tcpv, lh_value_null, &test_ttyv, lh_value_null, &first);
+  async_firstof(&test_ttyv, lh_value_null, &test_tcpv, lh_value_null, &first);
   // printf( first ? "http server exited\n" : "http server was terminated by the user\n");
 }
 
@@ -280,7 +284,7 @@ const char* http_request_parts[] = {
 };
 
 void test_as_client() {
-  uv_stream_t* conn = async_tcp_connect("127.0.0.1", "8080");
+  uv_stream_t* conn = async_tcp_connect("127.0.0.1:8080");
   {using_stream(conn) {
     const char* s;
     for (size_t i = 0; (s = http_request_parts[i]) != NULL; i++) {

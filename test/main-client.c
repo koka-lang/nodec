@@ -15,7 +15,7 @@ const char* http_request_parts[] = {
 };
 
 void test_as_client() {
-  uv_stream_t* conn = async_tcp_connect("127.0.0.1", "8080");
+  uv_stream_t* conn = async_tcp_connect("127.0.0.1:8080");
   {using_stream(conn) {
     const char* s;
     for (size_t i = 0; (s = http_request_parts[i]) != NULL; i++) {
@@ -67,7 +67,7 @@ static void test_as_client2_connection(uv_stream_t* conn) {
 -----------------------------------------------------------------*/
 
 void test_as_client_one_byte_at_a_time() {
-  uv_stream_t* conn = async_tcp_connect("127.0.0.1", "8080");
+  uv_stream_t* conn = async_tcp_connect("127.0.0.1:8080");
   {using_stream(conn) {
     test_as_client2_connection(conn);
   }}
@@ -113,7 +113,7 @@ static uv_buf_t read_file(const char* path) {
 static void test_client_file(const char* path) {
   uv_buf_t buf = read_file(path);
   {using_free(buf.base) {
-    uv_stream_t* conn = async_tcp_connect("127.0.0.1", "8080");
+    uv_stream_t* conn = async_tcp_connect("127.0.0.1:8080");
     {using_stream(conn) {
       async_write_buf(conn, buf);
       printf("await response...\n");
