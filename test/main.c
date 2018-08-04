@@ -141,41 +141,41 @@ static void test_http_serve() {
   http_req_print();
 
   // work
-  printf("waiting %i secs...\n", 2 + strand_id); 
-  async_wait(1000 + strand_id*1000);
+  printf("waiting %i secs...\n", 2); 
+  //async_wait(1000);
   //check_uverr(UV_EADDRINUSE);
 
   // response
-  http_resp_add_header("Content-Type","text/html; charset=utf-8");
-  http_resp_send_ok();
+  if (strstr(http_req_header("Accept"), "text/html")) {
+    http_resp_send(HTTP_STATUS_OK, response_body, "guess");
+  }
+  else {
+    http_resp_send_ok();
+  }
   printf("request handled\n\n\n");
 }
 
 static void test_tcp() {
   tcp_server_config_t config = tcp_server_config();
   config.max_interleaving = 3;
-  async_http_server_at( "127.0.0.1:8080", &config, &test_http_serve);
+  const char* host = "127.0.0.1:8080";
+  printf("serving at: %s\n", host);
+  async_http_server_at( host, NULL, &test_http_serve);
 }
 
 
-static lh_value test_tcpv(lh_value _arg) {
-  test_tcp();
-  return lh_value_null;
-}
 
-static lh_value test_ttyv(lh_value _arg) {
+static void wait_tty() {
   {using_tty() {
     async_tty_write("press enter to quit the server...");
     const char* s = async_tty_readline();
     nodec_free(s);
     async_tty_write("canceling server...");
   }}
-  return lh_value_null;
 }
 
 static void test_tcp_tty() {
-  bool first;
-  async_firstof(&test_ttyv, lh_value_null, &test_tcpv, lh_value_null, &first);
+  async_firstof(&test_tcp, &wait_tty);
   // printf( first ? "http server exited\n" : "http server was terminated by the user\n");
 }
 

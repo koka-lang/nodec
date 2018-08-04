@@ -52,9 +52,12 @@ static void async_write_http_err(uv_stream_t* client, http_status_t code, const 
   char headers[256];
   snprintf(headers, 255, http_error_headers, code, reason, strlen(body));
   headers[255] = 0;
-  const char* strs[2] = { headers, body };
   fprintf(stderr, "HTTP error: %i (%s): %s\n\n", code, reason, (msg == NULL ? "" : msg));
-  async_write_strs(client, strs, 2);
+  if (!uv_is_closing((uv_handle_t*)client)) {
+    // don't raise exceptions..
+    asyncx_write(client, nodec_buf_str(headers));
+    asyncx_write(client, nodec_buf_str(body));
+  }
 }
 
 void throw_http_err_str(http_status_t status, const char* msg) {

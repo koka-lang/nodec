@@ -35,9 +35,15 @@ static void async_shutdown_resume(uv_shutdown_t* req, uverr_t status) {
 /* ----------------------------------------------------------------------------
   Await write requests
 -----------------------------------------------------------------------------*/
+
 static void async_await_write(uv_write_t* req, uv_stream_t* owner) {
   async_await_owned((uv_req_t*)req,owner);
 }
+
+static uv_errno_t asyncx_await_write(uv_write_t* req, uv_stream_t* owner) {
+  return asyncx_await_owned((uv_req_t*)req, owner);
+}
+
 
 static void async_write_resume(uv_write_t* req, uverr_t status) {
   async_req_resume((uv_req_t*)req, status);
@@ -698,4 +704,14 @@ void async_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count) {
     nodec_check(uv_write(req, stream, bufs, (unsigned)buf_count, &async_write_resume));
     async_await_write(req,stream);
   }}
+}
+
+uv_errno_t asyncx_write(uv_stream_t* stream, uv_buf_t buf ) {
+  uv_errno_t err = 0;
+  {using_req(uv_write_t, req) {
+    // Todo: verify it is ok to have bufs on the stack or if we need to heap alloc them first for safety
+    err = uv_write(req, stream, &buf, 1, &async_write_resume);
+    if (err==0) err = asyncx_await_write(req, stream);
+  }}
+  return err;
 }

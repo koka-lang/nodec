@@ -29,7 +29,7 @@ static nodec_url_t*  nodecx_parse_urlx(const char* url, bool onlyhost) {
   nodec_url_t* nurl = nodec_zero_alloc(nodec_url_t);
   {on_abort(nodec_url_freev, lh_value_ptr(nurl)) {
     // we prepend "http://" if no protocol is specified
-    if (strstr(url, "://") == NULL) {
+    if (strstr(url, "://") == NULL && !onlyhost) {
       uv_buf_t buf = nodec_buf_str(nodec_strdup("http://"));     
       nurl->urlmem = nodec_buf_append_into(buf,nodec_buf_str(url));
     }

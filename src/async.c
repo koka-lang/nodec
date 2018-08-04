@@ -65,7 +65,9 @@ uv_errno_t asyncxx_await(uv_req_t* uvreq, uint64_t timeout, void* owner) {
 
 uv_errno_t asyncx_await(uv_req_t* uvreq, uint64_t timeout, void* owner) {
   uv_errno_t err = asyncxx_await(uvreq, timeout, owner); 
-  if (err == UV_ETHROWCANCEL) lh_throw_cancel();
+  if (err == UV_ETHROWCANCEL) {
+    lh_throw_cancel();
+  }
   return err;
 }
 
@@ -77,8 +79,12 @@ void async_await_once(uv_req_t* uvreq) {
   nodec_check(asyncx_await_once(uvreq));
 }
 
+uv_errno_t asyncx_await_owned(uv_req_t* uvreq, void* owner) {
+  return asyncx_await(uvreq, 0, owner);
+}
+
 void async_await_owned(uv_req_t* uvreq, void* owner) {
-  nodec_check(asyncx_await(uvreq,0,owner));
+  nodec_check(asyncx_await_owned(uvreq,owner));
 }
 
 
@@ -476,6 +482,8 @@ static bool uvreq_is_pending(uv_req_t* uvreq) {
 #endif
     return pending;
   }
+  case UV_UNKNOWN_REQ: // Our internal requests for timers for example
+    return false;  
   default: 
     return true; // conservate for now; this might delay deallocation of requests but is safe
   }

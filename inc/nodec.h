@@ -349,12 +349,12 @@ void http_out_send_status_headers(http_out_t* out, http_status_t status, bool en
 void http_out_send_request_headers(http_out_t* out, http_method_t method, const char* url, bool end);
 
 // Send full body at once
-void http_out_send_body_bufs(http_out_t* out, uv_buf_t bufs[], size_t count);
-void http_out_send_body_buf(http_out_t* out, uv_buf_t buf);
-void http_out_send_body(http_out_t* out, const char* s);
+void http_out_send_body_bufs(http_out_t* out, uv_buf_t bufs[], size_t count, const char* content_type);
+void http_out_send_body_buf(http_out_t* out, uv_buf_t buf, const char* content_type);
+void http_out_send_body(http_out_t* out, const char* s, const char* content_type);
 
 // Send chunked up body
-void http_out_send_chunked_start(http_out_t* out);
+void http_out_send_chunked_start(http_out_t* out, const char* content_type);
 void http_out_send_chunk_bufs(http_out_t* out, uv_buf_t bufs[], size_t count);
 void http_out_send_chunk_buf(http_out_t* out, uv_buf_t buf);
 void http_out_send_chunk(http_out_t* out, const char* s);
@@ -370,10 +370,10 @@ http_in_t*  http_req();
 http_out_t* http_resp();
 
 void http_resp_add_header(const char* field, const char* value);
-void http_resp_send(http_status_t status, const char* body /* can be NULL */);
+void http_resp_send(http_status_t status, const char* body /* can be NULL */, const char* content_type);
 void http_resp_send_ok();
-void http_resp_send_bufs(http_status_t status, uv_buf_t bufs[], size_t count);
-void http_resp_send_buf(http_status_t status, uv_buf_t buf );
+void http_resp_send_bufs(http_status_t status, uv_buf_t bufs[], size_t count, const char* content_type);
+void http_resp_send_buf(http_status_t status, uv_buf_t buf, const char* content_type);
 
 const char*   http_req_url();
 http_method_t http_req_method();

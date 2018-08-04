@@ -269,10 +269,11 @@ static lh_value tcp_servev(lh_value argsv) {
         // wrap in try itself in case writing gives an error too!
         lh_exception* wrap = lh_exception_alloc(exn->code, exn->msg);
         wrap->data = client;
-        lh_exception* ignore_exn;
+        lh_exception* ignore_exn = NULL;
         lh_try(&ignore_exn, args.on_exn, lh_value_any_ptr(wrap));
         lh_exception_free(wrap);
         lh_exception_free(exn);
+        lh_exception_free(ignore_exn);
       }
     }}
   } while (true);  // should be until termination
@@ -293,13 +294,15 @@ void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* confi
       sargs->serve = servefun;
       sargs->arg = arg;
       sargs->on_exn = (on_exn == NULL ? &async_log_tcp_exn : on_exn);
-      {using_alloc_n(config->max_interleaving, lh_actionfun*, actions) {
-        {using_alloc_n(config->max_interleaving, lh_value, args) {
-          for (int i = 0; i < config->max_interleaving; i++) {
+      size_t n = config->max_interleaving;
+      if (n == 0) n = 512;
+      {using_alloc_n(n, lh_actionfun*, actions) {
+        {using_alloc_n(n, lh_value, args) {
+          for (int i = 0; i < n; i++) {
             actions[i] = &tcp_servev;
             args[i] = lh_value_any_ptr(sargs);
           }
-          interleave(config->max_interleaving, actions, args);
+          interleave(n, actions, args);
         }}
       }}
     }}

@@ -442,14 +442,15 @@ void http_out_clearv(lh_value respv) {
 void http_out_add_header(http_out_t* out, const char* field, const char* value) {
   size_t n = strlen(field);
   size_t m = strlen(value);
-  size_t extra = n + m + 3; // :\r\n
+  size_t extra = n + m + 4; // : \r\n
   out->head = nodec_buf_ensure(out->head, out->head_offset + extra);
   char* p = out->head.base + out->head_offset;
   size_t available = out->head.len - out->head_offset;
   strncpy_s(p, available, field, n);
   p[n] = ':';
-  strncpy_s(p + n + 1, available - n - 1, value, m);
-  strncpy_s(p + n + m + 1, available - n - m - 1, "\r\n", 2);
+  p[n + 1] = ' ';
+  strncpy_s(p + n + 2, available - n - 2, value, m);
+  strncpy_s(p + n + m + 2, available - n - m - 2, "\r\n", 2);
   out->head_offset += extra;
 }
 
@@ -506,26 +507,52 @@ static void http_out_send_bufs(http_out_t* out, uv_buf_t bufs[], size_t count, c
     xbufs[i + 1] = bufs[i];
   }
   // create pre- and postfix
-  char prefix[64];
-  snprintf(prefix, 64, prefix_fmt, total);
+  char prefix[256];
+  snprintf(prefix, 256, prefix_fmt, total);
   xbufs[0] = nodec_buf(prefix, strlen(prefix));
   xbufs[count + 1] = nodec_buf_str(postfix);
   // and write it out as a chunk
   async_write_bufs(out->stream, xbufs, count + 2);
 }
 
+bool starts_with(const char* s, const char* prefix) {
+  return (_strnicmp(s, prefix, strlen(prefix)) == 0);
+}
+
+const char* http_guess_content_type(const char* content_type, const char* start_content) {
+  if (content_type == NULL || (strlen(content_type)>0 && _stricmp(content_type,"guess")!=0)) return content_type;
+  // guess
+  if (starts_with(start_content, "<!DOCTYPE") || starts_with(start_content,"<html")) {
+    return "text/html; charset=utf-8";
+  }
+  else if (starts_with(start_content,"{") || starts_with(start_content, "[")) {
+    return "application/json; charset=utf-8";
+  }
+  else {
+    return "text/plain; charset=utf-8";
+  }
+}
 
 // Send entire body at once
-void http_out_send_body_bufs(http_out_t* out, uv_buf_t bufs[], size_t count) {
-  http_out_send_bufs(out, bufs, count, "Content-Length: %l\r\n\r\n", ""); // decimal length
+void http_out_send_body_bufs(http_out_t* out, uv_buf_t bufs[], size_t count, const char* content_type) {
+  if (count>0) content_type = http_guess_content_type(content_type, bufs[0].base);
+  char prefix_fmt[256];
+  // decimal length of size_t: zu
+  if (content_type != NULL) {
+    snprintf(prefix_fmt, 256, "Content-Type: %s\r\nContent-Length: %%zu\r\n\r\n", content_type);
+  }
+  else {
+    strncpy_s(prefix_fmt, 256, "Content-Length: %zu\r\n\r\n", 256);
+  }
+  http_out_send_bufs(out, bufs, count, prefix_fmt, ""); 
 }
 
-void http_out_send_body_buf(http_out_t* out, uv_buf_t buf) {
-  http_out_send_body_bufs(out, &buf, 1);
+void http_out_send_body_buf(http_out_t* out, uv_buf_t buf, const char* content_type) {
+  http_out_send_body_bufs(out, &buf, 1, content_type);
 }
 
-void http_out_send_body(http_out_t* out, const char* s) {
-  http_out_send_body_buf(out, nodec_buf_str(s));
+void http_out_send_body(http_out_t* out, const char* s, const char* content_type) {
+  http_out_send_body_buf(out, nodec_buf_str(s), content_type);
 }
 
 
@@ -534,12 +561,20 @@ void http_out_send_body(http_out_t* out, const char* s) {
 // Send body in chunks
 
 // Start chunked body send
-void http_out_send_chunked_start(http_out_t* out) {
-  http_out_send_raw_str(out, "Transfer-Encoding: chunked\r\n\r\n");
+void http_out_send_chunked_start(http_out_t* out, const char* content_type) {
+  content_type = http_guess_content_type(content_type, "");
+  char prefix[256];
+  if (content_type != NULL && strlen(content_type) > 0) {
+    snprintf(prefix, 256, "Content-Type: %s\r\nTransfer-Encoding: chunked\r\n\r\n", content_type);
+  }
+  else {
+    strncpy_s(prefix, 256, "Transfer-Encoding: chunked\r\n\r\n", 256);
+  }
+  http_out_send_raw_str(out, prefix);
 }
 
 void http_out_send_chunk_bufs(http_out_t* out, uv_buf_t bufs[], size_t count) {
-  http_out_send_bufs(out, bufs, count, "%X\r\n", "\r\n"); // hexadecimal length
+  http_out_send_bufs(out, bufs, count, "%zX\r\n", "\r\n"); // hexadecimal length of size_t
 }
 
 void http_out_send_chunk_buf(http_out_t* out, uv_buf_t buf) {
@@ -645,27 +680,27 @@ void http_resp_add_header(const char* field, const char* value) {
   http_out_add_header(http_resp(), field, value);
 }
 
-void http_resp_send(http_status_t status, const char* body /* can be NULL */) {
+void http_resp_send(http_status_t status, const char* body /* can be NULL */, const char* content_type) {
   http_out_t* resp = http_resp();
   http_out_send_status_headers(resp, status, body == NULL);
-  if (body != NULL) http_out_send_body(resp, body);
+  if (body != NULL) http_out_send_body(resp, body, content_type);
 }
 
 void http_resp_send_ok() {
-  http_resp_send(HTTP_STATUS_OK, NULL);
+  http_resp_send(HTTP_STATUS_OK, NULL, NULL);
 }
 
 
-void http_resp_send_bufs(http_status_t status, uv_buf_t bufs[], size_t count) {
+void http_resp_send_bufs(http_status_t status, uv_buf_t bufs[], size_t count, const char* content_type) {
   http_out_t* resp = http_resp();
   http_out_send_status_headers(resp, status, bufs == NULL || count == 0);
-  if (bufs != NULL && count > 0) http_out_send_body_bufs(resp, bufs, count);
+  if (bufs != NULL && count > 0) http_out_send_body_bufs(resp, bufs, count, content_type);
 }
 
-void http_resp_send_buf(http_status_t status, uv_buf_t buf) {
+void http_resp_send_buf(http_status_t status, uv_buf_t buf, const char* content_type) {
   http_out_t* resp = http_resp();
   http_out_send_status_headers(resp, status, nodec_buf_is_null(buf));
-  if (!nodec_buf_is_null(buf)) http_out_send_body_buf(resp, buf);
+  if (!nodec_buf_is_null(buf)) http_out_send_body_buf(resp, buf, content_type);
 }
 
 

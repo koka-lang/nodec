@@ -42,6 +42,7 @@ uv_loop_t* async_loop();
 void       async_await_once(uv_req_t* req);
 
 uv_errno_t asyncx_await_once(uv_req_t* uvreq);
+uv_errno_t asyncx_await_owned(uv_req_t* uvreq, void* owner);
 
 // Await an asynchronous request. 
 // If canceled, the request is deallocated when the `owner` (usually a `uv_handle_t*`)
@@ -66,6 +67,9 @@ bool          channel_is_full(channel_t* channel);
 
 // Used to implement keep-alive
 uverr_t asyncx_stream_await_available(uv_stream_t* stream, uint64_t timeout);
+
+
+uv_errno_t asyncx_write(uv_stream_t* stream, uv_buf_t buf);
 
 
 #endif
