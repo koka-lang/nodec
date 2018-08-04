@@ -26,7 +26,13 @@ static lh_value _interleave_strand(lh_value vargs) {
   volatile ssize_t* todo = args->todo;
   *args->arg_res = lh_value_null;
   *args->exception = NULL;
-  *args->arg_res = lh_try_all(args->exception, args->action, arg);
+  if (async_scoped_is_canceled()) {
+    // an earlier strand called `cancel` already, don't start this strand
+    *args->exception = lh_exception_alloc_cancel();
+  }
+  else {
+    *args->arg_res = lh_try_all(args->exception, args->action, arg);
+  }
   *todo = *todo - 1;
   return lh_value_null;
 }

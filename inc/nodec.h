@@ -108,7 +108,7 @@ lh_value async_timeout(lh_actionfun* action, lh_value arg, uint64_t timeout, boo
 
 // Return when the either action is done, canceling the other.
 // Return `true` if the first action was finished first.
-typedef void (nodec_actionfun_t)(void);
+typedef void (nodec_actionfun_t)();
 bool async_firstof(nodec_actionfun_t* action1, nodec_actionfun_t* action2);
 
 // Return the value of the first returning action, canceling the other.
