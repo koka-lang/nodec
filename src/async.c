@@ -188,10 +188,18 @@ void nodec_req_force_freev(lh_value uvreq) {
   nodec_req_force_free(lh_ptr_value(uvreq));
 }
 
-// When deallocating a request, a `-1` in the data field will not deallocate 
+
+// When deallocating a request, some special values in the data field will not deallocate 
 // quite yet.
+
+#define UVREQ_FREE_ON_RESUME          ((void*)(-3))
+#define UVREQ_FREE_ON_OWNER_RELEASE   ((void*)(-1))
+
 void nodec_req_free(uv_req_t* uvreq) {
-  if ((uvreq != NULL && uvreq->data != (void*)(-1)) && uvreq->data != (void*)(-3)) {
+  if ((uvreq != NULL && 
+       uvreq->data != UVREQ_FREE_ON_OWNER_RELEASE) && 
+       uvreq->data != UVREQ_FREE_ON_RESUME) 
+  {
     nodec_req_force_free(uvreq);
   }
 }
@@ -225,6 +233,7 @@ struct _async_request_t {
   uint64_t              due;
   async_resume_fun*     resumefun;
 };
+
 
 static async_request_t* async_request_alloc(uv_req_t* uvreq, bool nocancel, uint64_t timeout, void* owner) {
   async_request_t* req = nodec_zero_alloc(async_request_t);
@@ -272,21 +281,23 @@ static void async_request_resume(async_request_t* req, uv_req_t* uvreq, int err)
     // if we were canceled explicitly, we cannot deallocate the orginal
     // request right away because it might still modified, or its callback
     // might be called once the request is satisfied. Therefore, if there
-    // is an owner set, we put `-1` in the uvrequest `data` field to signify
+    // is an owner set, we put `UVREQ_FREE_ON_OWNER_RELEASE` in the 
+    // uvrequest `data` field to signify
     // it should not yet be deallocated -- but only once the owner is
     // deallocated (usually a `uv_handle_t*`)._
-    // We use -3 to signify to deallocate once the original callback is called.
+    // We use `UVREQ_FREE_ON_RESUME` to signify to deallocate once the 
+    // original callback is called.
     // this is for request that have no particular owner and where the callback
     // will be called! like most file system requests
     if (req->canceled_err!=0) {
       err = req->canceled_err;
       if (req->owner != NULL) {
-        uvreq->data = (void*)(-1); // signify to not deallocate in `nodec_req_free`
+        uvreq->data = UVREQ_FREE_ON_OWNER_RELEASE; // signify to not deallocate in `nodec_req_free`
         // we leave it in the outstanding request where it will be freed when
         // the `owner` (usually a `uv_handle_t`) gets released.
       }
       else {
-        uvreq->data = (void*)(-3); // signify to not deallocate in `nodec_req_free`
+        uvreq->data = UVREQ_FREE_ON_RESUME; // signify to not deallocate in `nodec_req_free`
         // we free the request object, and free the uv request once its callback
         // is called
         async_request_free(req);
@@ -309,11 +320,11 @@ void async_req_resume(uv_req_t* uvreq, int err) {
   assert(uvreq != NULL);
   async_request_t* req = (async_request_t*)uvreq->data;
   if (req != NULL) {
-    if (req == (void*)(-3)) {
+    if (req == UVREQ_FREE_ON_RESUME) {
       // was explicitly canceled, deallocate now
       nodec_req_force_free(uvreq);
     }
-    else if (req == (void*)(-1)) {
+    else if (req == UVREQ_FREE_ON_OWNER_RELEASE) {
       // was expliclitly canceled, but has an owner (usually a uv_handle_t) and
       // will be deallocated later when the owner is released
     }
@@ -333,8 +344,8 @@ void async_req_resume(uv_req_t* uvreq, int err) {
 typedef struct _async_local_t {
   uv_loop_t*      loop;      // current event loop
   async_request_t requests;  // empty request to be the head of the queue of outstanding requests
-  async_request_t canceled;  // empty request to be the head of the queue of canceled requests 
-                             // these are deallocated when their owner is released.
+                             // these can include canceled request that are deallocated when
+                             // their owner is released (`uvreq.data` == UVREQ_FREE_ON_OWNER_RELEASE)                              
   uv_timer_t*     periodic;  // interval timer. currently only used for timing out requests
                              // on a slow interval but in the future could be used for light
                              // weight timers sharing a single handle.
@@ -364,7 +375,7 @@ static void _periodic_cb(uv_timer_t* timer) {
         // cancel failed; cancel it explicitly (through the eventloop instead using a 0 timeout)
         // this is risky as async_req_resume can be invoked twice and the first return might 
         // trigger deallocation of the uv_req_t structure which would be too early. Therefore,
-        // we set its `data` field to `-1` and check for that before deallocating a request.
+        // we set its `data` field to `UVREQ_FREE_ON_XXX` and check for that before deallocating a request.
         _uv_set_timeout(local->loop, &_periodic_force_timeout_cb, req->uvreq, 0);
         // todo: dont ignore errors here?
       }
@@ -389,7 +400,7 @@ static lh_value _async_uv_cancel(lh_resume resume, lh_value localv, lh_value sco
         // cancel failed; cancel it explicitly (through the eventloop instead using a 0 timeout)
         // this is risky as async_req_resume can be invoked twice and the first return might 
         // trigger deallocation of the uv_req_t structure which would be too early. Therefore,
-        // we set its `data` field to `-1` and check for that before deallocating a request.
+        // we set its `data` field to `UVREQ_FREE_ON_XXX` and check for that before deallocating a request.
         _uv_set_timeout(local->loop, &_explicit_cancel_cb, req->uvreq, 0);
         // todo: dont ignore errors here?
       }
@@ -469,14 +480,14 @@ static lh_value _async_owner_release(lh_resume r, lh_value localv, lh_value arg)
     for (async_request_t* req = local->requests.next; req != NULL; ) {  // TODO: linear lookup -- but probably ok.
       async_request_t* next = req->next;
       if (req->canceled_err != 0 && req->owner == owner) {
-        assert(req->uvreq != NULL && req->uvreq->data == (void*)(-1));
+        assert(req->uvreq != NULL && req->uvreq->data == UVREQ_FREE_ON_OWNER_RELEASE);
         // We cannot always free a request at this point either.. it might
         // still be in the pending request queue of the uv event loop
         // we check for that first:
         if (uvreq_is_pending(req->uvreq)) {
-          // assume it will be called later on, and set the data to -3 to be deallocated 
+          // assume it will be called later on, and set the data to `UVREQ_FREE_ON_RESUME` to be deallocated 
           // at that time
-          req->uvreq->data = (void*)(-3);
+          req->uvreq->data = UVREQ_FREE_ON_RESUME;
         }
         else {
           // free it now
@@ -546,7 +557,6 @@ static lh_value _channel_async_req_await(lh_resume r, lh_value local, lh_value a
   req->resume = r;
   req->local = local;
   if (req->resumefun==NULL) req->resumefun = &_channel_async_req_resume;
-  // todo: register request
   return lh_value_null;  // exit to our local async handler back to interleaved
 }
 
@@ -611,7 +621,7 @@ static lh_value uv_main_try_action(lh_value entry) {
   {using_outer_cancel_scope() {
     lh_try(&exn, uv_main_action, entry);
     if (exn != NULL) {
-      fprintf(stderr,"NodeC: unhandled exception: %s\n", exn->msg);
+      fprintf(stderr,"\nNodeC: unhandled exception: %s\n", exn->msg);
       lh_exception_free(exn);
     }
   }}
