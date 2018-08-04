@@ -89,6 +89,9 @@ lh_value _cancel_scope_alloc();
 // cancelation scope.
 void async_scoped_cancel();
 
+// Is the current scope canceled?
+bool async_scoped_is_canceled();
+
 /* ----------------------------------------------------------------------------
   Asynchronous combinators
 -----------------------------------------------------------------------------*/
@@ -103,8 +106,13 @@ void interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]);
 // General timeout routine over an `action`. 
 lh_value async_timeout(lh_actionfun* action, lh_value arg, uint64_t timeout, bool* timedout);
 
+// Return when the either action is done, canceling the other.
+// Return `true` if the first action was finished first.
+typedef void (nodec_actionfun_t)(void);
+bool async_firstof(nodec_actionfun_t* action1, nodec_actionfun_t* action2);
+
 // Return the value of the first returning action, canceling the other.
-lh_value async_firstof(lh_actionfun* action1, lh_value arg1, lh_actionfun* action2, lh_value arg2, bool* first);
+lh_value async_firstof_ex(lh_actionfun* action1, lh_value arg1, lh_actionfun* action2, lh_value arg2, bool* first, bool ignore_exn);
 
 // Asynchronously wait for `timeout` milli-seconds.
 void async_wait(uint64_t timeout);

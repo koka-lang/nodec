@@ -128,7 +128,7 @@ static lh_value firstof_action(lh_value argsv) {
   return lh_finally( args->action, args->arg, &firstof_cancel, lh_value_null);
 }
 
-lh_value async_firstof(lh_actionfun* action1, lh_value arg1, lh_actionfun* action2, lh_value arg2, bool* first ) {
+lh_value async_firstof_ex(lh_actionfun* action1, lh_value arg1, lh_actionfun* action2, lh_value arg2, bool* first, bool ignore_exn ) {
   firstof_args_t args[2]       = { {action1, arg1}, {action2, arg2} };
   lh_actionfun* actions[2]     = { &firstof_action, &firstof_action };
   lh_value      arg_results[2] = { lh_value_any_ptr(&args[0]), lh_value_any_ptr(&args[1]) };
@@ -136,19 +136,45 @@ lh_value async_firstof(lh_actionfun* action1, lh_value arg1, lh_actionfun* actio
   {using_cancel_scope() {
     interleave_n(2, actions, arg_results, exceptions);
   }}
-  if (exceptions[0] != NULL && 
-      (exceptions[1]==NULL || lh_exception_is_cancel(exceptions[0]))) {
-    if (first) *first = false;
-    lh_exception_free(exceptions[0]);
+
+  // pick the winner
+  int pick = 0;
+  // ignore cancel exceptions
+  if (lh_exception_is_cancel(exceptions[0])) pick = 1;
+  else if (lh_exception_is_cancel(exceptions[1])) pick = 0;
+  // if not ignoring exceptions, pick the first exception raising one
+  else if (!ignore_exn) {
+    if (exceptions[0] != NULL) pick = 0;
+    else if (exceptions[1] != NULL) pick = 1;
+  }
+  // or pick the first one with a result
+  else if (exceptions[0] != NULL) pick = 0;
+  else pick = 1;
+
+  // Return the result
+  if (first) *first = (pick == 0);
+  if (pick==1) {
+    if (exceptions[0]!=NULL) lh_exception_free(exceptions[0]);
     if (exceptions[1]!=NULL) lh_throw(exceptions[1]);
     return arg_results[1];
   }
   else {
-    if (first) *first = true;
     if (exceptions[1]!=NULL) lh_exception_free(exceptions[1]);
     if (exceptions[0]!=NULL) lh_throw(exceptions[0]);
     return arg_results[0];
   }
+}
+
+lh_value _firstof_action(lh_value actionv) {
+  nodec_actionfun_t* action = (nodec_actionfun_t*)lh_ptr_value(actionv);
+  action();
+  return lh_value_null;
+}
+
+bool async_firstof(nodec_actionfun_t* action1, nodec_actionfun_t* action2) {
+  bool first = false;
+  async_firstof_ex(&_firstof_action, lh_value_ptr(action1), &_firstof_action, lh_value_ptr(action2), &first, false);
+  return first;
 }
 
 
@@ -159,5 +185,5 @@ static lh_value _timeout_wait(lh_value timeoutv) {
 }
 
 lh_value async_timeout(lh_actionfun* action, lh_value arg, uint64_t timeout, bool* timedout) {
-  return async_firstof(_timeout_wait, lh_value_longlong(timeout), action, arg, timedout);
+  return async_firstof_ex(_timeout_wait, lh_value_longlong(timeout), action, arg, timedout, false);
 }

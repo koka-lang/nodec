@@ -137,6 +137,7 @@ void nodec_check_msg(uverr_t err, const char* msg) {
 
 typedef struct _cancel_scope_t {
   const struct _cancel_scope_t* parent;
+  bool canceled;
 } cancel_scope_t;
 
 
@@ -149,6 +150,7 @@ static const cancel_scope_t* cancel_scope() {
 lh_value _cancel_scope_alloc() {
   cancel_scope_t* scope = nodec_alloc(cancel_scope_t);
   scope->parent = cancel_scope();
+  scope->canceled = false;
   return lh_value_ptr(scope);
 }
 
@@ -163,12 +165,20 @@ static bool in_scope_of(const cancel_scope_t* scope, const cancel_scope_t* top )
   return (scope == top);
 }
 
-void async_scoped_cancel_under(const cancel_scope_t* scope) {
+void async_scoped_cancel_under(cancel_scope_t* scope) {
+  scope->canceled = true;
   async_uv_cancel(scope);
 }
 
 void async_scoped_cancel() {
-  async_scoped_cancel_under(cancel_scope());
+  async_scoped_cancel_under((cancel_scope_t*)cancel_scope());
+}
+
+bool async_scoped_is_canceled() {
+  for (const cancel_scope_t* scope = cancel_scope(); scope != NULL; scope = scope->parent) {
+    if (scope->canceled) return true;
+  }
+  return false;
 }
 
 
