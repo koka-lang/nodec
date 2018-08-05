@@ -151,7 +151,7 @@ bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
 // ----------------------------------
 // File system convenience functions
 
-char*       async_fread(const char* path);
+char*       async_fread_from(const char* path);
 uv_buf_t    async_fread_buf_from(const char* path);
 
 typedef lh_value(nodec_file_fun)(uv_file file, lh_value arg);
@@ -422,6 +422,16 @@ const char* nodec_url_userinfo(const nodec_url_t* url);
 const char* nodec_url_port_str(const nodec_url_t* url);
 uint16_t    nodec_url_port(const nodec_url_t* url);
 bool        nodec_url_is_ip6(const nodec_url_t* url);
+
+
+/* ----------------------------------------------------------------------------
+  Mime types
+-----------------------------------------------------------------------------*/
+
+const char* nodec_mime_info_from_fname(const char* fname, bool* compressible, const char** charset);
+const char* nodec_mime_from_fname(const char* fname);
+void        nodec_info_from_mime(const char* mime_type, const char** preferred_ext, bool* compressible, const char** charset);
+const char* nodec_ext_from_mime(const char* mime_type);
 
 
 /* ----------------------------------------------------------------------------

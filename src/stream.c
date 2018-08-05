@@ -552,8 +552,10 @@ size_t async_read_await_until(uv_stream_t* stream, const void* pat, size_t pat_l
   bool eof = false;
   find_t find;
   read_stream_find_init(rs, &find, pat, pat_len);
+  bool first_time = true;
   do {
-    eof = async_read_stream_await(rs,true);
+    eof = async_read_stream_await(rs,!first_time);
+    first_time = false;
     toread = read_stream_find(rs,&find);
   } while (toread == 0 && !eof);
   return toread;

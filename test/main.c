@@ -26,7 +26,8 @@ static bool http_try_send(const char* root, const char* path) {
   // open it and return it
   uv_buf_t contents = async_fread_buf_from(fname);
   {using_buf(&contents) {
-    http_resp_send_buf(HTTP_STATUS_OK, contents, "guess");
+    const char* content_type = nodec_mime_from_fname(fname);
+    http_resp_send_buf(HTTP_STATUS_OK, contents, content_type);
   }}
   return true;
 }
@@ -170,17 +171,18 @@ static void http_req_print() {
 
 static void test_http_serve() {
   int strand_id = http_strand_id();
-  fprintf(stderr, "strand %i entered\n", strand_id);
+  //fprintf(stderr, "strand %i entered\n", strand_id);
   // input
-  printf("strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), http_req_content_length());
-  http_req_print();
+  //printf("strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), http_req_content_length());
+  //http_req_print();
 
   // work
   //printf("waiting %i secs...\n", 2); 
   //async_wait(1000);
   //check_uverr(UV_EADDRINUSE);
 
-  http_serve_static("../..", NULL);
+  http_serve_static( "C:/Users/daan/Dropbox/dev/kuma-v5/web" //"../.."
+                   , NULL);
   /*
   // response
   if (strstr(http_req_header("Accept"), "text/html")) {
@@ -190,7 +192,7 @@ static void test_http_serve() {
     http_resp_send_ok();
   }
   */
-  printf("request handled\n\n\n");
+  //printf("request handled\n\n\n");
 }
 
 static void test_tcp() {

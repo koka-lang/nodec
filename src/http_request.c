@@ -253,6 +253,10 @@ size_t async_http_in_read_headers(http_in_t* in )
   uv_buf_t buf = async_read_buf_including(in->stream, &idx, "\r\n\r\n", 4);
   if (idx == 0 || buf.base == NULL || idx > HTTP_MAX_HEADERS) {
     if (buf.base != NULL) nodec_free(buf.base);
+    if (idx == 0) {
+      // eof; means client closed the stream; no problem
+      return 0;
+    }
     throw_http_err((idx > HTTP_MAX_HEADERS ? HTTP_STATUS_PAYLOAD_TOO_LARGE : HTTP_STATUS_BAD_REQUEST));
   }
   // set the default stream read capacity again for futher reading (=1Gb)
@@ -536,10 +540,19 @@ const char* http_guess_content_type(const char* content_type, const char* start_
 // Send entire body at once
 void http_out_send_body_bufs(http_out_t* out, uv_buf_t bufs[], size_t count, const char* content_type) {
   if (count>0) content_type = http_guess_content_type(content_type, bufs[0].base);
+
+  // lookup default character set
+  const char* charset = NULL;
+  if (content_type != NULL && strstr(content_type, "charset") == NULL) {
+    nodec_info_from_mime(content_type, NULL, NULL, &charset);
+  }
+  const char* charset_sep = (charset == NULL ? "" : ";");
+  if (charset == NULL) charset = "";
+
   char prefix_fmt[256];
   // decimal length of size_t: zu
   if (content_type != NULL) {
-    snprintf(prefix_fmt, 256, "Content-Type: %s\r\nContent-Length: %%zu\r\n\r\n", content_type);
+    snprintf(prefix_fmt, 256, "Content-Type: %s%s%s\r\nContent-Length: %%zu\r\n\r\n", content_type, charset_sep, charset);
   }
   else {
     strncpy_s(prefix_fmt, 256, "Content-Length: %zu\r\n\r\n", 256);
@@ -610,13 +623,15 @@ static void http_serve(int id, uv_stream_t* client, lh_value servefunv) {
       http_out_t http_out;
       http_out_init_server(&http_out, client, "NodeC/0.1");
       {using_implicit_defer(http_out_clearv, lh_value_any_ptr(&http_out), http_current_resp) {
-        async_http_in_read_headers(&http_in);
-        char urlpath[1024];
-        snprintf(urlpath,1024,"http://%s%s", http_in_header(&http_in, "Host"), http_in_url(&http_in));
-        const nodec_url_t* url = nodec_parse_url(urlpath);
-        {using_implicit_defer(nodec_url_freev, lh_value_ptr(url), http_current_url) {
-          servefun();
-        }}
+        //printf("strand %i, read headers\n", id);
+        if (async_http_in_read_headers(&http_in) > 0) { // if not closed by client
+          char urlpath[1024];
+          snprintf(urlpath, 1024, "http://%s%s", http_in_header(&http_in, "Host"), http_in_url(&http_in));
+          const nodec_url_t* url = nodec_parse_url(urlpath);
+          {using_implicit_defer(nodec_url_freev, lh_value_ptr(url), http_current_url) {
+            servefun();
+          }}
+        }
       }}
     }}
   }}
