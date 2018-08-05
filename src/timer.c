@@ -102,20 +102,20 @@ uv_errno_t _uv_set_timeout(uv_loop_t* loop, uv_timeoutfun* cb, void* arg, uint64
 
 #define INET_DATE_LEN 29
 
-const char* nodec_inet_date( const time_t * const now )
+static const char* days[7] =
+  { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+static const char* months[12] =
+  { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+const char* nodec_inet_date( time_t now )
 {
   static char inet_date[INET_DATE_LEN + 1] = "Thu, 01 Jan 1972 00:00:00 GMT";
   static time_t inet_time = 0;
 
-  static const char* days[7] =
-    { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-  static const char* months[12] =
-    { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-
-  if (*now == inet_time) return inet_date;
+  if (now == inet_time) return inet_date;
   struct tm tm;
-  gmtime_s(&tm, now);
+  gmtime_s(&tm, &now);
   strftime(inet_date, INET_DATE_LEN + 1, "---, %d --- %Y %H:%M:%S GMT", &tm);
   if (tm.tm_wday >= 0 && tm.tm_wday < 7) memcpy(inet_date, days[tm.tm_wday], 3);
   if (tm.tm_mon >= 0 && tm.tm_mon < 12) memcpy(inet_date + 8, months[tm.tm_mon], 3);
@@ -125,5 +125,29 @@ const char* nodec_inet_date( const time_t * const now )
 const char* nodec_inet_date_now() {
   time_t now;
   time(&now);
-  return nodec_inet_date(&now);
+  return nodec_inet_date(now);
+}
+
+bool nodec_parse_inet_date(const char* date, time_t* t) {
+  struct tm g;
+  memset(&g, 0, sizeof(g));  
+  char month[4];
+  *t = 0;
+  if (date == NULL || strlen(date) != INET_DATE_LEN) return false;
+
+  int res = sscanf_s(date, "%*3s, %2d %3s %4d %2d:%2d:%2d GMT",
+                      &g.tm_mday, month, 4, &g.tm_year,
+                      &g.tm_hour, &g.tm_min, &g.tm_sec);
+  if (res == EOF) return false;
+  
+  month[3] = 0;
+  for (int i = 0; i < 12; i++) {
+    if (strncmp(month, months[i], 3) == 0) {
+      g.tm_mon = i;
+      break;
+    }
+  }
+  g.tm_year -= 1900;
+  *t = _mkgmtime(&g);  // or 'timegm' ? 
+  return true;
 }

@@ -124,6 +124,8 @@ void async_yield();
 // Get the current time as a RFC1123 internet date.
 // Caches previous results to increase efficiency.
 const char* nodec_inet_date_now();
+const char* nodec_inet_date(time_t now);
+bool nodec_parse_inet_date(const char* date, time_t* t);
 
 /* ----------------------------------------------------------------------------
   File system (fs)
