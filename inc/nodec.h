@@ -152,6 +152,7 @@ bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
 // File system convenience functions
 
 char*       async_fread(const char* path);
+uv_buf_t    async_fread_buf_from(const char* path);
 
 typedef lh_value(nodec_file_fun)(uv_file file, lh_value arg);
 lh_value    using_async_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
@@ -376,6 +377,7 @@ void http_resp_send_bufs(http_status_t status, uv_buf_t bufs[], size_t count, co
 void http_resp_send_buf(http_status_t status, uv_buf_t buf, const char* content_type);
 
 const char*   http_req_url();
+const char*   http_req_path();
 http_method_t http_req_method();
 uint64_t      http_req_content_length();
 const char*   http_req_header(const char* name);

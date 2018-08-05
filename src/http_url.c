@@ -97,6 +97,11 @@ static const char* nodec_url_field(const nodec_url_t* url, enum http_parser_url_
   else {
     size_t ofs = url->parts.field_data[f].off;
     size_t len = url->parts.field_data[f].len;
+    if (len > 0 && url->urlmem.base[ofs] == 0) {
+      // for things like "path" that include the initial "/"
+      ofs++;
+      len--;
+    }
     assert(ofs + len <= url->urlmem.len);
     assert(url->urlmem.base[ofs + len] == 0);
     return &url->urlmem.base[ofs];

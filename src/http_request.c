@@ -599,6 +599,7 @@ void http_out_send_chunked_end(http_out_t* out) {
 implicit_define(http_current_req);
 implicit_define(http_current_resp);
 implicit_define(http_current_strand_id);
+implicit_define(http_current_url);
 
 static void http_serve(int id, uv_stream_t* client, lh_value servefunv) {
   nodec_http_servefun* servefun = (nodec_http_servefun*)lh_ptr_value(servefunv);
@@ -610,7 +611,12 @@ static void http_serve(int id, uv_stream_t* client, lh_value servefunv) {
       http_out_init_server(&http_out, client, "NodeC/0.1");
       {using_implicit_defer(http_out_clearv, lh_value_any_ptr(&http_out), http_current_resp) {
         async_http_in_read_headers(&http_in);
-        servefun();
+        char urlpath[1024];
+        snprintf(urlpath,1024,"http://%s%s", http_in_header(&http_in, "Host"), http_in_url(&http_in));
+        const nodec_url_t* url = nodec_parse_url(urlpath);
+        {using_implicit_defer(nodec_url_freev, lh_value_ptr(url), http_current_url) {
+          servefun();
+        }}
       }}
     }}
   }}
@@ -674,6 +680,10 @@ http_out_t* http_resp() {
   return (http_out_t*)lh_ptr_value(implicit_get(http_current_resp));
 }
 
+const nodec_url_t* http_req_parsed_url() {
+  return (const nodec_url_t*)lh_ptr_value(implicit_get(http_current_url));
+}
+
 // Responses
 
 void http_resp_add_header(const char* field, const char* value) {
@@ -712,6 +722,10 @@ const char* http_req_url() {
 
 http_method_t http_req_method() {
   return http_in_method(http_req());
+}
+
+const char* http_req_path() {
+  return nodec_url_path(http_req_parsed_url());
 }
 
 uint64_t http_req_content_length() {

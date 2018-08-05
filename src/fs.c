@@ -184,14 +184,22 @@ uv_buf_t async_fread_buf_all(uv_file file, size_t max ) {
   return async_fread_buf(file, (max > 0 && size > max ? max : size), -1);
 }
 
-static lh_value async_fread_allv(uv_file file, lh_value _arg) {
-  return lh_value_ptr(async_fread_buf_all(file, 0).base);
+static lh_value async_fread_allv(uv_file file, lh_value bufv) {
+  uv_buf_t* buf = (uv_buf_t*)(lh_ptr_value(bufv));
+  *buf = async_fread_buf_all(file, 0);
+  return lh_value_null;
+}
+
+uv_buf_t async_fread_buf_from(const char* path) {
+  uv_buf_t buf = nodec_buf_null();
+  lh_value result = using_async_fopen(path, O_RDONLY, 0, &async_fread_allv, lh_value_any_ptr(&buf));
+  return buf;
 }
 
 
-char* async_fread(const char* path) {
-  lh_value result = using_async_fopen(path, O_RDONLY, 0, &async_fread_allv, lh_value_null);  
-  return (char*)lh_ptr_value(result);
+char* async_fread_from(const char* path) {
+  uv_buf_t buf = async_fread_buf_from(path);
+  return buf.base;
 }
 
 /*-----------------------------------------------------------------

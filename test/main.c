@@ -6,6 +6,41 @@
 #include "request.h"
 
 /*-----------------------------------------------------------------
+  Static web server
+-----------------------------------------------------------------*/
+typedef struct _http_static_config_t {
+  bool no_etag;
+  bool no_implicit_index_html;
+  bool no_implicit_html_ext;  
+} http_static_config_t;
+
+#define http_static_default_config() { false, false, false }
+
+static bool http_try_send(const char* root, const char* path) {
+  // check if it exists
+  char fname[MAX_PATH];
+  snprintf(fname, MAX_PATH, "%s/%s", root, path);
+  uv_stat_t stat;
+  if (asyncx_stat(fname, &stat) != 0) return false;
+  if ((stat.st_mode & S_IFREG) == 0) return false;  // not a file
+  // open it and return it
+  uv_buf_t contents = async_fread_buf_from(fname);
+  {using_buf(&contents) {
+    http_resp_send_buf(HTTP_STATUS_OK, contents, "guess");
+  }}
+  return true;
+}
+
+static void http_serve_static(const char* root, const http_static_config_t* config) {
+  static http_static_config_t _default_config = http_static_default_config();
+  if (config == NULL) config = &_default_config;
+  // get request path
+  const char* path = http_req_path();
+  if (http_try_send(root, path)) return;
+  http_resp_send(HTTP_STATUS_NOT_FOUND, NULL, NULL);
+}
+
+/*-----------------------------------------------------------------
   Test files
 -----------------------------------------------------------------*/
 static void test_stat() {
@@ -18,7 +53,7 @@ static void test_stat() {
 static void test_fileread() {
   const char* path = "cenv.h";
   printf("opening file: %s\n", path);
-  char* contents = async_fread(path);
+  char* contents = async_fread_from(path);
   {using_free(contents) {
     printf("read %Ii bytes from %s:\n...\n", strlen(contents), path);    
   }}
@@ -141,10 +176,12 @@ static void test_http_serve() {
   http_req_print();
 
   // work
-  printf("waiting %i secs...\n", 2); 
+  //printf("waiting %i secs...\n", 2); 
   //async_wait(1000);
   //check_uverr(UV_EADDRINUSE);
 
+  http_serve_static("../..", NULL);
+  /*
   // response
   if (strstr(http_req_header("Accept"), "text/html")) {
     http_resp_send(HTTP_STATUS_OK, response_body, "guess");
@@ -152,6 +189,7 @@ static void test_http_serve() {
   else {
     http_resp_send_ok();
   }
+  */
   printf("request handled\n\n\n");
 }
 
