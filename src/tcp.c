@@ -56,7 +56,9 @@ void nodec_tcp_bind(uv_tcp_t* handle, const struct sockaddr* addr, unsigned int 
 } 
 
 static void _listen_cb(uv_stream_t* server, int status) {
-  fprintf(stderr, "connection came in!\n");
+#ifndef NDEBUG
+  fprintf(stderr, "connection request\n");
+#endif
   uv_tcp_t* client = NULL;
   channel_t* ch = NULL;
   int err = 0;
@@ -87,7 +89,9 @@ static void _listen_cb(uv_stream_t* server, int status) {
           // entering a listener is ok since that will be a resume 
           // under an async/try handler again.
           // TODO: we should have a size limited queue and check the emit return value
+      #ifndef NDEBUG
           fprintf(stderr, "emit\n");
+      #endif
           err = channel_emit(ch, lh_value_ptr(client), lh_value_null, 0);  // if err==UV_NOSPC the channel was full
         }
       }

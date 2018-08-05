@@ -138,17 +138,36 @@ static void async_fclosev(lh_value vfile) {
 typedef struct __fopen_args {
   lh_value arg;
   uv_file  file;
+  const char* path;
   nodec_file_fun* action;
 } _fopen_args;
 
 static lh_value _fopen_action(lh_value argsv) {
   _fopen_args* args = (_fopen_args*)lh_ptr_value(argsv);
-  return args->action(args->file, args->arg);
+  return args->action(args->file, args->path, args->arg);
+}
+
+uv_errno_t using_asyncx_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg, lh_value* result) {
+  if (result != NULL) *result = lh_value_null;
+  _fopen_args args;
+  args.arg = arg;
+  args.path = path;
+  args.action = action;
+  uv_errno_t err = asyncx_fopen(path, flags, 0, &args.file);
+  if (err == 0) {
+    lh_value res = lh_finally(
+      &_fopen_action, lh_value_any_ptr(&args),
+      &async_fclosev, lh_value_int(args.file)
+    );
+    if (result != NULL) *result = res;
+  }
+  return err;
 }
 
 lh_value using_async_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg ) {
   _fopen_args args;
   args.arg = arg;
+  args.path = path;
   args.action = action;
   args.file = async_fopen(path, flags, 0);
   return lh_finally(
@@ -157,7 +176,8 @@ lh_value using_async_fopen(const char* path, int flags, int mode, nodec_file_fun
   );
 }
 
-void async_fread_into(uv_file file, uv_buf_t buf , int64_t file_offset) {
+
+size_t async_fread_into(uv_file file, uv_buf_t buf , int64_t file_offset) {
   size_t total = 0;
   while (total < buf.len) {
     uv_buf_t view = nodec_buf(buf.base + total, buf.len - total);
@@ -167,14 +187,22 @@ void async_fread_into(uv_file file, uv_buf_t buf , int64_t file_offset) {
     if (total > buf.len) total = buf.len; // paranoia
   }
   buf.base[total] = 0;
+  return total;
 }
 
 uv_buf_t async_fread_buf(uv_file file, size_t max, int64_t file_offset) {
   uv_buf_t buf = nodec_buf_alloc(max);
+  size_t nread = 0;
   {using_on_abort_free_buf(&buf) {
-    async_fread_into(file, buf, file_offset);
-  }}
-  return buf;
+    nread = async_fread_into(file, buf, file_offset);
+  }}  
+  if (nread == 0) {
+    nodec_buf_free(buf);
+    return nodec_buf_null();
+  }
+  else {
+    return nodec_buf_fit(buf, nread);
+  }
 }
 
 uv_buf_t async_fread_buf_all(uv_file file, size_t max ) {
@@ -184,7 +212,7 @@ uv_buf_t async_fread_buf_all(uv_file file, size_t max ) {
   return async_fread_buf(file, (max > 0 && size > max ? max : size), -1);
 }
 
-static lh_value async_fread_allv(uv_file file, lh_value bufv) {
+static lh_value async_fread_allv(uv_file file, const char* path, lh_value bufv) {
   uv_buf_t* buf = (uv_buf_t*)(lh_ptr_value(bufv));
   *buf = async_fread_buf_all(file, 0);
   return lh_value_null;

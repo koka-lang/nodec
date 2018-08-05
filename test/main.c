@@ -8,37 +8,83 @@
 /*-----------------------------------------------------------------
   Static web server
 -----------------------------------------------------------------*/
+implicit_define(http_static_config)
+
+
 typedef struct _http_static_config_t {
   bool no_etag;
   bool no_implicit_index_html;
   bool no_implicit_html_ext;  
+  size_t max_content_size;
+  size_t min_chunk_size;
 } http_static_config_t;
 
-#define http_static_default_config() { false, false, false }
+#define http_static_default_config() { false, false, false, 0, 64*1024 }
 
-static bool http_try_send(const char* root, const char* path) {
+const http_static_config_t* http_static_config() {
+  return (const http_static_config_t*)lh_ptr_value(implicit_get(http_static_config));
+}
+
+
+static lh_value http_try_send_file(uv_file file, const char* path, lh_value fnamev) {
+  uv_stat_t stat = async_fstat(file);
+  const http_static_config_t* config = http_static_config();
+  if (stat.st_size >= MAXSIZE_T) { 
+    nodec_check(UV_E2BIG);
+  }
+  size_t size = (size_t)stat.st_size;
+  if (config->max_content_size > 0 && size > config->max_content_size) {
+    nodec_check(UV_E2BIG);
+  }
+
+  const char* content_type = nodec_mime_from_fname(path);
+  if (config->min_chunk_size > 0 && size > config->min_chunk_size) {
+    // send in chunks
+    http_out_t* resp = http_resp();
+    http_out_send_status_headers(resp, HTTP_STATUS_OK, false);
+    http_out_send_chunked_start(resp, content_type);
+    uv_buf_t buf = nodec_buf_alloc(config->min_chunk_size);
+    size_t nread = 0;
+    {using_buf(&buf) {
+      while ((nread = async_fread_into(file, buf, -1)) > 0) {
+        buf.len = nread;
+        http_out_send_chunk_buf(resp, buf);
+        buf.len = config->min_chunk_size;
+      };
+    }}
+    http_out_send_chunked_end(resp);
+  }
+  else {
+    // send at once
+    uv_buf_t buf = async_fread_buf(file, size, -1);
+    {using_buf(&buf) {
+      http_resp_send_buf(HTTP_STATUS_OK, buf, content_type);
+    }}
+  }
+  return lh_value_int(size);
+}
+
+static bool http_try_send(const char* root, const char* path, const char* ext) {
   // check if it exists
   char fname[MAX_PATH];
-  snprintf(fname, MAX_PATH, "%s/%s", root, path);
-  uv_stat_t stat;
-  if (asyncx_stat(fname, &stat) != 0) return false;
-  if ((stat.st_mode & S_IFREG) == 0) return false;  // not a file
-  // open it and return it
-  uv_buf_t contents = async_fread_buf_from(fname);
-  {using_buf(&contents) {
-    const char* content_type = nodec_mime_from_fname(fname);
-    http_resp_send_buf(HTTP_STATUS_OK, contents, content_type);
-  }}
-  return true;
+  const char* pathsep = (root == NULL ? "" : "/");
+  const char* extsep = (ext == NULL ? "" : ".");
+  snprintf(fname, MAX_PATH, "%s%s%s%s%s", (root==NULL ? "" : root), pathsep, path, extsep, (ext==NULL ? "" : ext) );
+  lh_value sizev;
+  uv_errno_t err = using_asyncx_fopen(fname, O_RDONLY, 0, &http_try_send_file, lh_value_null, &sizev);
+  return (err == 0);
 }
 
 static void http_serve_static(const char* root, const http_static_config_t* config) {
   static http_static_config_t _default_config = http_static_default_config();
   if (config == NULL) config = &_default_config;
-  // get request path
-  const char* path = http_req_path();
-  if (http_try_send(root, path)) return;
-  http_resp_send(HTTP_STATUS_NOT_FOUND, NULL, NULL);
+  bool ok = false;
+  {using_implicit(lh_value_any_ptr(config), http_static_config) {
+    // get request path
+    const char* path = http_req_path();
+    ok = http_try_send(root, path, NULL);
+  }}
+  if (!ok) http_resp_send(HTTP_STATUS_NOT_FOUND, NULL, NULL);
 }
 
 /*-----------------------------------------------------------------

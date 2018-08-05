@@ -134,9 +134,10 @@ uv_stat_t   async_stat(const char* path);
 uv_stat_t   async_fstat(uv_file file);
 
 uv_file     async_fopen(const char* path, int flags, int mode);
+uv_errno_t  asyncx_fopen(const char* path, int flags, int mode, uv_file* file );
 void        async_fclose(uv_file file);
 
-void        async_fread_into(uv_file file, uv_buf_t buf, int64_t file_offset);
+size_t      async_fread_into(uv_file file, uv_buf_t buf, int64_t file_offset);
 uv_buf_t    async_fread_buf(uv_file file, size_t max, int64_t file_offset);
 uv_buf_t    async_fread_buf_all(uv_file file, size_t max);
 
@@ -154,8 +155,9 @@ bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
 char*       async_fread_from(const char* path);
 uv_buf_t    async_fread_buf_from(const char* path);
 
-typedef lh_value(nodec_file_fun)(uv_file file, lh_value arg);
+typedef lh_value(nodec_file_fun)(uv_file file, const char* path, lh_value arg);
 lh_value    using_async_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
+uv_errno_t  using_asyncx_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg, lh_value* result);
 
 
 
