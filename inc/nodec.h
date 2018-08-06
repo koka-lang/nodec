@@ -74,6 +74,12 @@ void nodec_bufref_freev(lh_value bufref);
 #define using_on_abort_free_buf(bufref)   on_abort(nodec_bufref_freev,lh_value_any_ptr(bufref))
 
 
+bool nodec_starts_with(const char* s, const char* prefix);
+bool nodec_starts_withi(const char* s, const char* prefix);
+bool nodec_ends_with(const char* s, const char* prefix);
+bool nodec_ends_withi(const char* s, const char* prefix);
+
+
 /* ----------------------------------------------------------------------------
   Cancelation scope
 -----------------------------------------------------------------------------*/
@@ -319,6 +325,10 @@ uint64_t      http_in_content_length(http_in_t* in);
 const char*   http_in_header(http_in_t* in, const char* name);
 const char*   http_in_header_next(http_in_t* in, const char** value, size_t* iter);
 
+// Read comma separated header fields; `*iter` should start as NULL.
+// Returns NULL when done.
+const char* http_header_next_field(const char* header, size_t* len, const char** iter);
+
 // use this on connections to wait for a response
 size_t async_http_in_read_headers(http_in_t* in);
 
@@ -437,6 +447,23 @@ const char* nodec_mime_from_fname(const char* fname);
 void        nodec_info_from_mime(const char* mime_type, const char** preferred_ext, bool* compressible, const char** charset);
 const char* nodec_ext_from_mime(const char* mime_type);
 
+/* ----------------------------------------------------------------------------
+  HTTP Static web server
+-----------------------------------------------------------------------------*/
+
+typedef struct _http_static_config_t {
+  bool use_etag;
+  bool use_implicit_index_html;
+  bool use_implicit_html_ext;
+  const char* cache_control;
+  size_t max_content_size;
+  size_t min_chunk_size;
+} http_static_config_t;
+
+#define http_static_default_config() { true, true, true, "public, max-age=604800", 0, 64*1024 }
+
+// Serve static files under a `root` directory. `config` can be NULL for the default configuration.
+void http_serve_static(const char* root, const http_static_config_t* config);
 
 /* ----------------------------------------------------------------------------
   TTY

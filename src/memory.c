@@ -3,6 +3,44 @@
 #include "nodec-internal.h"
 #include <assert.h> 
 
+/*-----------------------------------------------------------------
+  string/memory utility functions
+-----------------------------------------------------------------*/
+
+bool nodec_starts_with(const char* s, const char* prefix) {
+  if (s == NULL || prefix == NULL) return false;
+  size_t m = strlen(prefix);
+  if (m == 0) return true;
+  return (strncmp(s, prefix, m) == 0);
+}
+
+bool nodec_starts_withi(const char* s, const char* prefix) {
+  if (s == NULL || prefix == NULL) return false;
+  size_t m = strlen(prefix);
+  if (m == 0) return true;
+  return (_strnicmp(s, prefix, m) == 0);
+}
+
+
+bool nodec_ends_with(const char* s, const char* pat) {
+  if (s == NULL || pat == NULL) return false;
+  size_t m = strlen(pat);
+  if (m == 0) return true;
+  size_t n = strlen(s);
+  if (n < m) return false;
+  return (strncmp(s + (n - m), pat, m) == 0);
+}
+
+bool nodec_ends_withi(const char* s, const char* pat) {
+  if (s == NULL || pat == NULL) return false;
+  size_t m = strlen(pat);
+  if (m == 0) return true;
+  size_t n = strlen(s);
+  if (n < m) return false;
+  return (_strnicmp(s + (n - m), pat, m) == 0);
+}
+
+
 // Search for byte pattern in byte source array.
 const void* nodec_memmem(const void* src, size_t src_len, const void* pat, size_t pat_len)
 {
@@ -21,6 +59,9 @@ const void* nodec_memmem(const void* src, size_t src_len, const void* pat, size_
   return NULL;
 }
 
+/*-----------------------------------------------------------------
+  uv_buf_t functions
+-----------------------------------------------------------------*/
 
 uv_buf_t nodec_buf(const void* data, size_t len) {
   return uv_buf_init((char*)data, (uv_buf_len_t)(len));

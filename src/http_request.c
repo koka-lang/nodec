@@ -407,6 +407,25 @@ const char* http_in_header_next(http_in_t* req, const char** value, size_t* iter
 }
 
 
+const char* http_header_next_field(const char* header, size_t* len, const char** iter) {
+  *len = 0;
+  if (*iter == NULL) *iter = header;
+
+  // find start
+  const char* p = *iter;
+  while (*p == ' ' || *p == ',') p++;
+  if (*p == '"') p++;
+  if (*p == 0) return NULL;
+
+  // find end
+  const char* q = p + 1;
+  while (*q != 0 && *q != '"' && *q != ' ' && *q != ',') q++;
+  *len = (q - p);
+  if (*q != 0) q++;
+  *iter = q;
+  return p;
+}
+
 
 
 /*-----------------------------------------------------------------
@@ -519,17 +538,14 @@ static void http_out_send_bufs(http_out_t* out, uv_buf_t bufs[], size_t count, c
   async_write_bufs(out->stream, xbufs, count + 2);
 }
 
-bool starts_with(const char* s, const char* prefix) {
-  return (_strnicmp(s, prefix, strlen(prefix)) == 0);
-}
 
 const char* http_guess_content_type(const char* content_type, const char* start_content) {
   if (content_type == NULL || (strlen(content_type)>0 && _stricmp(content_type,"guess")!=0)) return content_type;
   // guess
-  if (starts_with(start_content, "<!DOCTYPE") || starts_with(start_content,"<html")) {
+  if (nodec_starts_with(start_content, "<!DOCTYPE") || nodec_starts_with(start_content,"<html")) {
     return "text/html; charset=utf-8";
   }
-  else if (starts_with(start_content,"{") || starts_with(start_content, "[")) {
+  else if (nodec_starts_with(start_content,"{") || nodec_starts_with(start_content, "[")) {
     return "application/json; charset=utf-8";
   }
   else {
