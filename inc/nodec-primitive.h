@@ -65,11 +65,28 @@ int           channel_receive(channel_t* channel, lh_value* data, lh_value* arg)
 bool          channel_is_full(channel_t* channel);
 
 
+
+
+uv_errno_t asyncx_uv_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count);
+uv_errno_t asyncx_uv_write_buf(uv_stream_t* stream, uv_buf_t buf);
+void async_uv_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count);
+void async_uv_write_buf(uv_stream_t* stream, uv_buf_t buf);
+void async_uv_stream_shutdown(uv_stream_t* stream);
+void nodec_uv_stream_free(uv_stream_t* stream);
+
+
+typedef struct _nodec_uv_stream_t nodec_uv_stream_t;
+nodec_bstream_t* as_bstream(nodec_uv_stream_t* stream);
+
+#define using_uv_stream(s) using_bstream(as_bstream(s))
+
+nodec_uv_stream_t* nodec_uv_stream_alloc(uv_stream_t* stream);
+void nodec_uv_stream_read_start(nodec_uv_stream_t* rs, size_t read_max, size_t alloc_init, size_t alloc_max);
+void nodec_uv_stream_read_restart(nodec_uv_stream_t* rs);
+void nodec_uv_stream_set_read_max(nodec_uv_stream_t* rs, size_t read_max);
+void nodec_uv_stream_read_stop(nodec_uv_stream_t* rs);
+
 // Used to implement keep-alive
-uverr_t asyncx_stream_await_available(uv_stream_t* stream, uint64_t timeout);
-
-
-uv_errno_t asyncx_write(uv_stream_t* stream, uv_buf_t buf);
-
+uv_errno_t asyncx_uv_stream_await_available(nodec_uv_stream_t* stream, int64_t timeout);
 
 #endif

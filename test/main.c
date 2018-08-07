@@ -104,9 +104,8 @@ const char* response_body =
 "</body>\n"
 "</html>\n";
 
-
 void http_in_print(http_in_t* in) {
-  printf("headers: \n");
+  printf("%s %s\n headers: \n", http_method_str(http_in_method(in)), http_in_url(in));
   size_t iter = 0;
   const char* value;
   const char* name;
@@ -135,10 +134,9 @@ static void http_req_print() {
 
 static void test_http_serve() {
   int strand_id = http_strand_id();
-  //fprintf(stderr, "strand %i entered\n", strand_id);
   // input
-  //printf("strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), http_req_content_length());
-  //http_req_print();
+  printf("strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), http_req_content_length());
+  http_req_print();
 
   // work
   //printf("waiting %i secs...\n", 2); 
@@ -156,7 +154,7 @@ static void test_http_serve() {
     http_resp_send_ok();
   }
   */
-  //printf("request handled\n\n\n");
+  printf("request handled\n\n\n");
 }
 
 static void test_tcp() {
@@ -188,22 +186,6 @@ static void test_tcp_tty() {
 /*-----------------------------------------------------------------
   TTY
 -----------------------------------------------------------------*/
-static void test_tty_raw() {
-  uv_tty_t* tty_in = nodec_zero_alloc(uv_tty_t);
-  {using_stream((uv_stream_t*)tty_in){
-    nodec_check(uv_tty_init(async_loop(), tty_in, 0, true));
-    nodec_read_start((uv_stream_t*)tty_in, 0, 255, 255);
-    const char* s = async_read_line((uv_stream_t*)tty_in);
-    {using_free(s) {
-      printf("I got: %s\n", s);
-    }}
-    s = async_read_line((uv_stream_t*)tty_in);
-    {using_free(s) {
-      printf("Now I got: %s\n", s);
-    }}
-    printf("The end");
-  }}
-}
 
 static void test_tty() {
   {using_tty() {

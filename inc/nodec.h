@@ -172,7 +172,49 @@ uv_errno_t  using_asyncx_fopen(const char* path, int flags, int mode, nodec_file
 /* ----------------------------------------------------------------------------
   Streams
 -----------------------------------------------------------------------------*/
+typedef struct _nodec_stream_t  nodec_stream_t;
 
+// Primitives
+void      nodec_stream_free(nodec_stream_t* stream);
+void      nodec_stream_freev(lh_value streamv);
+void      async_shutdown(nodec_stream_t* stream);
+
+#define using_stream(s) \
+    defer_exit(async_shutdown(s),&nodec_stream_freev,lh_value_ptr(s))
+
+uv_buf_t  async_read_buf(nodec_stream_t* stream);
+char*     async_read(nodec_stream_t* stream);
+void      async_write_bufs(nodec_stream_t* stream, uv_buf_t bufs[], size_t count);
+void      async_write_buf(nodec_stream_t* stream, uv_buf_t buf);
+void      async_write(nodec_stream_t* stream, const char* s);
+
+
+typedef struct _nodec_bstream_t nodec_bstream_t;
+nodec_stream_t*  as_stream(nodec_bstream_t* stream);
+
+#define using_bstream(s)  using_stream(as_stream(s))  
+
+uv_buf_t  async_read_buf_all(nodec_bstream_t* bstream);
+char*     async_read_all(nodec_bstream_t* bstream);
+size_t    async_read_into(nodec_bstream_t* bstream, uv_buf_t buf);
+uv_buf_t  async_read_buf_including(nodec_bstream_t* bstream, size_t* toread, const void* pat, size_t pat_len, size_t read_max);
+uv_buf_t  async_read_buf_upto(nodec_bstream_t* bstream, const void* pat, size_t pat_len, size_t max);
+uv_buf_t  async_read_buf_line(nodec_bstream_t* bstream);
+char*     async_read_line(nodec_bstream_t* bstream);
+
+// Create a buffered stream from a plain stream
+nodec_bstream_t* nodec_bstream_alloc_on(nodec_stream_t* source);
+
+
+// Creata a buffered stream from a `uv_stream_t`
+nodec_bstream_t* nodec_bstream_alloc(uv_stream_t* stream);
+nodec_bstream_t* nodec_bstream_alloc_read(uv_stream_t* stream);
+nodec_bstream_t* nodec_bstream_alloc_read_ex(uv_stream_t* stream, size_t read_max, size_t alloc_init, size_t alloc_max);
+
+
+
+
+/*
 void        nodec_handle_free(uv_handle_t* handle);
 void        nodec_stream_free(uv_stream_t* stream);
 void        nodec_stream_freev(lh_value streamv);
@@ -209,6 +251,7 @@ void        async_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_co
 void        async_write_strs(uv_stream_t* stream, const char* strings[], size_t string_count );
 void        async_write_buf(uv_stream_t* stream, uv_buf_t buf);
 
+*/
 
 /* ----------------------------------------------------------------------------
   IP4 and IP6 Addresses
@@ -269,7 +312,7 @@ typedef struct _tcp_server_config_t {
 
 #define tcp_server_config()    { 0, 0, 0, 0 }
 
-typedef void    (nodec_tcp_servefun)(int id, uv_stream_t* client, lh_value arg);
+typedef void    (nodec_tcp_servefun)(int id, nodec_bstream_t* client, lh_value arg);
 
 void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config,
                           nodec_tcp_servefun* servefun, lh_actionfun* on_exn,
@@ -346,9 +389,9 @@ uv_buf_t      async_http_in_read_body(http_in_t* in, size_t initial_size);
   HTTP outgoing
 -----------------------------------------------------------------*/
 
-void http_out_init(http_out_t* out, uv_stream_t* stream);
-void http_out_init_server(http_out_t* out, uv_stream_t* stream, const char* server_name);
-void http_out_init_client(http_out_t* out, uv_stream_t* stream, const char* host_name);
+void http_out_init(http_out_t* out, nodec_stream_t* stream);
+void http_out_init_server(http_out_t* out, nodec_stream_t* stream, const char* server_name);
+void http_out_init_client(http_out_t* out, nodec_stream_t* stream, const char* host_name);
 
 void http_out_clear(http_out_t* out);
 void http_out_clearv(lh_value respv);

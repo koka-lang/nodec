@@ -131,13 +131,13 @@ Requests
 
 typedef struct _http_in_t
 {
-  uv_stream_t*    stream; // the input stream
-  http_parser     parser; // the request parser on the stream
+  nodec_bstream_t* stream; // the input stream
+  http_parser      parser; // the request parser on the stream
   http_parser_settings parser_settings;
 
   bool            is_request;
   const char*     url;            // parsed url (for client request)
-  http_status_t     status;         // parsed status (for server response)
+  http_status_t   status;         // parsed status (for server response)
   size_t          content_length; // real content length from headers
   http_headers_t  headers; // parsed headers; usually pointing into `prefix`
   uv_buf_t        prefix;  // the initially read buffer that holds all initial headers
@@ -222,6 +222,7 @@ static void http_in_clear(http_in_t* req) {
   if (req->current.base != NULL && req->current.base != req->prefix.base) nodec_free(req->current.base);
   if (req->prefix.base != NULL) nodec_free(req->prefix.base);
   memset(req, 0, sizeof(http_in_t));
+  // don't free the stream, it is not owned by us
 }
 
 void http_in_clearv(lh_value reqv) {
@@ -236,7 +237,7 @@ static enum http_errno check_http_errno(http_parser* parser) {
   return err;
 }
 
-void http_in_init(http_in_t* in, uv_stream_t* stream, bool is_request)
+void http_in_init(http_in_t* in, nodec_bstream_t* stream, bool is_request)
 {
   memset(in, 0, sizeof(http_in_t));
   in->stream = stream;
@@ -245,12 +246,9 @@ void http_in_init(http_in_t* in, uv_stream_t* stream, bool is_request)
 
 size_t async_http_in_read_headers(http_in_t* in ) 
 {
-  // start the read stream and read the headers (and at most 8Kb of data)
-  nodec_read_start(in->stream, HTTP_MAX_HEADERS, HTTP_MAX_HEADERS, 0);
-
   // and read until the double empty line is seen  (\r\n\r\n); the end of the headers 
   size_t idx = 0;
-  uv_buf_t buf = async_read_buf_including(in->stream, &idx, "\r\n\r\n", 4);
+  uv_buf_t buf = async_read_buf_including(in->stream, &idx, "\r\n\r\n", 4, HTTP_MAX_HEADERS);
   if (idx == 0 || buf.base == NULL || idx > HTTP_MAX_HEADERS) {
     if (buf.base != NULL) nodec_free(buf.base);
     if (idx == 0) {
@@ -259,8 +257,6 @@ size_t async_http_in_read_headers(http_in_t* in )
     }
     throw_http_err((idx > HTTP_MAX_HEADERS ? HTTP_STATUS_PAYLOAD_TOO_LARGE : HTTP_STATUS_BAD_REQUEST));
   }
-  // set the default stream read capacity again for futher reading (=1Gb)
-  nodec_set_read_max(in->stream, 0);
   //printf("\n\nraw prefix read: %s\n\n\n", buf.base);  // only print idx length here
 
   // only if successful initialize a request object
@@ -314,7 +310,7 @@ uv_buf_t async_http_in_read_body_buf(http_in_t* req)
         req->current_offset = 0;
       }
       // and read a fresh buffer async from the stream
-      req->current = async_read_buf(req->stream);     
+      req->current = async_read_buf(as_stream(req->stream));     
       if (req->current.base == NULL || req->current.len == 0) throw_http_err(HTTP_STATUS_BAD_REQUEST);
       req->current.base[req->current.len] = 0;
       //printf("\n\nraw body read: %s\n\n\n", req->current.base);
@@ -432,22 +428,22 @@ const char* http_header_next_field(const char* header, size_t* len, const char**
    HTTP response
 -----------------------------------------------------------------*/
 typedef struct _http_out_t {
-  uv_stream_t* stream;
-  uv_buf_t     head;
-  size_t       head_offset;
+  nodec_stream_t* stream;
+  uv_buf_t         head;
+  size_t           head_offset;
 } http_out_t;
 
-void http_out_init(http_out_t* out, uv_stream_t* stream) {
+void http_out_init(http_out_t* out, nodec_stream_t* stream) {
   memset(out, 0, sizeof(http_out_t));
   out->stream = stream;
 }
 
-void http_out_init_server(http_out_t* out, uv_stream_t* stream, const char* server_name) {
+void http_out_init_server(http_out_t* out, nodec_stream_t* stream, const char* server_name) {
   http_out_init(out, stream);
   http_out_add_header(out, "Server", server_name);
 }
 
-void http_out_init_client(http_out_t* out, uv_stream_t* stream, const char* host_name) {
+void http_out_init_client(http_out_t* out, nodec_stream_t* stream, const char* host_name) {
   http_out_init(out, stream);
   http_out_add_header(out, "Host", host_name);
 }
@@ -630,14 +626,14 @@ implicit_define(http_current_resp);
 implicit_define(http_current_strand_id);
 implicit_define(http_current_url);
 
-static void http_serve(int id, uv_stream_t* client, lh_value servefunv) {
+static void http_serve(int id, nodec_bstream_t* client, lh_value servefunv) {
   nodec_http_servefun* servefun = (nodec_http_servefun*)lh_ptr_value(servefunv);
   {using_implicit(lh_value_int(id), http_current_strand_id) {
     http_in_t http_in;
     http_in_init(&http_in, client, true);
     {using_implicit_defer(http_in_clearv, lh_value_any_ptr(&http_in), http_current_req) {
       http_out_t http_out;
-      http_out_init_server(&http_out, client, "NodeC/0.1");
+      http_out_init_server(&http_out, as_stream(client), "NodeC/0.1");
       {using_implicit_defer(http_out_clearv, lh_value_any_ptr(&http_out), http_current_resp) {
         //printf("strand %i, read headers\n", id);
         if (async_http_in_read_headers(&http_in) > 0) { // if not closed by client
@@ -678,13 +674,14 @@ void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_h
 
 lh_value async_http_connect(const char* host, http_connect_fun* connectfun, lh_value arg) {
   lh_value result = lh_value_null;
-  uv_stream_t* conn = async_tcp_connect(host);
-  {using_stream(conn) {
+  uv_stream_t* uvconn = async_tcp_connect(host);
+  nodec_bstream_t* conn = nodec_bstream_alloc(uvconn);  // todo: what if this fails?
+  {using_bstream(conn) {
     http_in_t in;
     http_in_init(&in, conn, false);
     {defer(http_in_clearv, lh_value_any_ptr(&in)) {
       http_out_t out;
-      http_out_init_client(&out, conn, host);
+      http_out_init_client(&out, as_stream(conn), host);
       {defer(http_out_clearv, lh_value_any_ptr(&out)) {
         result = connectfun(&in, &out, arg);
       }}

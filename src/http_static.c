@@ -147,7 +147,7 @@ static bool http_try_send(const http_static_config_t* config, const char* root, 
 }
 
 void http_serve_static(const char* root, const http_static_config_t* config) {
-  if (http_req_method() != HTTP_GET) return;
+  //if (http_req_method() != HTTP_GET) return;
   static http_static_config_t _default_config = http_static_default_config();
   if (config == NULL) config = &_default_config;
   bool ok = false;

@@ -37,7 +37,7 @@ void check_uv_err_addr(int err, const struct sockaddr* addr) {
 
 
 void nodec_tcp_free(uv_tcp_t* tcp) {
-  nodec_stream_free((uv_stream_t*)tcp);
+  nodec_uv_stream_free((uv_stream_t*)tcp);
 }
 
 void nodec_tcp_freev(lh_value tcp) {
@@ -100,7 +100,7 @@ static void _listen_cb(uv_stream_t* server, int status) {
   if (err!=0) {
     // deallocate client on error
     if (client!=NULL) {
-      nodec_stream_free((uv_stream_t*)client);
+      nodec_uv_stream_free((uv_stream_t*)client);
       client = NULL;
     }
     fprintf(stderr, "connection error: %i: %s\n", err, uv_strerror(err));
@@ -117,7 +117,7 @@ static void _channel_release_tcp(lh_value tcpv) {
 static void _channel_release_client(lh_value data, lh_value arg, int err) {
   uv_stream_t* client = (uv_stream_t*)lh_ptr_value(data);
   if (client != NULL) {
-    nodec_stream_free(client);    
+    nodec_uv_stream_free(client);    
   }
 }
 
@@ -214,17 +214,17 @@ typedef struct _tcp_serve_args {
 } tcp_serve_args;
 
 typedef struct _tcp_client_args {
-  int           id;
-  uint64_t      timeout;
-  uv_stream_t*  client;
+  int                 id;
+  uint64_t            timeout;
+  nodec_uv_stream_t*  client;
   nodec_tcp_servefun* serve;
-  int           keepalive;
-  lh_value      arg;
+  int                 keepalive;
+  lh_value            arg;
 } tcp_client_args;
 
 static lh_value tcp_serve_client(lh_value argsv) {
   tcp_client_args* args = (tcp_client_args*)lh_ptr_value(argsv);
-  args->serve(args->id, args->client, args->arg);
+  args->serve(args->id, as_bstream(args->client), args->arg);
   return lh_value_null;
 }
 
@@ -243,6 +243,7 @@ static lh_value tcp_serve_timeout(lh_value argsv) {
 
 static lh_value tcp_serve_keepalive(lh_value argsv) {
   tcp_client_args* args = (tcp_client_args*)lh_ptr_value(argsv);
+  nodec_uv_stream_read_start(args->client, 0, 8 * 1024, 0); // initial allocation at 8kb (for the header)
   if (args->keepalive <= 0) {
     return tcp_serve_timeout(argsv);
   }
@@ -252,7 +253,7 @@ static lh_value tcp_serve_keepalive(lh_value argsv) {
     //nodec_check(uv_tcp_keepalive((uv_tcp_t*)args->client, 1, (unsigned)args->keepalive));
     do {
       result = tcp_serve_timeout(argsv);
-      err = asyncx_stream_await_available(args->client, 1000*(uint64_t)args->keepalive);
+      err = asyncx_uv_stream_await_available(args->client, 1000*(uint64_t)args->keepalive);
     } while (err == 0);
     return result;
   }
@@ -263,8 +264,9 @@ static lh_value tcp_servev(lh_value argsv) {
   int id = ids++;
   tcp_serve_args args = *((tcp_serve_args*)lh_ptr_value(argsv));  
   do {
-    uv_stream_t* client = async_tcp_channel_receive(args.ch);
-    {using_stream(client) {
+    uv_stream_t* uvclient = async_tcp_channel_receive(args.ch);
+    nodec_uv_stream_t* client = nodec_uv_stream_alloc(uvclient);
+    {using_uv_stream(client) {
       lh_exception* exn;
       tcp_client_args cargs = { id, args.timeout, client, args.serve, 5, args.arg };
       lh_try( &exn, &tcp_serve_keepalive, lh_value_any_ptr(&cargs)); 

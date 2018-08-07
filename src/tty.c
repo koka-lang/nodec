@@ -14,10 +14,10 @@ static uv_stream_t* stream_of_tty(uv_tty_t* tty) {
 }
 
 typedef struct _tty_t {
-  uv_tty_t*      _stdin;
-  uv_tty_t*      _stdout;
-  uv_tty_t*      _stderr;
-  int            mode;
+  nodec_bstream_t* _stdin;
+  uv_tty_t* _stdout;
+  uv_tty_t* _stderr;
+  int       mode;
 } tty_t;
 
 static tty_t* nodec_tty_alloc() {
@@ -30,10 +30,9 @@ lh_value _nodec_tty_allocv() {
 
 
 static void nodec_tty_free(tty_t* tty) {
-  if (tty->_stdin != NULL) nodec_stream_free(stream_of_tty(tty->_stdin));
-  if (tty->_stdout != NULL) nodec_stream_free(stream_of_tty(tty->_stdout));
-  if (tty->_stderr != NULL) nodec_stream_free(stream_of_tty(tty->_stderr));
-  // `read_stream_t* in` is owned by _stdin and freed by it
+  if (tty->_stdin != NULL) nodec_stream_free(as_stream(tty->_stdin));
+  if (tty->_stdout != NULL) nodec_uv_stream_free(stream_of_tty(tty->_stdout));
+  if (tty->_stderr != NULL) nodec_uv_stream_free(stream_of_tty(tty->_stderr));
   nodec_free(tty);
 }
 
@@ -53,11 +52,11 @@ static tty_t* tty_get() {
 char* async_tty_readline() {
   tty_t* tty = tty_get();
   if (tty->_stdin == NULL) {
-    tty->_stdin = nodec_zero_alloc(uv_tty_t);
-    nodec_check(uv_tty_init(async_loop(), tty->_stdin, 0, 1));
-    nodec_read_start(stream_of_tty(tty->_stdin), 0, 64, 64);
+    uv_tty_t* hstdin = nodec_zero_alloc(uv_tty_t);
+    nodec_check(uv_tty_init(async_loop(), hstdin, 0, 1));
+    tty->_stdin = nodec_bstream_alloc_read_ex(stream_of_tty(hstdin), 0, 64, 64);
   }
-  return async_read_line(stream_of_tty(tty->_stdin));
+  return async_read_line(tty->_stdin);
 }
 
 void async_tty_write(const char* s) {
@@ -66,12 +65,12 @@ void async_tty_write(const char* s) {
     tty->_stdout = nodec_zero_alloc(uv_tty_t);
     nodec_check(uv_tty_init(async_loop(), tty->_stdout, 1, 0));
   }
-  async_write(stream_of_tty(tty->_stdout), s);
+  async_uv_write_buf(stream_of_tty(tty->_stdout), nodec_buf_str(s));
 }
 
 // Flush any outstanding writes
 void async_tty_shutdown() {
   tty_t* tty = tty_get();
-  if (tty->_stdout == NULL) async_shutdown(stream_of_tty(tty->_stdout));
-  if (tty->_stderr == NULL) async_shutdown(stream_of_tty(tty->_stderr));
+  if (tty->_stdout == NULL) async_uv_stream_shutdown(stream_of_tty(tty->_stdout));
+  if (tty->_stderr == NULL) async_uv_stream_shutdown(stream_of_tty(tty->_stderr));
 }
