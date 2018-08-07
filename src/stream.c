@@ -377,7 +377,7 @@ static size_t async_bstream_find(nodec_bstream_t* bstream, const void* pat, size
   size_t toread = 0;
   bool eof = false;
   while (!eof && (toread = chunks_find(&bstream->chunks, &find)) == 0 && (read_max == 0 || bstream->chunks.available < read_max)) {
-    eof = (0 == bstream->read_chunk(bstream, false)); // read direct and push into the chunks
+    eof = bstream->read_chunk(bstream, false); // read direct and push into the chunks
   }
   return toread;
 }
@@ -631,8 +631,8 @@ static void nodec_uv_stream_alloc_cb(uv_handle_t* handle, size_t suggested_size,
   // allocate
   size_t len = (rs->alloc_size > 0 ? rs->alloc_size : suggested_size);
   buf->base = nodecx_malloc(len + 1);  // always allow a zero at the end
-  if (buf->base != NULL) buf->len = (uv_buf_len_t)len;
-  // increase alloc size
+  buf->len  = (buf->base == NULL ? 0 : (uv_buf_len_t)len);
+  // increase allocation size
   if (rs->alloc_size > 0 && rs->alloc_size < rs->alloc_max) {
     size_t newsize = 2 * rs->alloc_size;
     rs->alloc_size = (newsize > rs->alloc_max || newsize < rs->alloc_size ? rs->alloc_max : newsize);
@@ -651,6 +651,9 @@ static void _nodec_uv_stream_cb(uv_stream_t* stream, ssize_t nread, const uv_buf
 
   if (rs != NULL) {
     if (nread > 0) {
+      // always terminate with zero
+      assert(buf->len >= nread);
+      buf->base[nread] = 0;
       // data available
       nodecx_uv_stream_push(rs, *buf, (size_t)nread);
       if (!rs->read_to_eof || rs->eof) {
