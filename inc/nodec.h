@@ -297,9 +297,9 @@ uv_stream_t*    async_tcp_channel_receive(tcp_channel_t* ch);
 
 // TCP connection
 
-uv_stream_t* async_tcp_connect_at(const struct sockaddr* addr, const char* host /* can be NULL, used for errors */);
-uv_stream_t* async_tcp_connect_at_host(const char* host, const char* service /*NULL="http"*/);
-uv_stream_t* async_tcp_connect(const char* host);
+nodec_bstream_t* async_tcp_connect_at(const struct sockaddr* addr, const char* host /* can be NULL, used for errors */);
+nodec_bstream_t* async_tcp_connect_at_host(const char* host, const char* service /*NULL="http"*/);
+nodec_bstream_t* async_tcp_connect(const char* host);
 
 // TCP server
 

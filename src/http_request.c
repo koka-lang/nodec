@@ -674,8 +674,7 @@ void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_h
 
 lh_value async_http_connect(const char* host, http_connect_fun* connectfun, lh_value arg) {
   lh_value result = lh_value_null;
-  uv_stream_t* uvconn = async_tcp_connect(host);
-  nodec_bstream_t* conn = nodec_bstream_alloc(uvconn);  // todo: what if this fails?
+  nodec_bstream_t* conn = async_tcp_connect(host);
   {using_bstream(conn) {
     http_in_t in;
     http_in_init(&in, conn, false);

@@ -143,17 +143,18 @@ static void test_http_serve() {
   //async_wait(1000);
   //check_uverr(UV_EADDRINUSE);
 
-  http_serve_static( "C:/Users/daan/Dropbox/dev/kuma-v5/web" //"../.."
-                   , NULL);
-  /*
+  //http_serve_static( "C:/Users/daan/Dropbox/dev/kuma-v5/web" //"../.."
+  //                 , NULL);
+  
   // response
-  if (strstr(http_req_header("Accept"), "text/html")) {
+  const char* accept = http_req_header("Accept");
+  if (accept != NULL && strstr(accept, "text/html")) {
     http_resp_send(HTTP_STATUS_OK, response_body, "guess");
   }
   else {
     http_resp_send_ok();
   }
-  */
+  
   printf("request handled\n\n\n");
 }
 
@@ -270,12 +271,12 @@ const char* http_request_parts[] = {
 };
 
 void test_as_client() {
-  uv_stream_t* conn = async_tcp_connect("127.0.0.1:8080");
-  {using_stream(conn) {
+  nodec_bstream_t* conn = async_tcp_connect("127.0.0.1:8080");
+  {using_bstream(conn) {
     const char* s;
     for (size_t i = 0; (s = http_request_parts[i]) != NULL; i++) {
       printf("write: %s\n", s);
-      async_write(conn, s);
+      async_write( as_stream(conn), s);
       async_wait(250);
     }
     printf("await response...\n");
@@ -334,13 +335,13 @@ static void entry() {
   //test_interleave();
   //test_cancel();
   //test_tcp();
-  test_tty();
+  //test_tty();
   //test_scandir();
   //test_dns();
   //test_http();
   //test_as_client();
   //test_connect();
-  //test_tcp_tty();
+  test_tcp_tty();
   //test_url();
 }
 

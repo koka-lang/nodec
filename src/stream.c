@@ -285,7 +285,13 @@ Buffered streams
 Abstract class: buffered streams and basic uv_stream_t derive from this
 -----------------------------------------------------------------------------*/
 
-typedef bool (async_read_chunk_fun)(nodec_bstream_t* bstream, bool read_to_eof);
+typedef enum _nodec_chunk_read_t {
+  CREAD_NORMAL,
+  CREAD_EVEN_IF_AVAILABLE,
+  CREAD_TO_EOF
+} nodec_chunk_read_t;
+
+typedef bool (async_read_chunk_fun)(nodec_bstream_t* bstream, nodec_chunk_read_t mode);
 
 typedef struct _nodec_bstream_t {
   nodec_stream_t        stream_t;
@@ -318,7 +324,7 @@ static void nodec_bstream_release(nodec_bstream_t* bstream) {
 
 // Return a single buffer that contains the entire stream contents
 uv_buf_t async_read_buf_all(nodec_bstream_t* bstream) {
-  while (!bstream->read_chunk(bstream, true)) {
+  while (!bstream->read_chunk(bstream, CREAD_TO_EOF)) {
     // wait until eof
   }
   return chunks_read_buf_all(&bstream->chunks);
@@ -377,7 +383,7 @@ static size_t async_bstream_find(nodec_bstream_t* bstream, const void* pat, size
   size_t toread = 0;
   bool eof = false;
   while (!eof && (toread = chunks_find(&bstream->chunks, &find)) == 0 && (read_max == 0 || bstream->chunks.available < read_max)) {
-    eof = bstream->read_chunk(bstream, false); // read direct and push into the chunks
+    eof = bstream->read_chunk(bstream, CREAD_EVEN_IF_AVAILABLE); // read direct and push into the chunks
   }
   return toread;
 }
@@ -434,13 +440,18 @@ static void async_bufstream_write_bufs(nodec_stream_t* stream, uv_buf_t bufs[], 
   async_write_bufs(bs->source, bufs, count);
 }
 
-static bool async_bufstream_read_chunk(nodec_bstream_t* bs, bool read_to_eof) {
-  uv_buf_t buf;
-  do {
-    buf = async_read_buf(bs->source);
-    chunks_push(&bs->chunks, buf, buf.len);
-  } while (!read_to_eof || !nodec_buf_is_null(buf));
-  return (nodec_buf_is_null(buf));
+static bool async_bufstream_read_chunk(nodec_bstream_t* bs, nodec_chunk_read_t read_mode) {
+  if (read_mode == CREAD_NORMAL && bs->chunks.available > 0) {
+    return false;
+  }
+  else {
+    uv_buf_t buf;
+    do {
+      buf = async_read_buf(bs->source);
+      chunks_push(&bs->chunks, buf, buf.len);
+    } while (read_mode == CREAD_TO_EOF && !nodec_buf_is_null(buf));
+    return (nodec_buf_is_null(buf));
+  }
 }
 
 static void async_bufstream_shutdown(nodec_stream_t* stream) {
@@ -739,7 +750,9 @@ void nodec_uv_stream_free(uv_stream_t* stream) {
   nodec_handle_free((uv_handle_t*)stream);
 }
 
-
+void nodec_uv_stream_freev(lh_value uvstreamv) {
+  nodec_uv_stream_free((uv_stream_t*)lh_ptr_value(uvstreamv));
+}
 static uv_buf_t async_uv_stream_read_buf(nodec_stream_t* s) {
   nodec_uv_stream_t* rs = (nodec_uv_stream_t*)s;
   async_uv_stream_await(rs, false);
@@ -747,16 +760,16 @@ static uv_buf_t async_uv_stream_read_buf(nodec_stream_t* s) {
   return chunks_read_buf(&rs->bstream_t.chunks);
 }
 
-static bool async_uv_stream_read_chunk(nodec_bstream_t* s, bool read_to_eof) {
+static bool async_uv_stream_read_chunk(nodec_bstream_t* s, nodec_chunk_read_t read_mode) {
   nodec_uv_stream_t* rs = (nodec_uv_stream_t*)s;
-  if (read_to_eof) {
+  if (read_mode == CREAD_TO_EOF) {
     rs->read_to_eof = true; // reduces resumes
     while (!async_uv_stream_await(rs, true)) {
       // wait until eof
     }
   }
   else {
-    async_uv_stream_await(rs, false);
+    async_uv_stream_await(rs, (read_mode == CREAD_EVEN_IF_AVAILABLE));
   }
   return rs->eof;
 }
@@ -783,12 +796,15 @@ static void nodec_uv_stream_freex(nodec_stream_t* stream) {
 
 
 nodec_uv_stream_t* nodec_uv_stream_alloc(uv_stream_t* stream) {
-  nodec_uv_stream_t* rs = nodec_zero_alloc(nodec_uv_stream_t);
-  nodec_bstream_init(&rs->bstream_t,
-    &async_uv_stream_read_chunk,
-    &async_uv_stream_read_buf, &async_uv_stream_write_bufsx,
-    &async_uv_stream_shutdownx, &nodec_uv_stream_freex);
-  rs->stream = stream;
+  nodec_uv_stream_t* rs = NULL;
+  {on_abort(nodec_uv_stream_freev, lh_value_any_ptr(stream)) {
+    rs = nodec_zero_alloc(nodec_uv_stream_t);
+    nodec_bstream_init(&rs->bstream_t,
+      &async_uv_stream_read_chunk,
+      &async_uv_stream_read_buf, &async_uv_stream_write_bufsx,
+      &async_uv_stream_shutdownx, &nodec_uv_stream_freex);
+    rs->stream = stream;
+  }}
   return rs;
 }
 
