@@ -4,6 +4,7 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 -----------------------------------------------------------------------------*/
+
 #pragma once
 #ifndef __nodec_h 
 #define __nodec_h
@@ -11,6 +12,7 @@
 #include <libhandler.h>
 #include <uv.h>
 #include <http_parser.h>
+
 
 /* ----------------------------------------------------------------------------
   Notes:
@@ -32,8 +34,13 @@
 // Forward declarations 
 typedef struct _channel_t channel_t;
 
-// Throw on an error
+/// Throw an error, either an `errno` or `uv_errno_t`.
+/// \param err error code.
 void nodec_throw(int err);
+
+/// Throw an error, either an `errno` or `uv_errno_t`.
+/// \param err error code.
+/// \param msg custom message.
 void nodec_throw_msg(int err, const char* msg);
 
 /* ----------------------------------------------------------------------------
@@ -41,12 +48,23 @@ Buffers are `uv_buf_t` which contain a `base` pointer and the
 available `len` bytes. These buffers are usually passed by value.
 -----------------------------------------------------------------------------*/
 
-// Initialize a libuv buffer which is a record with a data pointer and its length.
-uv_buf_t nodec_buf(const void* data, size_t len);
+/// \defgroup buffers Buffer's
+/// Convenience routines around the \a libuv `uv_buf_t` structure:
+/// ```
+/// struct uv_buf_t {
+///   size_t len;
+///   void*  base;
+/// }
+/// ```
+///
+/// @{
+
+/// Initialize a libuv buffer, which is a record with a data pointer and its length.
+uv_buf_t nodec_buf(const void* base, size_t len);
 uv_buf_t nodec_buf_str(const char* s);
 uv_buf_t nodec_buf_strdup(const char* s);
 
-// Create a NULL buffer, i.e. `nodec_buf(NULL,0)`.
+/// Create a null buffer, i.e. `nodec_buf(NULL,0)`.
 uv_buf_t nodec_buf_null();
 
 // Create and allocate a buffer
@@ -63,16 +81,36 @@ uv_buf_t nodec_buf_fit(uv_buf_t buf, size_t needed);
 
 uv_buf_t nodec_buf_append_into(uv_buf_t buf1, uv_buf_t buf2);
 
+
+/// Is this a null buffer?.
+/// \param buf the buffer.
+/// \returns `true` if the buffer length is 0 or the `base` is `NULL`.
 bool nodec_buf_is_null(uv_buf_t buf);
+
 void nodec_buf_free(uv_buf_t buf);
 void nodec_bufref_free(uv_buf_t* buf);
 void nodec_bufref_freev(lh_value bufref);
 
-// Use a scoped buffer; pass the buffer by reference so it will free
-// the final memory that `bufref->base` points to (and not the initial value)
+/// Use a buffer in a scope, freeing automatically when exiting.
+/// Pass the buffer by reference so it will free
+/// the final memory that `bufref->base` points to (and not the initial value).
+/// \param bufref  a reference to the buffer to free after use.
+/// \b Example
+/// ```
+/// uv_buf_t buf = async_read_buf(stream);
+/// {using_buf(&buf){
+///    async_write_buf(out,buf);
+/// }}
+/// ```
 #define using_buf(bufref)                 defer(nodec_bufref_freev,lh_value_any_ptr(bufref))
+
+/// Use a buffer in a scope, freeing automatically only when an exception is thrown.
+/// Pass the buffer by reference so it will free
+/// the final memory that `bufref->base` points to (and not the initial value).
+/// \param bufref  a reference to the buffer to free after use.
 #define using_on_abort_free_buf(bufref)   on_abort(nodec_bufref_freev,lh_value_any_ptr(bufref))
 
+/// @}
 
 bool nodec_starts_with(const char* s, const char* prefix);
 bool nodec_starts_withi(const char* s, const char* prefix);
@@ -172,46 +210,181 @@ uv_errno_t  using_asyncx_fopen(const char* path, int flags, int mode, nodec_file
 /* ----------------------------------------------------------------------------
   Streams
 -----------------------------------------------------------------------------*/
+///\defgroup stream Streams
+///@{
+
+/// Basic unbuffered streams.
 typedef struct _nodec_stream_t  nodec_stream_t;
 
 // Primitives
+
+/// Free a basic stream.
+/// Usually this is not used directly but instead using_stream() is used.
 void      nodec_stream_free(nodec_stream_t* stream);
+
+/// Free a basic stream as an `lh_value`.
+/// Usually this is not used directly but instead using_stream() is used.
 void      nodec_stream_freev(lh_value streamv);
+
+/// Shutdown a stream. 
+///
+/// This closes the stream gracefully for writes.
+/// Usually this is not used directly but instead using_stream() is used.
 void      async_shutdown(nodec_stream_t* stream);
 
+/// Use a stream in a scope, freeing the stream when exiting.
+///
+/// This safely uses the stream in a scope and frees the stream afterwards
+/// (even if an exception is thrown).
+/// Uses async_shutdown(stream) too if no exception was thrown.
+/// \param s   the #nodec_stream_t to free after use.
+///
+/// \b Example
+/// ```
+/// nodec_stream_t s = ...
+/// {using_stream(s){
+///    async_write(s, "hello");
+/// }}
+/// ```
 #define using_stream(s) \
     defer_exit(async_shutdown(s),&nodec_stream_freev,lh_value_ptr(s))
 
+/// Asynchronously read a buffer from a stream.
+/// \param stream  stream to read from.
+/// \returns uv_buf_t  a buffer with the data. This buffer is becomes
+///    the callee's responsibility (see using_buf()) and is passed without
+///    copying from the lower level read routines.
 uv_buf_t  async_read_buf(nodec_stream_t* stream);
+
+/// Asynchronously read a string from a stream.
 char*     async_read(nodec_stream_t* stream);
+
+/// Write an array of buffers to a stream.
+/// \param stream  the stream to write to.
+/// \param bufs    the array of buffers to write.
+/// \param count the number of buffers in the array.
 void      async_write_bufs(nodec_stream_t* stream, uv_buf_t bufs[], size_t count);
+
+/// Write a buffer to a stream.
 void      async_write_buf(nodec_stream_t* stream, uv_buf_t buf);
+
+/// Write a string to a stream.
+/// \param stream stream to write to.
+/// \param s      the string to write.
 void      async_write(nodec_stream_t* stream, const char* s);
 
-
+/// The type of buffered streams. 
+/// Derives from a basic #nodec_stream_t and can be cast to it using as_stream().
+/// Buffered streams have added functionality, like being able to read
+/// a stream up to a certain pattern is encountered, or reading the full
+/// stream as a single buffer.
 typedef struct _nodec_bstream_t nodec_bstream_t;
+
+/// Safely cast a buffered stream to a basic stream.
 nodec_stream_t*  as_stream(nodec_bstream_t* stream);
 
+/// Use a buffered stream in a scope, freeing the stream when exiting.
+///
+/// This safely uses the stream in a scope and frees the stream afterwards
+/// (even if an exception is thrown).
+/// Uses async_shutdown(stream) too if no exception was thrown.
+/// \param s   the #nodec_bstream_t to free after use.
+///
+/// \b Example
+/// ```
+/// nodec_bstream_t s = nodec_tcp_connect("http://www.google.com");
+/// {using_bstream(s){
+///    uv_buf_t buf = async_read_buf_all(s);
+///    {using_buf(&buf){
+///       printf("received: %s\n", buf.base);
+///    }}
+/// }}
+/// ```
 #define using_bstream(s)  using_stream(as_stream(s))  
 
+/// Read the entire stream as a single buffer.
 uv_buf_t  async_read_buf_all(nodec_bstream_t* bstream);
+
+/// Read the entire stream as a string.
 char*     async_read_all(nodec_bstream_t* bstream);
+
+/// Read a stream into a pre-allocated buffer.
+/// \param bstream  the stream to read from.
+/// \param buf      the buffer to read into; reads up to either the end of the stream
+///                 or up to the `buf.len`.
+/// \returns the number of bytes read.
 size_t    async_read_into(nodec_bstream_t* bstream, uv_buf_t buf);
+
+/// Read a stream until some pattern is encountered.
+/// The returned buffer will contain `pat` unless the end-of-stream was 
+/// encountered or `read_max` bytes were read. The return buffer may contain 
+/// more data following the
+/// the pattern `pat`. This is more efficient than async_read_buf_upto which may involve
+/// some memory copying to split buffers.
+/// \param bstream the stream to read from.
+/// \param[out] toread  the number of bytes just including the pattern `pat`. 0 on failure.
+/// \param[in]  pat     the pattern to scan for.
+/// \param[in] pat_len   the length of the patter. For efficiency reasons, this can be at
+///                      most 8 (bytes).
+/// \param[in] read_max stop reading after `read_max` bytes have been seen. Depending on 
+///          the internal buffering, the returned buffer might still contain more bytes.
+/// \returns buffer with the read bytes where `buf.len >= *toread`. Returns
+///          a null buffer (see nodec_buf_is_null()) if an end-of-stream is encountered.
 uv_buf_t  async_read_buf_including(nodec_bstream_t* bstream, size_t* toread, const void* pat, size_t pat_len, size_t read_max);
-uv_buf_t  async_read_buf_upto(nodec_bstream_t* bstream, const void* pat, size_t pat_len, size_t max);
+
+/// Read a stream until some pattern is encountered.
+/// The returned buffer will contain `pat` at its end unless the end-of-stream was 
+/// encountered or `read_max` bytes were read. 
+/// \param bstream the stream to read from.
+/// \param[in]  pat     the pattern to scan for.
+/// \param[in] pat_len   the length of the patter. For efficiency reasons, this can be at
+///                      most 8 (bytes).
+/// \param[in] read_max stop reading after `read_max` bytes have been seen. Depending on 
+///          the internal buffering, the returned buffer might still contain more bytes.
+/// \returns buffer with the read bytes. Returns
+///          a null buffer (see nodec_buf_is_null()) if an end-of-stream is encountered.
+uv_buf_t  async_read_buf_upto(nodec_bstream_t* bstream, const void* pat, size_t pat_len, size_t read_max);
+
+/// Read the first line of a buffered stream.
 uv_buf_t  async_read_buf_line(nodec_bstream_t* bstream);
+
+/// Read the first line as a string from a buffered stream.
 char*     async_read_line(nodec_bstream_t* bstream);
 
-// Create a buffered stream from a plain stream
+/// Create a buffered stream from a plain stream
 nodec_bstream_t* nodec_bstream_alloc_on(nodec_stream_t* source);
 
 
-// Creata a buffered stream from a `uv_stream_t`
+/// Low level: Create a buffered stream from an internal `uv_stream_t`.
+///
+/// \param stream   the underlying `uv_stream_t`. Freed when the #nodec_bstream_t is freed.
+/// \returns a buffered stream.
 nodec_bstream_t* nodec_bstream_alloc(uv_stream_t* stream);
+
+/// Low level: Create a buffered stream from an internal `uv_stream_t` for reading.
+///
+/// \param stream   the underlying `uv_stream_t`. Freed when the #nodec_bstream_t is freed.
+/// \returns a buffered stream.
 nodec_bstream_t* nodec_bstream_alloc_read(uv_stream_t* stream);
+
+/// Low level: Create a buffered stream from an internal `uv_stream_t` for reading.
+///
+/// \param stream   the underlying `uv_stream_t`. Freed when the #nodec_bstream_t is freed.
+/// \param read_max  return end-of-stream after `read_max` bytes are read. Use 0 for no maximum.
+/// \param alloc_init the initial allocation size for read buffers. Use 0 for default (8k). Doubles on further data until `alloc_max`.
+/// \param alloc_max  the maximal allocation size for read buffers.
+/// \returns a buffered stream.
 nodec_bstream_t* nodec_bstream_alloc_read_ex(uv_stream_t* stream, size_t read_max, size_t alloc_init, size_t alloc_max);
 
 
+#ifndef NO_ZLIB
+
+nodec_bstream_t* nodec_zstream_alloc(nodec_stream_t* stream);
+nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, int compress_level, bool gzip);
+
+#endif
+
+///@}
 
 
 /*
@@ -282,6 +455,10 @@ void nodec_free_addrinfov(lh_value infov);
 /* ----------------------------------------------------------------------------
   TCP
 -----------------------------------------------------------------------------*/
+
+/// \defgroup tcpx Low level TCP connections
+/// @{
+
 typedef struct _channel_t tcp_channel_t;
 void            channel_freev(lh_value vchannel);
 #define using_tcp_channel(ch)  defer(channel_freev,lh_value_ptr(ch))
@@ -294,29 +471,54 @@ void            nodec_tcp_bind(uv_tcp_t* handle, const struct sockaddr* addr, un
 tcp_channel_t*  nodec_tcp_listen(uv_tcp_t* tcp, int backlog, bool channel_owns_tcp);
 uv_stream_t*    async_tcp_channel_receive(tcp_channel_t* ch);
 
+/// @}
 
-// TCP connection
+/// \defgroup tcp TCP connections
+/// @{
 
+/// Establish a TCP connection.
+/// \param addr   Connection address. 
+/// \param host   Host name, only used for error messages and can be `NULL`.
 nodec_bstream_t* async_tcp_connect_at(const struct sockaddr* addr, const char* host /* can be NULL, used for errors */);
+
+/// Establish a TCP connection.
+/// \param host     Host address. 
+/// \param service  Can be a port (`"8080"`) or service (`"https"`). Uses `"http"` when `NULL`.
 nodec_bstream_t* async_tcp_connect_at_host(const char* host, const char* service /*NULL="http"*/);
+
+/// Establish a TCP connection.
+/// \param host     Host address as a url, like `"http://www.bing.com"`.
 nodec_bstream_t* async_tcp_connect(const char* host);
 
 // TCP server
 
+/// TCP Server configuration options.
 typedef struct _tcp_server_config_t {
-  int       backlog;           // maximal pending request queue length
-  int       max_interleaving;  // maximal number concurrent requests
-  uint64_t  timeout;           // ms between connection requests allowed; 0 = infinite
-  uint64_t  timeout_total;     // total allowed connection time in ms; 0 = infinite
+  int       backlog;           ///< maximal pending request queue length (default 8).
+  int       max_interleaving;  ///< maximal number concurrent requests (default 512).
+  uint64_t  timeout;           ///< ms between connection requests allowed; 0 = infinite
+  uint64_t  timeout_total;     ///< total allowed connection time in ms; 0 = infinite
 } tcp_server_config_t;
 
+/// Default TCP server configuration.
 #define tcp_server_config()    { 0, 0, 0, 0 }
 
+/// The server callback when listening on a TCP connection.
+/// \param id       The identity of the current asynchronous strand.
+/// \param client   The connecting client data stream.
+/// \param arg      The `lh_value` passed from async_tcp_server_at().
 typedef void    (nodec_tcp_servefun)(int id, nodec_bstream_t* client, lh_value arg);
 
-void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config,
-                          nodec_tcp_servefun* servefun, lh_actionfun* on_exn,
-                          lh_value arg);
+/// Create a TCP server.
+///
+/// \param addr       The socket address to serve.
+/// \param config     The TCP server configuration, can be `NULL` in which case tcp_server_config() is used.
+/// \param servefun   The callback called when a client connects.
+/// \param on_exn     Optional function that is called when an exception happens in `servefun`.
+/// \param arg        Optional argument to pass on to `servefun`, can be `lh_value_null`.
+void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config, nodec_tcp_servefun* servefun, lh_actionfun* on_exn, lh_value arg);
+
+/// @}
 
 
 
@@ -605,7 +807,6 @@ const void* nodec_memmem(const void* src, size_t src_len, const void* pat, size_
 #define using_zero_alloc(tp,name)      using_zero_alloc_n(1,tp,name)
 
 #define nodec_zero(tp,ptr)        memset(ptr,0,sizeof(tp));
-
 
 
 #endif // __nodec_h
