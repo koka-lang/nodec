@@ -494,65 +494,30 @@ static void http_out_send_raw_headers(http_out_t* out, uv_buf_t prefix, uv_buf_t
   out->head_offset = 0;
 }
 
-void http_out_send_headers(http_out_t* out, const char* prefix, const char* postfix) {
+static void http_out_send_headers(http_out_t* out, const char* prefix, const char* postfix) {
   http_out_send_raw_headers(out, nodec_buf_str(prefix), nodec_buf_str(postfix));
 }
 
-void http_out_send_status_headers(http_out_t* out, http_status_t status, bool end) {
-  // send status
+static void http_out_send_status_headers(http_out_t* out, http_status_t status) {
+  // send status to a client
   if (status == 0) status = HTTP_STATUS_OK;
   char line[256];
   snprintf(line, 256, "HTTP/1.1 %i %s\r\nDate: %s\r\n", status, nodec_http_status_str(status), nodec_inet_date_now());
   line[255] = 0;
-  http_out_send_headers(out, line, (end ? "Content-Length: 0\r\n\r\n" : NULL));
+  http_out_send_headers(out, line, "\r\n");
 }
 
-void http_out_send_request_headers(http_out_t* out, http_method_t method, const char* url, bool end) {
+static void http_out_send_request_headers(http_out_t* out, http_method_t method, const char* url) {
+  // send request to a server
   char prefix[512];
   snprintf(prefix, 512, "%s %s HTTP/1.1\r\nDate: %s\r\n", nodec_http_method_str(method), url, nodec_inet_date_now());
   prefix[511] = 0;
-  http_out_send_headers(out, prefix, (end ? "\r\n" : NULL));
+  http_out_send_headers(out, prefix, "\r\n");
 }
 
-
-
-static void http_out_send_bufs(http_out_t* out, uv_buf_t bufs[], size_t count, const char* prefix_fmt, const char* postfix) {
-  // pre and post fix the buffers, and calculate the total
-  uv_buf_t* xbufs = alloca((count + 2) * sizeof(uv_buf_t));
-  size_t total = 0;
-  for (size_t i = 0; i < count; i++) {
-    total += bufs[i].len;
-    if (total < bufs[i].len) lh_throw_errno(EOVERFLOW);
-    xbufs[i + 1] = bufs[i];
-  }
-  // create pre- and postfix
-  char prefix[256];
-  snprintf(prefix, 256, prefix_fmt, total);
-  xbufs[0] = nodec_buf(prefix, strlen(prefix));
-  xbufs[count + 1] = nodec_buf_str(postfix);
-  // and write it out as a chunk
-  async_write_bufs(out->stream, xbufs, count + 2);
-}
-
-
-const char* http_guess_content_type(const char* content_type, const char* start_content) {
-  if (content_type == NULL || (strlen(content_type)>0 && _stricmp(content_type,"guess")!=0)) return content_type;
-  // guess
-  if (nodec_starts_with(start_content, "<!DOCTYPE") || nodec_starts_with(start_content,"<html")) {
-    return "text/html; charset=utf-8";
-  }
-  else if (nodec_starts_with(start_content,"{") || nodec_starts_with(start_content, "[")) {
-    return "application/json; charset=utf-8";
-  }
-  else {
-    return "text/plain; charset=utf-8";
-  }
-}
-
-// Send entire body at once
-void http_out_send_body_bufs(http_out_t* out, uv_buf_t bufs[], size_t count, const char* content_type) {
-  if (count>0) content_type = http_guess_content_type(content_type, bufs[0].base);
-
+static void http_out_add_header_content_type(http_out_t* out, const char* content_type) {
+  if (content_type == NULL) return;
+  char hvalue[256];
   // lookup default character set
   const char* charset = NULL;
   if (content_type != NULL && strstr(content_type, "charset") == NULL) {
@@ -560,58 +525,104 @@ void http_out_send_body_bufs(http_out_t* out, uv_buf_t bufs[], size_t count, con
   }
   const char* charset_sep = (charset == NULL ? "" : ";");
   if (charset == NULL) charset = "";
+  snprintf(hvalue, 256, "%s%s%s", content_type, charset_sep, charset);
+  http_out_add_header(out, "Content-Type", hvalue);
+}
 
-  char prefix_fmt[256];
-  // decimal length of size_t: zu
-  if (content_type != NULL) {
-    snprintf(prefix_fmt, 256, "Content-Type: %s%s%s\r\nContent-Length: %%zu\r\n\r\n", content_type, charset_sep, charset);
+
+static void http_out_add_headers_body(http_out_t* out, size_t content_length, const char* content_type) {
+  http_out_add_header_content_type(out,content_type);
+  if (content_length != NODEC_CHUNKED) {
+    char lvalue[64];
+    snprintf(lvalue, 64, "%zu", content_length);
+    http_out_add_header(out, "Content-Length", lvalue);
   }
   else {
-    strncpy_s(prefix_fmt, 256, "Content-Length: %zu\r\n\r\n", 256);
+    http_out_add_header(out, "Transfer-Encoding", "chunked");
   }
-  http_out_send_bufs(out, bufs, count, prefix_fmt, ""); 
 }
 
-void http_out_send_body_buf(http_out_t* out, uv_buf_t buf, const char* content_type) {
-  http_out_send_body_bufs(out, &buf, 1, content_type);
-}
+/*-----------------------------------------------------------------
+  HTTP out body stream
+-----------------------------------------------------------------*/
 
-void http_out_send_body(http_out_t* out, const char* s, const char* content_type) {
-  http_out_send_body_buf(out, nodec_buf_str(s), content_type);
-}
+typedef struct _http_out_stream_t {
+  nodec_stream_t    stream;
+  nodec_stream_t*   source;
+  bool              chunked;
+} http_out_stream_t;
 
-
-
-// -----------------------------------------------------------------------
-// Send body in chunks
-
-// Start chunked body send
-void http_out_send_chunked_start(http_out_t* out, const char* content_type) {
-  content_type = http_guess_content_type(content_type, "");
-  char prefix[256];
-  if (content_type != NULL && strlen(content_type) > 0) {
-    snprintf(prefix, 256, "Content-Type: %s\r\nTransfer-Encoding: chunked\r\n\r\n", content_type);
+static void _http_out_write_bufs(nodec_stream_t* stream, uv_buf_t bufs[], size_t count) {
+  if (bufs == NULL || count == 0) return;
+  http_out_stream_t* hs = (http_out_stream_t*)stream;
+  if (!hs->chunked) {
+    async_write_bufs(hs->source, bufs, count);
   }
   else {
-    strncpy_s(prefix, 256, "Transfer-Encoding: chunked\r\n\r\n", 256);
+    // pre and post fix the buffers, and calculate the total
+    uv_buf_t* xbufs = alloca((count + 2) * sizeof(uv_buf_t));
+    size_t total = 0;
+    for (size_t i = 0; i < count; i++) {
+      total += bufs[i].len;
+      if (total < bufs[i].len) nodec_check(EOVERFLOW);
+      xbufs[i + 1] = bufs[i];
+    }
+    // create pre- and postfix
+    char prefix[256];
+    snprintf(prefix, 256, "%zX\r\n", total );  // hexadecimal chunk length
+    xbufs[0] = nodec_buf(prefix, strlen(prefix));
+    xbufs[count + 1] = nodec_buf_str("\r\n");
+    // and write it out as a chunk
+    async_write_bufs(hs->source, xbufs, count + 2);
   }
-  http_out_send_raw_str(out, prefix);
 }
 
-void http_out_send_chunk_bufs(http_out_t* out, uv_buf_t bufs[], size_t count) {
-  http_out_send_bufs(out, bufs, count, "%zX\r\n", "\r\n"); // hexadecimal length of size_t
+static void _http_out_shutdown(nodec_stream_t* stream) {
+  http_out_stream_t* hs = (http_out_stream_t*)stream;
+  if (hs->chunked) {
+    // write out final 0 chunk
+    async_write_buf(hs->source, nodec_buf_str("0\r\n\r\n"));
+  }
 }
 
-void http_out_send_chunk_buf(http_out_t* out, uv_buf_t buf) {
-  http_out_send_chunk_bufs(out, &buf, 1);
+static void _http_out_free(nodec_stream_t* stream) {
+  http_out_stream_t* hs = (http_out_stream_t*)stream;
+  hs->source = NULL;  // we don't own the underlying TCP stream, don't free it
+  nodec_stream_release(&hs->stream);
+  nodec_free(hs);
 }
 
-void http_out_send_chunk(http_out_t* out, const char* s) {
-  http_out_send_chunk_buf(out, nodec_buf_str(s));
+static nodec_stream_t* http_out_stream_alloc(nodec_stream_t* source, bool chunked) {
+  http_out_stream_t* hs = nodec_alloc(http_out_stream_t);
+  hs->source = source;
+  hs->chunked = chunked;
+  nodec_stream_init(&hs->stream, NULL,
+                       &_http_out_write_bufs, &_http_out_shutdown, &_http_out_free);
+  return &hs->stream;
 }
 
-void http_out_send_chunked_end(http_out_t* out) {
-  http_out_send_chunk_buf(out, nodec_buf_null());  // final 0 length message
+
+
+void http_out_send_status(http_out_t* out, http_status_t status) {
+  http_out_add_header(out, "Content-Length", "0");
+  http_out_send_status_headers(out, status);
+}
+
+nodec_stream_t* http_out_send_status_body(http_out_t* out, http_status_t status, size_t content_length, const char* content_type) {
+  http_out_add_headers_body(out, content_length, content_type);
+  http_out_send_status_headers(out, status);
+  return http_out_stream_alloc(out->stream, (content_length == NODEC_CHUNKED));
+}
+
+void http_out_send_request(http_out_t* out, http_method_t method, const char* url) {
+  http_out_add_header(out,"Content-Length", "0");
+  http_out_send_request_headers(out, method, url);
+}
+
+nodec_stream_t* http_out_send_request_body(http_out_t* out, http_method_t method, const char* url, size_t content_length, const char* content_type) {
+  http_out_add_headers_body(out, content_length, content_type);
+  http_out_send_request_headers(out, method, url);
+  return http_out_stream_alloc(out->stream, (content_length == NODEC_CHUNKED));
 }
 
 
@@ -717,28 +728,39 @@ void http_resp_add_header(const char* field, const char* value) {
   http_out_add_header(http_resp(), field, value);
 }
 
-void http_resp_send(http_status_t status, const char* body /* can be NULL */, const char* content_type) {
+void http_resp_send_status(http_status_t status) {
   http_out_t* resp = http_resp();
-  http_out_send_status_headers(resp, status, body == NULL);
-  if (body != NULL) http_out_send_body(resp, body, content_type);
+  http_out_send_status(resp, status);
 }
+
+nodec_stream_t* http_resp_send_status_body(http_status_t status, size_t content_length, const char* content_type) {
+  http_out_t* resp = http_resp();
+  return http_out_send_status_body(resp, status, content_length, content_type);
+}
+
 
 void http_resp_send_ok() {
-  http_resp_send(HTTP_STATUS_OK, NULL, NULL);
+  http_resp_send_status(HTTP_STATUS_OK);
 }
 
-
-void http_resp_send_bufs(http_status_t status, uv_buf_t bufs[], size_t count, const char* content_type) {
+void http_resp_send_body_buf(http_status_t status, uv_buf_t buf, const char* content_type) {
   http_out_t* resp = http_resp();
-  http_out_send_status_headers(resp, status, bufs == NULL || count == 0);
-  if (bufs != NULL && count > 0) http_out_send_body_bufs(resp, bufs, count, content_type);
+  if (nodec_buf_is_null(buf)) {
+    http_out_send_status(resp, status);
+  }
+  else {
+    nodec_stream_t* stream = http_out_send_status_body(resp, status, buf.len, content_type);
+    {using_stream(stream) {
+      async_write_buf(stream, buf);
+    }}
+  }
 }
 
-void http_resp_send_buf(http_status_t status, uv_buf_t buf, const char* content_type) {
-  http_out_t* resp = http_resp();
-  http_out_send_status_headers(resp, status, nodec_buf_is_null(buf));
-  if (!nodec_buf_is_null(buf)) http_out_send_body_buf(resp, buf, content_type);
+void http_resp_send_body_str(http_status_t status, const char* body /* can be NULL */, const char* content_type) {
+  http_resp_send_body_buf(status, nodec_buf_str(body), content_type);
 }
+
+
 
 
 // Requests

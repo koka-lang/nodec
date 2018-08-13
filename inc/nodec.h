@@ -603,23 +603,15 @@ void http_out_clearv(lh_value respv);
 // Add headers
 void http_out_add_header(http_out_t* out, const char* field, const char* value);
 
-// Send the headers
-void http_out_send_headers(http_out_t* out, const char* prefix, const char* postfix);
-void http_out_send_status_headers(http_out_t* out, http_status_t status, bool end);
-void http_out_send_request_headers(http_out_t* out, http_method_t method, const char* url, bool end);
+// Send headers and get a possible body write stream
 
-// Send full body at once
-void http_out_send_body_bufs(http_out_t* out, uv_buf_t bufs[], size_t count, const char* content_type);
-void http_out_send_body_buf(http_out_t* out, uv_buf_t buf, const char* content_type);
-void http_out_send_body(http_out_t* out, const char* s, const char* content_type);
+/// Use this as a `content_length` to use a _chunked_ transfer encoding.
+#define NODEC_CHUNKED ((size_t)(-1))
 
-// Send chunked up body
-void http_out_send_chunked_start(http_out_t* out, const char* content_type);
-void http_out_send_chunk_bufs(http_out_t* out, uv_buf_t bufs[], size_t count);
-void http_out_send_chunk_buf(http_out_t* out, uv_buf_t buf);
-void http_out_send_chunk(http_out_t* out, const char* s);
-void http_out_send_chunked_end(http_out_t* out);
-
+void             http_out_send_status(http_out_t* out, http_status_t status);
+nodec_stream_t*  http_out_send_status_body(http_out_t* out, http_status_t status, size_t content_length, const char* content_type);
+void             http_out_send_request(http_out_t* out, http_method_t method, const char* url);
+nodec_stream_t*  http_out_send_request_body(http_out_t* out, http_method_t method, const char* url, size_t content_length, const char* content_type);
 
 /*-----------------------------------------------------------------
   HTTP server implicitly bound request and response
@@ -629,11 +621,12 @@ int         http_strand_id();
 http_in_t*  http_req();
 http_out_t* http_resp();
 
-void http_resp_add_header(const char* field, const char* value);
-void http_resp_send(http_status_t status, const char* body /* can be NULL */, const char* content_type);
-void http_resp_send_ok();
-void http_resp_send_bufs(http_status_t status, uv_buf_t bufs[], size_t count, const char* content_type);
-void http_resp_send_buf(http_status_t status, uv_buf_t buf, const char* content_type);
+void            http_resp_add_header(const char* field, const char* value);
+void            http_resp_send_status(http_status_t status);
+nodec_stream_t* http_resp_send_status_body(http_status_t status, size_t content_length, const char* content_type);
+void            http_resp_send_ok();
+void            http_resp_send_body_buf(http_status_t status, uv_buf_t buf, const char* content_type);
+void            http_resp_send_body_str(http_status_t status, const char* body, const char* content_type);
 
 const char*   http_req_url();
 const char*   http_req_path();

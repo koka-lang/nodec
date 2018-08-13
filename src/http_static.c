@@ -58,7 +58,7 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
         if (field_len == ETAG_LEN && strncmp(field, etag, ETAG_LEN) == 0) {
           // matching etag, return a 304 Not-Modified
           printf("match etag! return 304");
-          http_resp_send(HTTP_STATUS_NOT_MODIFIED, NULL, NULL);
+          http_resp_send_status(HTTP_STATUS_NOT_MODIFIED);
           return lh_value_int(size);
         }
       }
@@ -71,34 +71,34 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
     if (if_modified_since >= mtime) {
       // it has not been modified since, return a 304
       printf("match if-modified-since! return 304");
-      http_resp_send(HTTP_STATUS_NOT_MODIFIED, NULL, NULL);
+      http_resp_send_status(HTTP_STATUS_NOT_MODIFIED);
       return lh_value_int(size);
     }
   }
 
   // Send content
+  // TODO: always read in chunks, regardless of chunked encoding
   const char* content_type = nodec_mime_from_fname(path);
   if (config->min_chunk_size > 0 && size > config->min_chunk_size) {
     // send in chunks
-    http_out_t* resp = http_resp();
-    http_out_send_status_headers(resp, HTTP_STATUS_OK, false);
-    http_out_send_chunked_start(resp, content_type);
-    uv_buf_t buf = nodec_buf_alloc(config->min_chunk_size);
-    size_t nread = 0;
-    {using_buf(&buf) {
-      while ((nread = async_fread_into(file, buf, -1)) > 0) {
-        buf.len = (uv_buf_len_t)nread;
-        http_out_send_chunk_buf(resp, buf);
-        buf.len = (uv_buf_len_t)config->min_chunk_size;
-      };
+    nodec_stream_t* stream = http_resp_send_status_body(HTTP_STATUS_OK, NODEC_CHUNKED, content_type);
+    {using_stream(stream) {
+      uv_buf_t buf = nodec_buf_alloc(config->min_chunk_size);
+      size_t nread = 0;
+      {using_buf(&buf) {
+        while ((nread = async_fread_into(file, buf, -1)) > 0) {
+          buf.len = (uv_buf_len_t)nread;
+          async_write_buf(stream, buf);
+          buf.len = (uv_buf_len_t)config->min_chunk_size;
+        };
+      }}
     }}
-    http_out_send_chunked_end(resp);
   }
   else {
     // send at once
     uv_buf_t buf = async_fread_buf(file, size, -1);
     {using_buf(&buf) {
-      http_resp_send_buf(HTTP_STATUS_OK, buf, content_type);
+      http_resp_send_body_buf(HTTP_STATUS_OK, buf, content_type);
     }}
   }
   return lh_value_int(size);
@@ -136,7 +136,7 @@ static bool http_try_send(const http_static_config_t* config, const char* root, 
     char dirpath[MAX_PATH];
     snprintf(dirpath, MAX_PATH, (path[0] == 0 ? "/" : "/%s/"), path);
     http_resp_add_header("Location", dirpath);
-    http_resp_send(HTTP_STATUS_MOVED_PERMANENTLY, NULL, NULL);
+    http_resp_send_status(HTTP_STATUS_MOVED_PERMANENTLY);
     return true;
   }
   else {
@@ -156,5 +156,5 @@ void http_serve_static(const char* root, const http_static_config_t* config) {
     const char* path = http_req_path();
     ok = http_try_send(config, root, path, NULL);
   }}
-  if (!ok) http_resp_send(HTTP_STATUS_NOT_FOUND, NULL, NULL);
+  if (!ok) http_resp_send_status(HTTP_STATUS_NOT_FOUND);
 }

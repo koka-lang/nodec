@@ -56,7 +56,7 @@ static void async_write_http_err(uv_stream_t* client, http_status_t code, const 
   if (!uv_is_closing((uv_handle_t*)client)) {
     // don't raise exceptions..
     asyncx_uv_write_buf(client, nodec_buf_str(headers));
-    asyncx_uv_write_buf(client, nodec_buf_str(body));
+    if (!uv_is_closing((uv_handle_t*)client)) asyncx_uv_write_buf(client, nodec_buf_str(body));
   }
 }
 

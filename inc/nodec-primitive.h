@@ -29,6 +29,7 @@ typedef size_t uv_buf_len_t;
 #endif
 
 
+
 /* ----------------------------------------------------------------------------
 Asynchronous primitives
 -----------------------------------------------------------------------------*/
@@ -49,6 +50,8 @@ uv_errno_t asyncx_await_owned(uv_req_t* uvreq, void* owner);
 // is released. This is used for streams or timers.
 void       async_await_owned(uv_req_t* req, void* owner);
 
+
+
 /* ----------------------------------------------------------------------------
 Channels
 -----------------------------------------------------------------------------*/
@@ -60,11 +63,72 @@ void          channel_free(channel_t* channel);
 void          channel_freev(lh_value vchannel);
 #define using_channel(name) channel_t* name = channel_alloc(-1); defer(&channel_freev,lh_value_ptr(name))
 
-uv_errno_t         channel_emit(channel_t* channel, lh_value data, lh_value arg, int err);
+uv_errno_t    channel_emit(channel_t* channel, lh_value data, lh_value arg, int err);
 int           channel_receive(channel_t* channel, lh_value* data, lh_value* arg);
 bool          channel_is_full(channel_t* channel);
 
 
+// ---------------------------------------------------------------------------------
+// Internal stream functions
+// ---------------------------------------------------------------------------------
+
+typedef void     (nodec_stream_free_fun)(nodec_stream_t* stream);
+typedef void     (async_shutdown_fun)(nodec_stream_t* stream);
+typedef uv_buf_t(async_read_buf_fun)(nodec_stream_t* stream);
+typedef void     (async_write_bufs_fun)(nodec_stream_t* stream, uv_buf_t bufs[], size_t count);
+
+struct _nodec_stream_t {
+  async_read_buf_fun*     read_buf;
+  async_write_bufs_fun*   write_bufs;
+  async_shutdown_fun*     shutdown;
+  nodec_stream_free_fun*  stream_free;
+};
+
+void nodec_stream_init(nodec_stream_t* stream,
+  async_read_buf_fun*  read_buf,
+  async_write_bufs_fun* write_bufs,
+  async_shutdown_fun*   shutdown,
+  nodec_stream_free_fun* stream_free);
+void nodec_stream_release(nodec_stream_t* stream);
+
+typedef struct _chunk_t {
+  struct _chunk_t* next;
+  uv_buf_t     buf;
+} chunk_t;
+
+typedef struct _chunks_t {
+  chunk_t*     first;
+  chunk_t*     last;
+  size_t       available;
+} chunks_t;
+
+typedef enum _nodec_chunk_read_t {
+  CREAD_NORMAL,
+  CREAD_EVEN_IF_AVAILABLE,
+  CREAD_TO_EOF
+} nodec_chunk_read_t;
+
+typedef bool (async_read_chunk_fun)(nodec_bstream_t* bstream, nodec_chunk_read_t mode);
+
+struct _nodec_bstream_t {
+  nodec_stream_t        stream_t;
+  async_read_chunk_fun* read_chunk;
+  chunks_t              chunks;
+  nodec_stream_t*       source;
+};
+
+void nodec_bstream_init(nodec_bstream_t* bstream,
+  async_read_chunk_fun* read_chunk,
+  async_read_buf_fun*  read_buf,
+  async_write_bufs_fun* write_bufs,
+  async_shutdown_fun*   shutdown,
+  nodec_stream_free_fun* stream_free);
+
+void nodec_bstream_release(nodec_bstream_t* bstream);
+
+// ---------------------------------------------------------------------------------
+// LibUV streams 
+// ---------------------------------------------------------------------------------
 
 
 uv_errno_t asyncx_uv_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count);
@@ -88,5 +152,7 @@ void nodec_uv_stream_read_stop(nodec_uv_stream_t* rs);
 
 // Used to implement keep-alive
 uv_errno_t asyncx_uv_stream_await_available(nodec_uv_stream_t* stream, int64_t timeout);
+
+
 
 #endif

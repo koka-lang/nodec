@@ -9,20 +9,9 @@
 #include "nodec-internal.h"
 #include <assert.h>
 
-typedef void     (nodec_stream_free_fun)(nodec_stream_t* stream);
-typedef void     (async_shutdown_fun)(nodec_stream_t* stream);
-typedef uv_buf_t (async_read_buf_fun)(nodec_stream_t* stream);
-typedef void     (async_write_bufs_fun)(nodec_stream_t* stream, uv_buf_t bufs[], size_t count);
-
-typedef struct _nodec_stream_t {
-  async_read_buf_fun*     read_buf;
-  async_write_bufs_fun*   write_bufs;
-  async_shutdown_fun*     shutdown;
-  nodec_stream_free_fun*  stream_free;
-} nodec_stream_t;
 
 void nodec_stream_free(nodec_stream_t* stream) {
-  stream->stream_free(stream);
+  if (stream->stream_free!=NULL) stream->stream_free(stream);
 }
 
 void nodec_stream_freev(lh_value streamv) {
@@ -30,18 +19,20 @@ void nodec_stream_freev(lh_value streamv) {
 }
 
 void async_shutdown(nodec_stream_t* stream) {
-  stream->shutdown(stream);
+  if (stream->shutdown != NULL) stream->shutdown(stream);
 }
 
 uv_buf_t async_read_buf(nodec_stream_t* stream) {
+  if (stream->read_buf == NULL) nodec_check_msg(UV_EINVAL, "trying to read from a write stream");
   return stream->read_buf(stream);
 }
 
 void async_write_bufs(nodec_stream_t* stream, uv_buf_t bufs[], size_t count) {
+  if (stream->write_bufs == NULL) nodec_check_msg(UV_EINVAL, "trying to write to a read stream");
   stream->write_bufs(stream, bufs, count);
 }
 
-static void nodec_stream_init(nodec_stream_t* stream,
+void nodec_stream_init(nodec_stream_t* stream,
   async_read_buf_fun*  read_buf,
   async_write_bufs_fun* write_bufs,
   async_shutdown_fun*   shutdown,
@@ -53,7 +44,7 @@ static void nodec_stream_init(nodec_stream_t* stream,
   stream->stream_free = stream_free;
 }
 
-static void nodec_stream_release(nodec_stream_t* stream) {
+void nodec_stream_release(nodec_stream_t* stream) {
   // nothing
 }
 
@@ -82,17 +73,6 @@ Read chunks
 read data in a list of buffers (`chunks`) and provide asynchronous functions to read
 from these chunks potentially waiting until data is read.
 -----------------------------------------------------------------------------*/
-
-typedef struct _chunk_t {
-  struct _chunk_t* next;
-  uv_buf_t     buf;
-} chunk_t;
-
-typedef struct _chunks_t {
-  chunk_t*     first;
-  chunk_t*     last;
-  size_t       available;
-} chunks_t;
 
 static void chunks_init(chunks_t* chunks) {
   memset(chunks, 0, sizeof(*chunks));
@@ -285,26 +265,16 @@ Buffered streams
 Abstract class: buffered streams and basic uv_stream_t derive from this
 -----------------------------------------------------------------------------*/
 
-typedef enum _nodec_chunk_read_t {
-  CREAD_NORMAL,
-  CREAD_EVEN_IF_AVAILABLE,
-  CREAD_TO_EOF
-} nodec_chunk_read_t;
-
-typedef bool (async_read_chunk_fun)(nodec_bstream_t* bstream, nodec_chunk_read_t mode);
-
-typedef struct _nodec_bstream_t {
-  nodec_stream_t        stream_t;
-  async_read_chunk_fun* read_chunk;
-  chunks_t              chunks;
-  nodec_stream_t*       source;
-} nodec_bstream_t;
+bool async_bstream_read_chunk(nodec_bstream_t* bstream, nodec_chunk_read_t mode) {
+  if (bstream->read_chunk == NULL) nodec_check_msg(UV_EINVAL, "trying to read from a write stream");
+  return bstream->read_chunk(bstream, mode);
+}
 
 nodec_stream_t* as_stream(nodec_bstream_t* bstream) {
   return &bstream->stream_t;
 }
 
-static void nodec_bstream_init(nodec_bstream_t* bstream,
+void nodec_bstream_init(nodec_bstream_t* bstream,
   async_read_chunk_fun* read_chunk,
   async_read_buf_fun*  read_buf,
   async_write_bufs_fun* write_bufs,
@@ -317,14 +287,14 @@ static void nodec_bstream_init(nodec_bstream_t* bstream,
   chunks_init(&bstream->chunks);
 }
 
-static void nodec_bstream_release(nodec_bstream_t* bstream) {
+void nodec_bstream_release(nodec_bstream_t* bstream) {
   chunks_release(&bstream->chunks);
   nodec_stream_release(&bstream->stream_t);
 }
 
 // Return a single buffer that contains the entire stream contents
 uv_buf_t async_read_buf_all(nodec_bstream_t* bstream) {
-  while (!bstream->read_chunk(bstream, CREAD_TO_EOF)) {
+  while (!async_bstream_read_chunk(bstream, CREAD_TO_EOF)) {
     // wait until eof
   }
   return chunks_read_buf_all(&bstream->chunks);
@@ -383,7 +353,7 @@ static size_t async_bstream_find(nodec_bstream_t* bstream, const void* pat, size
   size_t toread = 0;
   bool eof = false;
   while (!eof && (toread = chunks_find(&bstream->chunks, &find)) == 0 && (read_max == 0 || bstream->chunks.available < read_max)) {
-    eof = bstream->read_chunk(bstream, CREAD_EVEN_IF_AVAILABLE); // read direct and push into the chunks
+    eof = async_bstream_read_chunk(bstream, CREAD_EVEN_IF_AVAILABLE); // read direct and push into the chunks
   }
   return toread;
 }
