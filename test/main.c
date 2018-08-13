@@ -104,8 +104,8 @@ const char* response_body =
 "</body>\n"
 "</html>\n";
 
-void http_in_print(http_in_t* in) {
-  printf("%s %s\n headers: \n", http_method_str(http_in_method(in)), http_in_url(in));
+
+void http_in_headers_print(http_in_t* in) {
   size_t iter = 0;
   const char* value;
   const char* name;
@@ -128,8 +128,16 @@ void http_in_print(http_in_t* in) {
   }}
 }
 
-static void http_req_print() {
-  http_in_print(http_req());
+void http_req_print() {
+  http_in_t* in = http_req();
+  printf("%s %s\n headers: \n", http_method_str(http_in_method(in)), http_in_url(in));
+  http_in_headers_print(in);
+}
+
+
+static void http_in_status_print(http_in_t* in) {
+  printf("status: %li\n headers: \n", http_in_status(in));
+  http_in_headers_print(in);
 }
 
 static void test_http_serve() {
@@ -143,18 +151,19 @@ static void test_http_serve() {
   //async_wait(1000);
   //check_uverr(UV_EADDRINUSE);
 
-  //http_serve_static( "C:/Users/daan/Dropbox/dev/kuma-v5/web" //"../.."
-  //                 , NULL);
+  http_serve_static( "C:/Users/daan/Dropbox/dev/kuma-v5/web" //"../.."
+                   , NULL);
   
   // response
+  /*
   const char* accept = http_req_header("Accept");
   if (accept != NULL && strstr(accept, "text/html")) {
-    http_resp_send(HTTP_STATUS_OK, response_body, "guess");
+    http_resp_send_body_str(HTTP_STATUS_OK, response_body, "text/html");
   }
   else {
     http_resp_send_ok();
   }
-  
+  */
   printf("request handled\n\n\n");
 }
 
@@ -248,10 +257,10 @@ const char* http_request =
 
 lh_value test_connection(http_in_t* in, http_out_t* out, lh_value arg) {
   http_out_add_header(out, "Connection", "close");
-  http_out_send_request_headers(out, HTTP_GET, "/", true);
+  http_out_send_request(out, HTTP_GET, "/");
   async_http_in_read_headers(in); // wait for response
   printf("received, status: %i, content length: %llu\n", http_in_status(in), http_in_content_length(in));
-  http_in_print(in);
+  http_in_status_print(in);
   return lh_value_null;
 }
 
