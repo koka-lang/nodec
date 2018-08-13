@@ -129,7 +129,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\inc;..\..\..\libhandler\inc;..\..\..\libuv\include;..\..\..\http-parser;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\inc;..\..\..\libhandler\inc;..\..\..\libuv\include;..\..\..\http-parser;..\..\..\zlib;.</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -164,7 +164,7 @@
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
-      <AdditionalIncludeDirectories>..\..\inc;..\..\..\libhandler\inc;..\..\..\libuv\include;..\..\..\http-parser;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\inc;..\..\..\libhandler\inc;..\..\..\libuv\include;..\..\..\http-parser;..\..\..\zlib;.</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -184,7 +184,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\inc;..\..\..\libhandler\inc;..\..\..\libuv\include;..\..\..\http-parser;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\inc;..\..\..\libhandler\inc;..\..\..\libuv\include;..\..\..\http-parser;..\..\..\zlib;.</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
@@ -209,7 +209,7 @@
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
-      <AdditionalIncludeDirectories>..\..\inc;..\..\..\libhandler\inc;..\..\..\libuv\include;..\..\..\http-parser;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\inc;..\..\..\libhandler\inc;..\..\..\libuv\include;..\..\..\http-parser;..\..\..\zlib;.</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -157,6 +157,15 @@
   <ItemGroup>
     <Library Include="..\..\..\libuv\$(Configuration)\lib\libuv.lib" />
   </ItemGroup>
+  <ItemGroup Condition="'$(Platform)'=='Win32'">
+    <Library Include="..\..\..\zlib\contrib\vstudio\vc14\x86\ZlibStat$(Configuration)\zlibstat.lib" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Library Include="..\..\..\zlib\contrib\vstudio\vc14\$(Platform)\ZlibStat$(Configuration)WithoutAsm\zlibstat.lib" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Library Include="..\..\..\zlib\contrib\vstudio\vc14\$(Platform)\ZlibStat$(Configuration)\zlibstat.lib" />
+  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\debug.h" />
     <ClInclude Include="..\..\test\kvp.h" />
