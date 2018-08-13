@@ -872,6 +872,7 @@ static void async_zstream_write_buf(nodec_zstream_t* zs, uv_buf_t src, int flush
   zs->write_strm.avail_in = src.len;
   zs->write_strm.next_in = src.base;
   int res = 0;
+  size_t nwritten = 0;
   do {
     //uv_buf_t dest = nodec_buf_alloc(zs->chunk_size);
     //{using_buf(&dest) {
@@ -883,7 +884,7 @@ static void async_zstream_write_buf(nodec_zstream_t* zs, uv_buf_t src, int flush
         async_write_buf(zs->source, nodec_buf(zs->write_buf.base, nwritten));
       }
     //}}
-  } while (res == 0 && zs->write_strm.avail_out == 0);  // while full buffers
+  } while (res != Z_STREAM_ERROR && zs->write_strm.avail_out == 0);  // while full buffers
 }
 
 static void async_zstream_write_bufs(nodec_stream_t* s, uv_buf_t bufs[], size_t buf_count) {
@@ -910,6 +911,7 @@ static void nodec_zstream_free(nodec_stream_t* stream) {
   nodec_buf_free(zs->write_buf);
   zs->write_buf = nodec_buf_null();  
   nodec_stream_free(zs->source);
+  nodec_free(zs);
 }
 
 static void* nodec_zalloc(void* opaque, unsigned size, unsigned count) {
@@ -924,6 +926,10 @@ nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, int compress_lev
   int res = 0;
   nodec_zstream_t* zs = nodecx_alloc(nodec_zstream_t);
   if (zs == NULL) { res = UV_ENOMEM; goto err; }
+  zs->write_buf = nodec_buf_null();
+  zs->chunk_size = 64 * 1024;       // (de)compress in 64kb chunks
+  zs->nread = 0;
+  zs->nwritten = 0;
   nodec_bstream_init(&zs->bstream, &async_zstream_read_chunk,
     &async_zstream_read_buf, &async_zstream_write_bufs,
     &async_zstream_shutdown, &nodec_zstream_free);

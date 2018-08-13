@@ -77,30 +77,49 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
   }
 
   // Send content
-  // TODO: always read in chunks, regardless of chunked encoding
-  const char* content_type = nodec_mime_from_fname(path);
-  if (config->min_chunk_size > 0 && size > config->min_chunk_size) {
+  bool compressible = false;
+  const char* content_type = nodec_mime_info_from_fname(path,&compressible,NULL);
+  nodec_stream_t* stream;
+  size_t write_buf_size = 64 * 1024;  // write in 64kb parts
+  
+  bool gzip = false;
+  if (false && compressible) { // turn off gzip for now
+    const char* accept_enc = http_req_header("Accept-Encoding");
+    gzip = (accept_enc != NULL && strstr(accept_enc, "gzip") != NULL);
+  }
+  if (gzip || (config->min_chunk_size > 0 && size > config->min_chunk_size)) {
     // send in chunks
-    nodec_stream_t* stream = http_resp_send_status_body(HTTP_STATUS_OK, NODEC_CHUNKED, content_type);
-    {using_stream(stream) {
-      uv_buf_t buf = nodec_buf_alloc(config->min_chunk_size);
-      size_t nread = 0;
-      {using_buf(&buf) {
-        while ((nread = async_fread_into(file, buf, -1)) > 0) {
-          buf.len = (uv_buf_len_t)nread;
-          async_write_buf(stream, buf);
-          buf.len = (uv_buf_len_t)config->min_chunk_size;
-        };
-      }}
-    }}
+    if (gzip) {
+      http_resp_add_header("Content-Encoding", "gzip");
+    }
+    else {
+      char svalue[64];
+      snprintf(svalue, 64, "%zu", size);
+      http_resp_add_header("Content-Length", svalue);
+    }
+    stream = http_resp_send_status_body(HTTP_STATUS_OK, NODEC_CHUNKED, content_type);
+    if (write_buf_size < config->min_chunk_size) write_buf_size = config->min_chunk_size;
   }
   else {
-    // send at once
-    uv_buf_t buf = async_fread_buf(file, size, -1);
-    {using_buf(&buf) {
-      http_resp_send_body_buf(HTTP_STATUS_OK, buf, content_type);
-    }}
+    // send as one body
+    stream = http_resp_send_status_body(HTTP_STATUS_OK, size, content_type);
   }
+  if (gzip) {
+    // gzip the response
+    stream = as_stream(nodec_zstream_alloc(stream));
+  }
+  {using_stream(stream) {
+    // send in parts of `write_buf_size` length
+    uv_buf_t buf = nodec_buf_alloc(write_buf_size);
+    size_t nread = 0;
+    {using_buf(&buf) {
+      while ((nread = async_fread_into(file, buf, -1)) > 0) {
+        buf.len = (uv_buf_len_t)nread;
+        async_write_buf(stream, buf);
+        buf.len = (uv_buf_len_t)write_buf_size;
+      };
+    }}
+  }}
   return lh_value_int(size);
 }
 
