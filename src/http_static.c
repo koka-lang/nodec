@@ -92,17 +92,19 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
     const char* accept_enc = http_req_header("Accept-Encoding");
     gzip = (accept_enc != NULL && strstr(accept_enc, "gzip") != NULL);
   }
+  if (gzip) {
+    http_resp_add_header("Content-Encoding", "gzip");
+  }
 
   if (http_req_method() == HTTP_HEAD) {
     // don't send a body on HEAD requests
-    if (gzip) http_resp_add_header("Content-Encoding", "gzip");
     http_resp_send_ok();
   }
   else {
     // Otherwise send the body 
     if (gzip) {
+      // TODO: check if <filename>.gz exists and use that if possible instead of zipping at runtime
       // send zipped content in chunks (as we don't know the final length)
-      http_resp_add_header("Content-Encoding", "gzip");
       stream = http_resp_send_status_body(HTTP_STATUS_OK, NODEC_CHUNKED, content_type);
       stream = as_stream(nodec_zstream_alloc(stream)); // gzip'd stream
     }
@@ -111,14 +113,13 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
       stream = http_resp_send_status_body(HTTP_STATUS_OK, size, content_type);
     }
     {using_stream(stream) {
-      // send in parts of `write_buf_size` length
+      // read the file in parts of `write_buf_size` length and send as we read
+      // TODO: overlap the reading of the next part with the sending of the current part?
       uv_buf_t buf = nodec_buf_alloc(config->read_buf_size);
       size_t nread = 0;
       {using_buf(&buf) {
         while ((nread = async_fread_into(file, buf, -1)) > 0) {
-          buf.len = (uv_buf_len_t)nread;
-          async_write_buf(stream, buf);
-          buf.len = (uv_buf_len_t)config->read_buf_size;
+          async_write_buf(stream, nodec_buf(buf.base, nread));
         };
       }}
     }}
