@@ -102,29 +102,38 @@ typedef struct _chunks_t {
   size_t       available;
 } chunks_t;
 
+
 typedef enum _nodec_chunk_read_t {
   CREAD_NORMAL,
   CREAD_EVEN_IF_AVAILABLE,
   CREAD_TO_EOF
 } nodec_chunk_read_t;
 
+typedef void (nodec_pushback_buf_fun)(nodec_bstream_t* bstream, uv_buf_t buf);
 typedef bool (async_read_chunk_fun)(nodec_bstream_t* bstream, nodec_chunk_read_t mode);
 
 struct _nodec_bstream_t {
-  nodec_stream_t        stream_t;
-  async_read_chunk_fun* read_chunk;
-  chunks_t              chunks;
-  nodec_stream_t*       source;
+  nodec_stream_t          stream_t;
+  async_read_chunk_fun*   read_chunk;
+  nodec_pushback_buf_fun* pushback_buf;
+  chunks_t                chunks;
+  nodec_stream_t*         source;
 };
 
 void nodec_bstream_init(nodec_bstream_t* bstream,
   async_read_chunk_fun* read_chunk,
+  nodec_pushback_buf_fun* pushback_buf,
   async_read_bufx_fun*  read_bufx,
   async_write_bufs_fun* write_bufs,
   async_shutdown_fun*   shutdown,
   nodec_stream_free_fun* stream_free);
 
 void nodec_bstream_release(nodec_bstream_t* bstream);
+
+void nodec_chunks_pushback_buf(nodec_bstream_t* bstream, uv_buf_t buf);
+void nodec_chunks_push(nodec_bstream_t* bstream, uv_buf_t buf);
+bool nodec_chunks_available(nodec_bstream_t* bstream);
+uv_buf_t nodec_chunks_read_buf(nodec_bstream_t* bstream);
 
 // ---------------------------------------------------------------------------------
 // LibUV streams 

@@ -255,6 +255,15 @@ void      async_shutdown(nodec_stream_t* stream);
 
 /// Asynchronously read a buffer from a stream.
 /// \param stream  stream to read from.
+/// \param[out] buf_owned this is set to `true` if the returned buffer is _owned_, i.e. should be freed by the callee.
+/// \returns uv_buf_t  a buffer with the data. This buffer is becomes
+///    the callee's responsibility (see using_buf_owned()) if `buf_owned` is true and is passed without
+///    copying from the lower level read routines. If `buf_owned` is false the buffer should
+///    _not_ be freed by the callee (again, see using_buf_owned()).
+uv_buf_t  async_read_bufx(nodec_stream_t* stream, bool* buf_owned);
+
+/// Asynchronously read a buffer from a stream.
+/// \param stream  stream to read from.
 /// \returns uv_buf_t  a buffer with the data. This buffer is becomes
 ///    the callee's responsibility (see using_buf()) and is passed without
 ///    copying from the lower level read routines.
@@ -354,6 +363,10 @@ uv_buf_t  async_read_buf_line(nodec_bstream_t* bstream);
 
 /// Read the first line as a string from a buffered stream.
 char*     async_read_line(nodec_bstream_t* bstream);
+
+/// Push back a buffer onto a read stream. 
+/// The data pushed back will be read on the next read call.
+void nodec_pushback_buf(nodec_bstream_t* bstream, uv_buf_t buf);
 
 /// Create a buffered stream from a plain stream
 nodec_bstream_t* nodec_bstream_alloc_on(nodec_stream_t* source);
@@ -573,6 +586,7 @@ http_status_t   http_in_status(http_in_t* in);       // client
 uint64_t      http_in_content_length(http_in_t* in); 
 const char*   http_in_header(http_in_t* in, const char* name);
 const char*   http_in_header_next(http_in_t* in, const char** value, size_t* iter);
+bool          http_in_header_contains(http_in_t* req, const char* name, const char* pattern);
 
 // Read comma separated header fields; `*iter` should start as NULL.
 // Returns NULL when done.
@@ -581,14 +595,15 @@ const char* http_header_next_field(const char* header, size_t* len, const char**
 // use this on connections to wait for a response
 size_t async_http_in_read_headers(http_in_t* in);
 
-// Read HTTP body in parts; returned buffer is only valid until the next read
-// Returns a null buffer when the end is reached.
-uv_buf_t      async_http_in_read_body_buf(http_in_t* in);
+/// Get a buffered stream to read the body.
+/// \param in       the HTTP input.
+/// \returns NULL if the stream has no body or was already completely read.
+/// Use async_read_bufx() to read most efficiently without memory copies.
+nodec_bstream_t* http_in_body(http_in_t* in);
 
-// Read the full body; the returned buf should be deallocated by the caller.
-// Pass `initial_size` 0 to automatically use the content-length or initially
-// received buffer size.
-uv_buf_t      async_http_in_read_body(http_in_t* in, size_t initial_size);
+/// Read the full body; the returned buf should be deallocated by the caller.
+/// Uses `Content-Length` when possible to read into a pre-allocated buffer of the right size.
+uv_buf_t async_http_in_read_body(http_in_t* in);
 
 
 /*-----------------------------------------------------------------
@@ -639,17 +654,15 @@ uint64_t      http_req_content_length();
 const char*   http_req_header(const char* name);
 const char*   http_req_header_next(const char** value, size_t* iter);
 
-// Read HTTP body in parts; returned buffer is only valid until the next read
-// Returns a null buffer when the end is reached.
-uv_buf_t      async_req_read_body_buf();
+nodec_bstream_t* http_req_body();
 
 // Read the full body; the returned buf should be deallocated by the caller.
 // Pass `initial_size` 0 to automatically use the content-length or initially
 // received buffer size.
-uv_buf_t      async_req_read_body_all(size_t initial_size);
+uv_buf_t      async_req_read_body();
 
 // Read the full body as a string. Only works if the body cannot contain 0 characters.
-const char*   async_req_read_body();
+const char*   async_req_read_body_str();
 
 
 

@@ -43,6 +43,7 @@ static void http_headers_add(http_headers_t* headers, const char* name, const ch
   if (headers->count >= headers->size) {
     size_t newsize = (headers->size == 0 ? 16 : 2 * headers->size);
     headers->elems = nodec_realloc_n(headers->elems, newsize, http_header_t);
+    headers->size = newsize;
   }
   http_header_t* h = &headers->elems[headers->count];
   headers->count++;
@@ -141,14 +142,15 @@ typedef struct _http_in_t
   size_t          content_length; // real content length from headers
   http_headers_t  headers; // parsed headers; usually pointing into `prefix`
   uv_buf_t        prefix;  // the initially read buffer that holds all initial headers
+  size_t          body_start;     // offset of the body start in the prefix buffer
 
-  uv_buf_t        current;        // the last read buffer; starts equal to prefix
-  size_t          current_offset; // parsed up to this point into the current buffer
   uv_buf_t        current_body;   // the last parsed body piece; each on_body pauses the parser so only one is needed
   const char*     current_field;  // during header parsing, holds the last seen header field
 
   bool            headers_complete;  // true if all initial headers have been parsed
   bool            complete;          // true if the whole message has been parsed
+
+  nodec_bstream_t* body_stream;
 } http_in_t;
 
 // Terminate header fields and values by modifying the read buffer in place. (in `prefix`)
@@ -219,8 +221,12 @@ static int on_message_complete(http_parser* parser) {
 // Clear and free all members of a request
 static void http_in_clear(http_in_t* req) {
   http_headers_clear(&req->headers);
-  if (req->current.base != NULL && req->current.base != req->prefix.base) nodec_free(req->current.base);
-  if (req->prefix.base != NULL) nodec_free(req->prefix.base);
+  if (req->body_stream != NULL) {
+    nodec_stream_free(as_stream(req->body_stream));
+  }
+  if (req->prefix.base != NULL) {
+    nodec_buf_free(req->prefix);
+  }
   memset(req, 0, sizeof(http_in_t));
   // don't free the stream, it is not owned by us
 }
@@ -244,13 +250,16 @@ void http_in_init(http_in_t* in, nodec_bstream_t* stream, bool is_request)
   in->is_request = is_request;
 }
 
+static nodec_bstream_t* http_in_stream_alloc(http_in_t* req);
+
+
 size_t async_http_in_read_headers(http_in_t* in ) 
 {
   // and read until the double empty line is seen  (\r\n\r\n); the end of the headers 
   size_t idx = 0;
   uv_buf_t buf = async_read_buf_including(in->stream, &idx, "\r\n\r\n", 4, HTTP_MAX_HEADERS);
-  if (idx == 0 || buf.base == NULL || idx > HTTP_MAX_HEADERS) {
-    if (buf.base != NULL) nodec_free(buf.base);
+  if (idx == 0 || nodec_buf_is_null(buf) || idx > HTTP_MAX_HEADERS) {
+    if (!nodec_buf_is_null(buf)) nodec_buf_free(buf);
     if (idx == 0) {
       // eof; means client closed the stream; no problem
       return 0;
@@ -260,8 +269,7 @@ size_t async_http_in_read_headers(http_in_t* in )
   //printf("\n\nraw prefix read: %s\n\n\n", buf.base);  // only print idx length here
 
   // only if successful initialize a request object
-  in->current = buf;
-  in->prefix = in->current; // set the prefix to the current buffer to keep it alive    
+  in->prefix = buf;
   http_parser_init(&in->parser, (in->is_request ? HTTP_REQUEST : HTTP_RESPONSE));
   in->parser.data = in;
   http_parser_settings_init(&in->parser_settings);
@@ -274,12 +282,21 @@ size_t async_http_in_read_headers(http_in_t* in )
   in->parser_settings.on_status = &on_status;
 
   // parse the headers
-  size_t nread = http_parser_execute(&in->parser, &in->parser_settings, in->current.base, in->current.len);
+  size_t nread = http_parser_execute(&in->parser, &in->parser_settings, in->prefix.base, in->prefix.len);
   check_http_errno(&in->parser);
 
   // remember where we are at in the current buffer for further body reads 
-  in->current_offset = nread;
-
+  in->body_start = nread;
+  if (in->complete && nodec_buf_is_null(in->current_body)) {
+    in->body_stream = NULL;
+  }
+  else {
+    in->body_stream = http_in_stream_alloc(in);
+    if (http_in_header_contains(in,"Content-Encoding", "gzip")) {
+      printf("use gzip!\n");
+      in->body_stream = nodec_zstream_alloc(as_stream(in->body_stream));
+    }
+  }
   return idx; // size of the headers
 }
 
@@ -287,7 +304,161 @@ size_t async_http_in_read_headers(http_in_t* in )
 Reading the body of a request
 -----------------------------------------------------------------*/
 
+typedef struct _http_in_stream_t {
+  nodec_bstream_t  bstream;
+  uv_buf_t         current;        // the last read buffer; starts equal to prefix
+  bool             current_owned;  // should we free the current buffer?
+  size_t           current_offset; // parsed up to this point into the current buffer
+  http_in_t*       req;            // the owning request
+} http_in_stream_t;
 
+
+// Read asynchronously a piece of the body; the return buffer is valid until
+// the next read. Returns a null buffer when the end of the request is reached.
+static uv_buf_t http_in_read_body_bufx(http_in_stream_t* hs, bool* owned)
+{
+  if (owned != NULL) *owned = false;
+
+  // if there is no current body ready: read another one.
+  // (there might be an initial body due to the initial parse of the headers.)
+  if (nodec_buf_is_null(hs->req->current_body))
+  {
+    // if we are done already, just return null
+    if (hs->req->complete) return nodec_buf_null();
+
+    // if we exhausted our current buffer, read a new one
+    if (nodec_buf_is_null(hs->current) || hs->current_offset >= hs->current.len) {
+      // deallocate current buffer first
+      if (hs->current.base != NULL && hs->current_owned) {
+        nodec_buf_free(hs->current);
+      }
+      hs->current = nodec_buf_null();
+      hs->current_offset = 0;
+    
+      // and read a fresh buffer async from the stream; use `bufx` variant for efficiency
+      hs->current = async_read_bufx(as_stream(hs->req->stream), &hs->current_owned);
+      if (nodec_buf_is_null(hs->current)) throw_http_err(HTTP_STATUS_BAD_REQUEST);
+      //hs->current.base[hs->current.len] = 0;
+      //printf("\n\nraw body read: %s\n\n\n", hs->current.base);
+    }
+
+    // we have a current buffer, parse a body piece (or read to eof)
+    assert(hs->current.base != NULL && hs->current_offset < hs->current.len);
+    http_parser_pause(&(hs->req->parser), 0); // unpause
+    size_t nread = http_parser_execute(&(hs->req->parser), &(hs->req->parser_settings), 
+                        hs->current.base + hs->current_offset, 
+                        hs->current.len - hs->current_offset);
+    hs->current_offset += nread;
+    check_http_errno(&(hs->req->parser));
+
+    // if no body now, something went wrong or we read to the end of the request without further bodies
+    if (nodec_buf_is_null(hs->req->current_body)) {
+      if (hs->req->complete) return nodec_buf_null();  // done parsing, no more body pieces
+      throw_http_err_str(HTTP_STATUS_BAD_REQUEST, "couldn't parse request body");
+    }
+  }
+
+  // We have a body piece ready, return it
+  assert(!nodec_buf_is_null(hs->req->current_body));
+  uv_buf_t body = hs->req->current_body;
+  hs->req->current_body = nodec_buf_null();
+  printf("read body part: len: %i\n", body.len);
+  return body;  // a view into our current buffer, valid until the next read
+}
+
+static uv_buf_t http_in_read_bufx(nodec_stream_t* stream, bool* owned) {
+  http_in_stream_t* hs = (http_in_stream_t*)stream;  
+  if (nodec_chunks_available(&hs->bstream)) {
+    if (owned != NULL) *owned = true;
+    return nodec_chunks_read_buf(&hs->bstream);
+  }
+  else {
+    return http_in_read_body_bufx(hs, owned);
+  }
+}
+
+static void http_in_pushback_buf(nodec_bstream_t* bstream, uv_buf_t buf) {
+  if (nodec_chunks_available(bstream)) {
+    nodec_chunks_pushback_buf(bstream, buf);
+  }
+  else {
+    // if no more data buffered (at end of the request)
+    // push back onto the original tcp stream since it can be the start of 
+    // a subsequent request
+    http_in_stream_t* hs = (http_in_stream_t*)bstream;
+    nodec_pushback_buf(hs->req->stream,buf);
+  }
+}
+
+static bool http_in_read_chunk(nodec_bstream_t* bstream, nodec_chunk_read_t read_mode) {
+  if (read_mode == CREAD_NORMAL && nodec_chunks_available(bstream)) {
+    return false;
+  }
+  else {
+    http_in_stream_t* hs = (http_in_stream_t*)bstream;
+    uv_buf_t buf;
+    do {
+      buf = async_read_buf(as_stream(hs->req->stream));
+      nodec_chunks_push(&hs->bstream, buf);
+    } while (read_mode == CREAD_TO_EOF && !nodec_buf_is_null(buf));
+    return (nodec_buf_is_null(buf));
+  }
+}
+
+
+static void http_in_stream_free(nodec_stream_t* stream) {
+  http_in_stream_t* hs = (http_in_stream_t*)stream;
+  if (!nodec_buf_is_null(hs->current) && hs->current_owned) {
+    nodec_buf_free(hs->current);
+  }
+  nodec_bstream_release(&hs->bstream);
+  nodec_free(hs);
+}
+
+static nodec_bstream_t* http_in_stream_alloc(http_in_t* req) {
+  //if (req->complete) return NULL;
+  http_in_stream_t* hs = nodec_alloc(http_in_stream_t);
+  hs->current = req->prefix;
+  hs->current_owned = false;
+  hs->current_offset = req->body_start;
+  hs->req = req;
+  nodec_bstream_init(&hs->bstream, 
+    &http_in_read_chunk, &http_in_pushback_buf,
+    &http_in_read_bufx, NULL, NULL, &http_in_stream_free);
+  return &hs->bstream;
+}
+
+nodec_bstream_t* http_in_body(http_in_t* in) {
+  return in->body_stream;
+}
+
+// Read asynchronously the entire body of the request. 
+// The caller is responsible for buffer deallocation.
+// Uses Content-Length is possible to read directly into a continuous buffer without reallocation.
+uv_buf_t async_http_in_read_body(http_in_t* req) {
+  uv_buf_t  buf = nodec_buf_null();
+  nodec_bstream_t* stream = http_in_body(req);
+  if (req->complete || req->body_stream == NULL) return buf;
+  //{using_bstream(stream) {
+     size_t clen = http_in_content_length(req);
+     if (clen > 0 && http_in_header(req, "Content-Encoding") == NULL) {
+       buf = nodec_buf_alloc(clen);
+       {using_on_abort_free_buf(&buf){
+          size_t nread = async_read_into(stream, buf);
+          nodec_buf_fit(buf, nread);
+       }}       
+     }
+     else {
+       buf = async_read_buf_all(stream);
+     }
+  //}}
+  nodec_stream_free(as_stream(req->body_stream));
+  req->body_stream = NULL;
+  return buf;
+}
+
+
+/*
 // Read asynchronously a piece of the body; the return buffer is valid until
 // the next read. Returns a null buffer when the end of the request is reached.
 uv_buf_t async_http_in_read_body_buf(http_in_t* req)
@@ -364,6 +535,7 @@ uv_buf_t async_http_in_read_body(http_in_t* req, size_t initial_size) {
   }}
   return result;
 }
+*/
 
 
 
@@ -402,6 +574,10 @@ const char* http_in_header_next(http_in_t* req, const char** value, size_t* iter
   return http_headers_next(&req->headers, value, iter);
 }
 
+bool http_in_header_contains(http_in_t* req, const char* name, const char* pattern ) {
+  const char* s = http_in_header(req,name);
+  return (s != NULL && pattern != NULL && strstr(s, pattern) != NULL);
+}
 
 const char* http_header_next_field(const char* header, size_t* len, const char** iter) {
   *len = 0;
@@ -791,20 +967,16 @@ const char* http_req_header_next(const char** value, size_t* iter) {
   return http_in_header_next(http_req(), value, iter);
 }
 
-// Read HTTP body in parts; returned buffer is only valid until the next read
-// Returns a null buffer when the end is reached.
-uv_buf_t  async_req_read_body_buf() {
-  return async_http_in_read_body_buf(http_req());
+nodec_bstream_t* async_req_body() {
+  return http_in_body(http_req());
 }
 
 // Read the full body; the returned buf should be deallocated by the caller.
-// Pass `initial_size` 0 to automatically use the content-length or initially
-// received buffer size.
-uv_buf_t async_req_read_body_all(size_t initial_size) {
-  return async_http_in_read_body(http_req(), initial_size);
+uv_buf_t async_req_read_body() {
+  return async_http_in_read_body(http_req());
 }
 
 // Read the full body as a string. Only works if the body cannot contain 0 characters.
-const char* async_req_read_body() {
-  return async_req_read_body_all(0).base;
+const char* async_req_read_body_str() {
+  return async_req_read_body().base;
 }
