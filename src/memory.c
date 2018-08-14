@@ -107,6 +107,10 @@ void nodec_bufref_freev(lh_value bufref) {
   nodec_bufref_free((uv_buf_t*)lh_ptr_value(bufref));  
 }
 
+void nodec_bufref_nofreev(lh_value bufref) {
+  // do nothing
+}
+
 bool nodec_buf_is_null(uv_buf_t buf) {
   return (buf.base == NULL || buf.len == 0);
 }

@@ -74,18 +74,18 @@ bool          channel_is_full(channel_t* channel);
 
 typedef void     (nodec_stream_free_fun)(nodec_stream_t* stream);
 typedef void     (async_shutdown_fun)(nodec_stream_t* stream);
-typedef uv_buf_t(async_read_buf_fun)(nodec_stream_t* stream);
+typedef uv_buf_t (async_read_bufx_fun)(nodec_stream_t* stream, bool* buf_owned);
 typedef void     (async_write_bufs_fun)(nodec_stream_t* stream, uv_buf_t bufs[], size_t count);
 
 struct _nodec_stream_t {
-  async_read_buf_fun*     read_buf;
+  async_read_bufx_fun*    read_bufx;
   async_write_bufs_fun*   write_bufs;
   async_shutdown_fun*     shutdown;
   nodec_stream_free_fun*  stream_free;
 };
 
 void nodec_stream_init(nodec_stream_t* stream,
-  async_read_buf_fun*  read_buf,
+  async_read_bufx_fun*  read_bufx,
   async_write_bufs_fun* write_bufs,
   async_shutdown_fun*   shutdown,
   nodec_stream_free_fun* stream_free);
@@ -119,7 +119,7 @@ struct _nodec_bstream_t {
 
 void nodec_bstream_init(nodec_bstream_t* bstream,
   async_read_chunk_fun* read_chunk,
-  async_read_buf_fun*  read_buf,
+  async_read_bufx_fun*  read_bufx,
   async_write_bufs_fun* write_bufs,
   async_shutdown_fun*   shutdown,
   nodec_stream_free_fun* stream_free);

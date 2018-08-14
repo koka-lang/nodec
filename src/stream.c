@@ -22,9 +22,19 @@ void async_shutdown(nodec_stream_t* stream) {
   if (stream->shutdown != NULL) stream->shutdown(stream);
 }
 
+uv_buf_t async_read_bufx(nodec_stream_t* stream, bool* buf_owned) {
+  if (stream->read_bufx == NULL) nodec_check_msg(UV_EINVAL, "trying to read from a write stream");
+  return stream->read_bufx(stream, buf_owned);
+}
+
 uv_buf_t async_read_buf(nodec_stream_t* stream) {
-  if (stream->read_buf == NULL) nodec_check_msg(UV_EINVAL, "trying to read from a write stream");
-  return stream->read_buf(stream);
+  bool owned = false;
+  uv_buf_t buf = async_read_bufx(stream, &owned);
+  if (owned || nodec_buf_is_null(buf)) return buf;
+  // copy into owned buffer
+  uv_buf_t dest = nodec_buf_alloc(buf.len);
+  memcpy(dest.base, buf.base, buf.len);
+  return dest;
 }
 
 void async_write_bufs(nodec_stream_t* stream, uv_buf_t bufs[], size_t count) {
@@ -33,12 +43,12 @@ void async_write_bufs(nodec_stream_t* stream, uv_buf_t bufs[], size_t count) {
 }
 
 void nodec_stream_init(nodec_stream_t* stream,
-  async_read_buf_fun*  read_buf,
+  async_read_bufx_fun*  read_bufx,
   async_write_bufs_fun* write_bufs,
   async_shutdown_fun*   shutdown,
   nodec_stream_free_fun* stream_free)
 {
-  stream->read_buf = read_buf;
+  stream->read_bufx = read_bufx;
   stream->write_bufs = write_bufs;
   stream->shutdown = shutdown;
   stream->stream_free = stream_free;
@@ -276,13 +286,13 @@ nodec_stream_t* as_stream(nodec_bstream_t* bstream) {
 
 void nodec_bstream_init(nodec_bstream_t* bstream,
   async_read_chunk_fun* read_chunk,
-  async_read_buf_fun*  read_buf,
+  async_read_bufx_fun*  read_bufx,
   async_write_bufs_fun* write_bufs,
   async_shutdown_fun*   shutdown,
   nodec_stream_free_fun* stream_free)
 {
   bstream->source = NULL;
-  nodec_stream_init(&bstream->stream_t, read_buf, write_bufs, shutdown, stream_free);
+  nodec_stream_init(&bstream->stream_t, read_bufx, write_bufs, shutdown, stream_free);
   bstream->read_chunk = read_chunk;
   chunks_init(&bstream->chunks);
 }
@@ -321,23 +331,32 @@ size_t async_read_into(nodec_bstream_t* bstream, uv_buf_t buf) {
   size_t nread = 0;
   do {
     // read available or from source
-    uv_buf_t rbuf = async_read_buf(&bstream->stream_t);
-    nread = rbuf.len;
-    if (nread > 0) {
-      // copy into buffer
-      size_t ncopy = (total + nread > buf.len ? buf.len - total : nread);
-      memcpy(buf.base + total, rbuf.base, ncopy);
-      total += ncopy;
-      if (ncopy < nread) {
-        // push back the bytes that didn't fit
-        // note: we don't reallocate since chunks are short-lived anyway
-        memmove(rbuf.base, rbuf.base + ncopy, rbuf.len - ncopy);
-        rbuf.len -= (uv_buf_len_t)ncopy;
-        chunks_push_back(&bstream->chunks, rbuf);
-        rbuf = nodec_buf_null(); // null out `rbuf` so it does not get freed
+    bool owned = false;
+    uv_buf_t rbuf = async_read_bufx(&bstream->stream_t,&owned);
+    {using_buf_owned(owned, &rbuf) {
+      nread = rbuf.len;
+      if (nread > 0) {
+        // copy into buffer
+        size_t ncopy = (total + nread > buf.len ? buf.len - total : nread);
+        memcpy(buf.base + total, rbuf.base, ncopy);
+        total += ncopy;
+        if (ncopy < nread) {
+          // push back the bytes that didn't fit
+          if (owned) {
+            // note: we don't reallocate since chunks are short-lived anyway
+            memmove(rbuf.base, rbuf.base + ncopy, rbuf.len - ncopy);
+            rbuf.len -= (uv_buf_len_t)ncopy;
+          }
+          else {
+            uv_buf_t dest = nodec_buf_alloc(rbuf.len - ncopy);
+            memcpy(dest.base, rbuf.base + ncopy, dest.len);
+            rbuf = dest; // overwrite, as we don't own rbuf anyway
+          }
+          chunks_push_back(&bstream->chunks, rbuf);
+          rbuf = nodec_buf_null(); // null out `rbuf` so it does not get freed          
+        }
       }
-    }
-    nodec_buf_free(rbuf);
+    }}
   } while (nread > 0 && total < buf.len);
   return total;
 }
@@ -395,13 +414,14 @@ char* async_read_line(nodec_bstream_t* bstream) {
 Buffer any stream
 -----------------------------------------------------------------------------*/
 
-static uv_buf_t async_bufstream_read_buf(nodec_stream_t* stream) {
-  nodec_bstream_t* bs = (nodec_bstream_t*)stream;
+static uv_buf_t async_bufstream_read_bufx(nodec_stream_t* stream, bool* owned) {
+nodec_bstream_t* bs = (nodec_bstream_t*)stream;
   if (bs->chunks.available > 0) {
+    if (owned != NULL) *owned = true;
     return chunks_read_buf(&bs->chunks);
   }
   else {
-    return async_read_buf(bs->source);
+    return async_read_bufx(bs->source, owned);
   }
 }
 
@@ -440,7 +460,7 @@ nodec_bstream_t* nodec_bstream_alloc_on(nodec_stream_t* source) {
   nodec_bstream_t* bs = nodec_zero_alloc(nodec_bstream_t);
   nodec_bstream_init(bs,
     &async_bufstream_read_chunk,
-    &async_bufstream_read_buf, &async_bufstream_write_bufs,
+    &async_bufstream_read_bufx, &async_bufstream_write_bufs,
     &async_bufstream_shutdown, &async_bufstream_free);
   bs->source = source;
   return bs;
@@ -723,8 +743,9 @@ void nodec_uv_stream_free(uv_stream_t* stream) {
 void nodec_uv_stream_freev(lh_value uvstreamv) {
   nodec_uv_stream_free((uv_stream_t*)lh_ptr_value(uvstreamv));
 }
-static uv_buf_t async_uv_stream_read_buf(nodec_stream_t* s) {
+static uv_buf_t async_uv_stream_read_bufx(nodec_stream_t* s, bool* owned) {
   nodec_uv_stream_t* rs = (nodec_uv_stream_t*)s;
+  if (owned != NULL) *owned = true;
   async_uv_stream_await(rs, false);
   assert(rs->eof || rs->bstream_t.chunks.available > 0);
   return chunks_read_buf(&rs->bstream_t.chunks);
@@ -771,7 +792,7 @@ nodec_uv_stream_t* nodec_uv_stream_alloc(uv_stream_t* stream) {
     rs = nodec_zero_alloc(nodec_uv_stream_t);
     nodec_bstream_init(&rs->bstream_t,
       &async_uv_stream_read_chunk,
-      &async_uv_stream_read_buf, &async_uv_stream_write_bufsx,
+      &async_uv_stream_read_bufx, &async_uv_stream_write_bufsx,
       &async_uv_stream_shutdownx, &nodec_uv_stream_freex);
     rs->stream = stream;
   }}
@@ -816,30 +837,35 @@ typedef struct _nodec_zstream_t {
 
 static bool async_zstream_read_chunks(nodec_zstream_t* zs) 
 {
-  uv_buf_t src = async_read_buf(zs->source);
-  zs->read_strm.avail_in = src.len;
-  zs->read_strm.next_in = src.base;
-  zs->nread += src.len;
-  // decompress while data available into chunks
-  int res = 0;
-  do {
-    uv_buf_t dest = nodec_buf_alloc(zs->chunk_size);
-    zs->read_strm.avail_out = dest.len;
-    zs->read_strm.next_out = dest.base;
-    res = inflate(&zs->read_strm, Z_NO_FLUSH);
-    if (res >= Z_OK) {
-      size_t nwritten = dest.len - zs->read_strm.avail_out;
-      chunks_push(&zs->bstream.chunks, dest, nwritten);
-    }
-    else {
-      nodec_check_msg(UV_EINVAL, "invalid gzip data");
-    }
-  } while (res >= Z_OK && zs->read_strm.avail_out == 0);  // while fully written buffers
-  return nodec_buf_is_null(src);
+  bool owned = false;
+  uv_buf_t src = async_read_bufx(zs->source, &owned);
+  if (nodec_buf_is_null(src)) return true;  // eof
+  {using_buf_owned(owned, &src) {
+    zs->read_strm.avail_in = src.len;
+    zs->read_strm.next_in = src.base;
+    zs->nread += src.len;
+    // decompress while data available into chunks
+    int res = 0;
+    do {
+      uv_buf_t dest = nodec_buf_alloc(zs->chunk_size);
+      zs->read_strm.avail_out = dest.len;
+      zs->read_strm.next_out = dest.base;
+      res = inflate(&zs->read_strm, Z_NO_FLUSH);
+      if (res >= Z_OK) {
+        size_t nwritten = dest.len - zs->read_strm.avail_out;
+        chunks_push(&zs->bstream.chunks, dest, nwritten);
+      }
+      else {
+        nodec_check_msg(UV_EINVAL, "invalid gzip data");
+      }
+    } while (res >= Z_OK && zs->read_strm.avail_out == 0);  // while fully written buffers
+  }}
+  return false;
 }
 
-static uv_buf_t async_zstream_read_buf(nodec_stream_t* stream) {
+static uv_buf_t async_zstream_read_bufx(nodec_stream_t* stream, bool* owned) {
   nodec_zstream_t* zs = (nodec_zstream_t*)stream;
+  if (owned != NULL) *owned = true;
   if (zs->bstream.chunks.available == 0) {
     async_zstream_read_chunks(zs);
   }
@@ -924,7 +950,7 @@ nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, int compress_lev
   zs->nread = 0;
   zs->nwritten = 0;
   nodec_bstream_init(&zs->bstream, &async_zstream_read_chunk,
-    &async_zstream_read_buf, &async_zstream_write_bufs,
+    &async_zstream_read_bufx, &async_zstream_write_bufs,
     &async_zstream_shutdown, &nodec_zstream_free);
   zs->read_strm.zalloc = &nodec_zalloc;
   zs->read_strm.zfree = &nodec_zfree;

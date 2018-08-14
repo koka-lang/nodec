@@ -102,13 +102,17 @@ void nodec_bufref_freev(lh_value bufref);
 ///    async_write_buf(out,buf);
 /// }}
 /// ```
-#define using_buf(bufref)                 defer(nodec_bufref_freev,lh_value_any_ptr(bufref))
+#define using_buf(bufref)  defer(nodec_bufref_freev,lh_value_any_ptr(bufref))
 
 /// Use a buffer in a scope, freeing automatically only when an exception is thrown.
 /// Pass the buffer by reference so it will free
 /// the final memory that `bufref->base` points to (and not the initial value).
 /// \param bufref  a reference to the buffer to free after use.
 #define using_on_abort_free_buf(bufref)   on_abort(nodec_bufref_freev,lh_value_any_ptr(bufref))
+
+void nodec_bufref_nofreev(lh_value pv);
+
+#define using_buf_owned(owned,bufref)  defer((owned ? nodec_bufref_freev : nodec_bufref_nofreev),lh_value_any_ptr(bufref))
 
 /// @}
 
