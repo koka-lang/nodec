@@ -81,37 +81,48 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
   const char* content_type = nodec_mime_info_from_fname(path,&compressible,NULL);
   nodec_stream_t* stream;
 
+  // If gzip is enabled, and this mime type is compressible, send a VARY header for better caching
   if (config->gzip_min_size < SIZE_MAX && compressible && config->gzip_vary) {
     http_resp_add_header("Vary", "Accept-Encoding");
   }
   
+  // Check if we should compress this content
   bool gzip = false;
   if (compressible && size > config->gzip_min_size) { 
     const char* accept_enc = http_req_header("Accept-Encoding");
     gzip = (accept_enc != NULL && strstr(accept_enc, "gzip") != NULL);
   }
-  if (gzip) {
-    // send zipped content in chunks (as we don't know the final length)
-    http_resp_add_header("Content-Encoding", "gzip");
-    stream = http_resp_send_status_body(HTTP_STATUS_OK, NODEC_CHUNKED, content_type);
-    stream = as_stream(nodec_zstream_alloc(stream)); // gzip'd stream
+
+  if (http_req_method() == HTTP_HEAD) {
+    // don't send a body on HEAD requests
+    if (gzip) http_resp_add_header("Content-Encoding", "gzip");
+    http_resp_send_ok();
   }
   else {
-    // send as one body
-    stream = http_resp_send_status_body(HTTP_STATUS_OK, size, content_type);
-  }
-  {using_stream(stream) {
-    // send in parts of `write_buf_size` length
-    uv_buf_t buf = nodec_buf_alloc(config->read_buf_size);
-    size_t nread = 0;
-    {using_buf(&buf) {
-      while ((nread = async_fread_into(file, buf, -1)) > 0) {
-        buf.len = (uv_buf_len_t)nread;
-        async_write_buf(stream, buf);
-        buf.len = (uv_buf_len_t)config->read_buf_size;
-      };
+    // Otherwise send the body 
+    if (gzip) {
+      // send zipped content in chunks (as we don't know the final length)
+      http_resp_add_header("Content-Encoding", "gzip");
+      stream = http_resp_send_status_body(HTTP_STATUS_OK, NODEC_CHUNKED, content_type);
+      stream = as_stream(nodec_zstream_alloc(stream)); // gzip'd stream
+    }
+    else {
+      // send as one body
+      stream = http_resp_send_status_body(HTTP_STATUS_OK, size, content_type);
+    }
+    {using_stream(stream) {
+      // send in parts of `write_buf_size` length
+      uv_buf_t buf = nodec_buf_alloc(config->read_buf_size);
+      size_t nread = 0;
+      {using_buf(&buf) {
+        while ((nread = async_fread_into(file, buf, -1)) > 0) {
+          buf.len = (uv_buf_len_t)nread;
+          async_write_buf(stream, buf);
+          buf.len = (uv_buf_len_t)config->read_buf_size;
+        };
+      }}
     }}
-  }}
+  }
   return lh_value_int(size);
 }
 
@@ -161,14 +172,16 @@ static bool http_try_send(const http_static_config_t* config, const char* root, 
 }
 
 void http_serve_static(const char* root, const http_static_config_t* config) {
-  //if (http_req_method() != HTTP_GET) return;
-  static http_static_config_t _default_config = http_static_default_config();
-  if (config == NULL) config = &_default_config;
-  bool ok = false;
-  {using_implicit(lh_value_any_ptr(config), http_static_config) {
-    // get request path
-    const char* path = http_req_path();
-    ok = http_try_send(config, root, path, NULL);
-  }}
-  if (!ok) http_resp_send_status(HTTP_STATUS_NOT_FOUND);
+  http_method_t method = http_req_method();
+  if (method == HTTP_GET || method == HTTP_HEAD) {
+    static http_static_config_t _default_config = http_static_default_config();
+    if (config == NULL) config = &_default_config;
+    bool ok = false;
+    {using_implicit(lh_value_any_ptr(config), http_static_config) {
+      // get request path
+      const char* path = http_req_path();
+      ok = http_try_send(config, root, path, NULL);
+    }}
+    if (!ok) http_resp_send_status(HTTP_STATUS_NOT_FOUND);
+  }
 }
