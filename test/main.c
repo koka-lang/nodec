@@ -114,7 +114,7 @@ void http_in_headers_print(http_in_t* in) {
   }
   uv_buf_t buf = nodec_buf_null();
   {using_buf(&buf) {
-    buf = async_http_in_read_body(in, 0);
+    buf = async_http_in_read_body(in, 4*NODEC_MB);
     if (buf.base != NULL) {
       buf.base[buf.len] = 0;
       if (buf.len <= 80) {
@@ -289,7 +289,7 @@ void test_as_client() {
       async_wait(250);
     }
     printf("await response...\n");
-    char* body = async_read_all(conn);
+    char* body = async_read_all(conn, 32*NODEC_MB);
     {using_free(body) {
       printf("received:\n%s", body);
     }}

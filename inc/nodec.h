@@ -30,6 +30,9 @@
     or `lh_value_int` (from int to a value).
 -----------------------------------------------------------------------------*/
 
+#define NODEC_KB  (1024)
+#define NODEC_MB  (1024*NODEC_KB)
+#define NODEC_GB  (1024*NODEC_MB)
 
 // Forward declarations 
 typedef struct _channel_t channel_t;
@@ -316,10 +319,16 @@ nodec_stream_t*  as_stream(nodec_bstream_t* stream);
 #define using_bstream(s)  using_stream(as_stream(s))  
 
 /// Read the entire stream as a single buffer.
-uv_buf_t  async_read_buf_all(nodec_bstream_t* bstream);
+/// \param bstream   the stream to read from.
+/// \param read_max  maximum number of bytes to read. Use 0 (or `SIZE_MAX`) for unlimited.
+/// \returns the data read in a callee owned buffer (see using_buf()).
+uv_buf_t  async_read_buf_all(nodec_bstream_t* bstream, size_t read_max);
 
 /// Read the entire stream as a string.
-char*     async_read_all(nodec_bstream_t* bstream);
+/// \param bstream   the stream to read from.
+/// \param read_max  maximum number of bytes to read. Use 0 (or `SIZE_MAX`) for unlimited.
+/// \returns the data read in a callee owned string (see using_str()).
+char*     async_read_all(nodec_bstream_t* bstream, size_t read_max);
 
 /// Read a stream into a pre-allocated buffer.
 /// \param bstream  the stream to read from.
@@ -387,11 +396,10 @@ nodec_bstream_t* nodec_bstream_alloc_read(uv_stream_t* stream);
 /// Low level: Create a buffered stream from an internal `uv_stream_t` for reading.
 ///
 /// \param stream   the underlying `uv_stream_t`. Freed when the #nodec_bstream_t is freed.
-/// \param read_max  return end-of-stream after `read_max` bytes are read. Use 0 for no maximum.
 /// \param alloc_init the initial allocation size for read buffers. Use 0 for default (8k). Doubles on further data until `alloc_max`.
 /// \param alloc_max  the maximal allocation size for read buffers.
 /// \returns a buffered stream.
-nodec_bstream_t* nodec_bstream_alloc_read_ex(uv_stream_t* stream, size_t read_max, size_t alloc_init, size_t alloc_max);
+nodec_bstream_t* nodec_bstream_alloc_read_ex(uv_stream_t* stream, size_t alloc_init, size_t alloc_max);
 
 
 #ifndef NO_ZLIB
@@ -403,45 +411,6 @@ nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, int compress_lev
 
 ///@}
 
-
-/*
-void        nodec_handle_free(uv_handle_t* handle);
-void        nodec_stream_free(uv_stream_t* stream);
-void        nodec_stream_freev(lh_value streamv);
-void        async_shutdown(uv_stream_t* stream);
- 
-#define using_stream(s) \
-    defer_exit(async_shutdown(s),&nodec_stream_freev,lh_value_ptr(s))
-
-// Configure a stream for reading; Normally not necessary to call explicitly
-// unless special configuration needs exist.
-void        nodec_read_start(uv_stream_t* stream, size_t read_max, size_t alloc_init, size_t alloc_max);
-void        nodec_read_stop(uv_stream_t* stream);
-void        nodec_read_restart(uv_stream_t* stream);
-// Set the maximal amount of bytes that can be read from a stream (4Gb default)
-void        nodec_set_read_max(uv_stream_t* stream, size_t read_max);
-
-// Reading from a stream. `async_read_buf` is most efficient.
-uv_buf_t    async_read_buf(uv_stream_t* stream);
-uv_buf_t    async_read_buf_available(uv_stream_t* stream);
-uv_buf_t    async_read_buf_line(uv_stream_t* stream);
-uv_buf_t    async_read_buf_all(uv_stream_t* stream);
-size_t      async_read_into_all(uv_stream_t* stream, uv_buf_t buf, bool* at_eof);
-// Read a buffer from a stream up to and including the first occurrence of `pat`; the pattern
-// can be at most 8 bytes long. Returns the number of bytes read in `*idx` (if not NULL).
-uv_buf_t    async_read_buf_including(uv_stream_t* stream, size_t* idx, const void* pat, size_t pat_len);
-
-char*       async_read(uv_stream_t* stream);
-char*       async_read_all(uv_stream_t* stream);
-char*       async_read_line(uv_stream_t* stream);
-
-// Writing to a stream. `async_write_bufs` is most primitive.
-void        async_write(uv_stream_t* stream, const char* s);
-void        async_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count);
-void        async_write_strs(uv_stream_t* stream, const char* strings[], size_t string_count );
-void        async_write_buf(uv_stream_t* stream, uv_buf_t buf);
-
-*/
 
 /* ----------------------------------------------------------------------------
   IP4 and IP6 Addresses
@@ -603,7 +572,7 @@ nodec_bstream_t* http_in_body(http_in_t* in);
 
 /// Read the full body; the returned buf should be deallocated by the caller.
 /// Uses `Content-Length` when possible to read into a pre-allocated buffer of the right size.
-uv_buf_t async_http_in_read_body(http_in_t* in);
+uv_buf_t async_http_in_read_body(http_in_t* in, size_t read_max);
 
 
 /*-----------------------------------------------------------------
@@ -659,10 +628,10 @@ nodec_bstream_t* http_req_body();
 // Read the full body; the returned buf should be deallocated by the caller.
 // Pass `initial_size` 0 to automatically use the content-length or initially
 // received buffer size.
-uv_buf_t      async_req_read_body();
+uv_buf_t      async_req_read_body(size_t read_max);
 
 // Read the full body as a string. Only works if the body cannot contain 0 characters.
-const char*   async_req_read_body_str();
+const char*   async_req_read_body_str(size_t read_max);
 
 
 

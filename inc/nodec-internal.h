@@ -65,5 +65,17 @@ int          channel_receive_nocancel(channel_t* channel, lh_value* data, lh_val
 lh_value async_write_http_exnv(lh_value exnv);
 
 
+// ---------------------------------------------------------------------------------
+// LibUV streams 
+// ---------------------------------------------------------------------------------
+
+// used in http.c for writing errors
+uv_errno_t asyncx_uv_write_bufs(uv_stream_t* stream, uv_buf_t* bufs, size_t buf_count);
+
+// used in tty.c
+void async_uv_write_buf(uv_stream_t* stream, uv_buf_t buf);
+void async_uv_stream_shutdown(uv_stream_t* stream);
+void nodec_uv_stream_free(uv_stream_t* stream);
+
 
 #endif

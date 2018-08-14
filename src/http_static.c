@@ -57,7 +57,7 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
       while ((field = http_header_next_field(if_none_match, &field_len, &iter)) != NULL) {
         if (field_len == ETAG_LEN && strncmp(field, etag, ETAG_LEN) == 0) {
           // matching etag, return a 304 Not-Modified
-          printf("match etag! return 304");
+          printf("match etag! return 304\n");
           http_resp_send_status(HTTP_STATUS_NOT_MODIFIED);
           return lh_value_int(size);
         }
@@ -70,7 +70,7 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
   if (nodec_parse_inet_date(http_req_header("If-Modified-Since"), &if_modified_since)) {
     if (if_modified_since >= mtime) {
       // it has not been modified since, return a 304
-      printf("match if-modified-since! return 304");
+      printf("match if-modified-since! return 304\n");
       http_resp_send_status(HTTP_STATUS_NOT_MODIFIED);
       return lh_value_int(size);
     }
@@ -93,6 +93,7 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
     gzip = (accept_enc != NULL && strstr(accept_enc, "gzip") != NULL);
   }
   if (gzip) {
+    printf("use gzip response\n");
     http_resp_add_header("Content-Encoding", "gzip");
   }
 

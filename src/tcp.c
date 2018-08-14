@@ -243,7 +243,7 @@ static lh_value tcp_serve_timeout(lh_value argsv) {
 
 static lh_value tcp_serve_keepalive(lh_value argsv) {
   tcp_client_args* args = (tcp_client_args*)lh_ptr_value(argsv);
-  nodec_uv_stream_read_start(args->client, 0, 8 * 1024, 0); // initial allocation at 8kb (for the header)
+  nodec_uv_stream_read_start(args->client, 8 * 1024, 0); // initial allocation at 8kb (for the header)
   if (args->keepalive <= 0) {
     return tcp_serve_timeout(argsv);
   }

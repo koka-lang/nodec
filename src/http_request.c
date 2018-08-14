@@ -368,7 +368,7 @@ static uv_buf_t http_in_read_body_bufx(http_in_stream_t* hs, bool* owned)
 
 static uv_buf_t http_in_read_bufx(nodec_stream_t* stream, bool* owned) {
   http_in_stream_t* hs = (http_in_stream_t*)stream;  
-  if (nodec_chunks_available(&hs->bstream)) {
+  if (nodec_chunks_available(&hs->bstream) > 0) {
     if (owned != NULL) *owned = true;
     return nodec_chunks_read_buf(&hs->bstream);
   }
@@ -378,7 +378,7 @@ static uv_buf_t http_in_read_bufx(nodec_stream_t* stream, bool* owned) {
 }
 
 static void http_in_pushback_buf(nodec_bstream_t* bstream, uv_buf_t buf) {
-  if (nodec_chunks_available(bstream)) {
+  if (nodec_chunks_available(bstream) > 0) {
     nodec_chunks_pushback_buf(bstream, buf);
   }
   else {
@@ -390,17 +390,18 @@ static void http_in_pushback_buf(nodec_bstream_t* bstream, uv_buf_t buf) {
   }
 }
 
-static bool http_in_read_chunk(nodec_bstream_t* bstream, nodec_chunk_read_t read_mode) {
-  if (read_mode == CREAD_NORMAL && nodec_chunks_available(bstream)) {
+static bool http_in_read_chunk(nodec_bstream_t* bstream, nodec_chunk_read_t read_mode, size_t read_to_eof_max) {
+  if (read_mode == CREAD_NORMAL && nodec_chunks_available(bstream) > 0) {
     return false;
   }
   else {
+    if (read_mode != CREAD_TO_EOF) read_to_eof_max = 0;
     http_in_stream_t* hs = (http_in_stream_t*)bstream;
     uv_buf_t buf;
     do {
       buf = async_read_buf(as_stream(hs->req->stream));
       nodec_chunks_push(&hs->bstream, buf);
-    } while (read_mode == CREAD_TO_EOF && !nodec_buf_is_null(buf));
+    } while (!nodec_buf_is_null(buf) && nodec_chunks_available(bstream) < read_to_eof_max);
     return (nodec_buf_is_null(buf));
   }
 }
@@ -435,12 +436,13 @@ nodec_bstream_t* http_in_body(http_in_t* in) {
 // Read asynchronously the entire body of the request. 
 // The caller is responsible for buffer deallocation.
 // Uses Content-Length is possible to read directly into a continuous buffer without reallocation.
-uv_buf_t async_http_in_read_body(http_in_t* req) {
+uv_buf_t async_http_in_read_body(http_in_t* req, size_t read_max) {
   uv_buf_t  buf = nodec_buf_null();
   nodec_bstream_t* stream = http_in_body(req);
   if (req->complete || req->body_stream == NULL) return buf;
   //{using_bstream(stream) {
      size_t clen = http_in_content_length(req);
+     if (clen > read_max) clen = read_max;
      if (clen > 0 && http_in_header(req, "Content-Encoding") == NULL) {
        buf = nodec_buf_alloc(clen);
        {using_on_abort_free_buf(&buf){
@@ -449,94 +451,13 @@ uv_buf_t async_http_in_read_body(http_in_t* req) {
        }}       
      }
      else {
-       buf = async_read_buf_all(stream);
+       buf = async_read_buf_all(stream, read_max);
      }
   //}}
   nodec_stream_free(as_stream(req->body_stream));
   req->body_stream = NULL;
   return buf;
 }
-
-
-/*
-// Read asynchronously a piece of the body; the return buffer is valid until
-// the next read. Returns a null buffer when the end of the request is reached.
-uv_buf_t async_http_in_read_body_buf(http_in_t* req)
-{
-  // if there is no current body ready: read another one.
-  // (there might be an initial body due to the initial parse of the headers.)
-  if (req->current_body.base == NULL)
-  {
-    // if we are done already, just return null
-    if (req->complete) return nodec_buf_null();
-
-    // if we exhausted our current buffer, read a new one
-    if (req->current.base == NULL || req->current_offset >= req->current.len) {
-      // deallocate current buffer first
-      if (req->current.base != NULL) {
-        if (req->current.base != req->prefix.base) { // don't deallocate the prefix with the headers
-          nodec_free(req->current.base);
-        }
-        req->current = nodec_buf_null();
-        req->current_offset = 0;
-      }
-      // and read a fresh buffer async from the stream
-      req->current = async_read_buf(as_stream(req->stream));     
-      if (req->current.base == NULL || req->current.len == 0) throw_http_err(HTTP_STATUS_BAD_REQUEST);
-      req->current.base[req->current.len] = 0;
-      //printf("\n\nraw body read: %s\n\n\n", req->current.base);
-    }
-
-    // we have a current buffer, parse a body piece (or read to eof)
-    assert(req->current.base != NULL && req->current_offset < req->current.len);
-    http_parser_pause(&req->parser, 0); // unpause
-    size_t nread = http_parser_execute(&req->parser, &req->parser_settings, req->current.base + req->current_offset, req->current.len - req->current_offset);
-    req->current_offset += nread;
-    check_http_errno(&req->parser);
-
-    // if no body now, something went wrong or we read to the end of the request without further bodies
-    if (req->current_body.base == NULL) {
-      if (req->complete) return nodec_buf_null();  // done parsing, no more body pieces
-      throw_http_err_str(HTTP_STATUS_BAD_REQUEST, "couldn't parse request body");
-    }
-  }
-
-  // We have a body piece ready, return it
-  assert(req->current_body.base != NULL);
-  uv_buf_t body = req->current_body;
-  req->current_body = nodec_buf_null();
-  printf("read body part: len: %i\n", body.len);
-  return body;  // a view into our current buffer, valid until the next read
-}
-
-
-// Read asynchronously the entire body of the request. The caller is responsible for buffer deallocation.
-// The initial_size can be 0 in which case the content_length or initially read buffer length is used.
-uv_buf_t async_http_in_read_body(http_in_t* req, size_t initial_size) {
-  uv_buf_t result = nodec_buf_null();
-  uv_buf_t body = nodec_buf_null();
-  {using_on_abort_free_buf(&body){
-    size_t   offset = 0;
-    // keep reading bufs into the target body buffer, reallocating as needed
-    uv_buf_t buf;
-    while ((buf = async_http_in_read_body_buf(req), buf.base != NULL)) {
-      if (initial_size == 0) {
-        initial_size = (http_in_content_length(req) > 0 ? (uv_buf_len_t)http_in_content_length(req) : buf.len);
-      }
-      body = nodec_buf_ensure_ex(body, buf.len + offset, initial_size, 0);
-      assert(body.len >= offset + buf.len);
-
-      // we cannot avoid memcpy due to chunking which breaks up the body
-      memcpy(body.base + offset, buf.base, buf.len);
-      offset += buf.len;
-      body.base[offset] = 0;  // always safe as bufs are allocated + 1 length
-    }
-    result = body;
-  }}
-  return result;
-}
-*/
-
 
 
 /*-----------------------------------------------------------------
@@ -972,11 +893,11 @@ nodec_bstream_t* async_req_body() {
 }
 
 // Read the full body; the returned buf should be deallocated by the caller.
-uv_buf_t async_req_read_body() {
-  return async_http_in_read_body(http_req());
+uv_buf_t async_req_read_body(size_t read_max) {
+  return async_http_in_read_body(http_req(), read_max);
 }
 
 // Read the full body as a string. Only works if the body cannot contain 0 characters.
-const char* async_req_read_body_str() {
-  return async_req_read_body().base;
+const char* async_req_read_body_str(size_t read_max) {
+  return async_req_read_body(read_max).base;
 }
