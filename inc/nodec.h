@@ -691,14 +691,18 @@ const char* nodec_ext_from_mime(const char* mime_type);
 
 typedef struct _http_static_config_t {
   bool use_etag;
-  bool use_implicit_index_html;
-  bool use_implicit_html_ext;
-  const char* cache_control;
-  size_t max_content_size;
-  size_t min_chunk_size;
+  const char*  cache_control;    // public, max-age=604800
+  const char** implicit_exts;  // http_static_html_exts
+  const char* implicit_index; // index.html
+  bool   gzip_vary;           // true
+  size_t gzip_min_size;       // 1kb  zip compress above this size
+  size_t content_max_size;    // SIZE_MAX
+  size_t read_buf_size;       // 64kb
 } http_static_config_t;
 
-#define http_static_default_config() { true, true, true, "public, max-age=604800", 0, 64*1024 }
+const char* http_static_implicit_exts[];
+
+#define http_static_default_config() { true, "public, max-age=604800", http_static_implicit_exts, "index", true, 1024, SIZE_MAX, 64*1024 }
 
 // Serve static files under a `root` directory. `config` can be NULL for the default configuration.
 void http_serve_static(const char* root, const http_static_config_t* config);

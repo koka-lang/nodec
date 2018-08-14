@@ -26,11 +26,11 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
   // check errors
   const uv_stat_t* stat = (const uv_stat_t*)lh_ptr_value(statv);
   const http_static_config_t* config = http_static_config();
-  if (stat->st_size >= MAXSIZE_T) {
+  if (stat->st_size >= SIZE_MAX) {
     nodec_check(UV_E2BIG);
   }
   size_t size = (size_t)stat->st_size;
-  if (config->max_content_size > 0 && size > config->max_content_size) {
+  if (config->content_max_size > 0 && size > config->content_max_size) {
     nodec_check(UV_E2BIG);
   }
 
@@ -45,7 +45,7 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
   if (config->use_etag) {
     char etag[ETAG_LEN + 1];
     // just modified time and size but no inode to cache properly on clusters
-    snprintf(etag, ETAG_LEN + 1, "W/%08lX.%08lXT-%08llXS", stat->st_mtim.tv_sec, stat->st_mtim.tv_nsec, (unsigned long long)stat->st_size);
+    snprintf(etag, ETAG_LEN + 1, "W/%08lx.%08lxT-%08llxS", stat->st_mtim.tv_sec, stat->st_mtim.tv_nsec, (unsigned long long)stat->st_size);
     http_resp_add_header("ETag", etag);
 
     // Check If-None-Match headers
@@ -80,65 +80,60 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
   bool compressible = false;
   const char* content_type = nodec_mime_info_from_fname(path,&compressible,NULL);
   nodec_stream_t* stream;
-  size_t write_buf_size = 64 * 1024;  // write in 64kb parts
+
+  if (config->gzip_min_size < SIZE_MAX && compressible && config->gzip_vary) {
+    http_resp_add_header("Vary", "Accept-Encoding");
+  }
   
   bool gzip = false;
-  if (false && compressible) { // turn off gzip for now
+  if (compressible && size > config->gzip_min_size) { 
     const char* accept_enc = http_req_header("Accept-Encoding");
     gzip = (accept_enc != NULL && strstr(accept_enc, "gzip") != NULL);
   }
-  if (gzip || (config->min_chunk_size > 0 && size > config->min_chunk_size)) {
-    // send in chunks
-    if (gzip) {
-      http_resp_add_header("Content-Encoding", "gzip");
-    }
-    else {
-      char svalue[64];
-      snprintf(svalue, 64, "%zu", size);
-      http_resp_add_header("Content-Length", svalue);
-    }
+  if (gzip) {
+    // send zipped content in chunks (as we don't know the final length)
+    http_resp_add_header("Content-Encoding", "gzip");
     stream = http_resp_send_status_body(HTTP_STATUS_OK, NODEC_CHUNKED, content_type);
-    if (write_buf_size < config->min_chunk_size) write_buf_size = config->min_chunk_size;
+    stream = as_stream(nodec_zstream_alloc(stream)); // gzip'd stream
   }
   else {
     // send as one body
     stream = http_resp_send_status_body(HTTP_STATUS_OK, size, content_type);
   }
-  if (gzip) {
-    // gzip the response
-    stream = as_stream(nodec_zstream_alloc(stream));
-  }
   {using_stream(stream) {
     // send in parts of `write_buf_size` length
-    uv_buf_t buf = nodec_buf_alloc(write_buf_size);
+    uv_buf_t buf = nodec_buf_alloc(config->read_buf_size);
     size_t nread = 0;
     {using_buf(&buf) {
       while ((nread = async_fread_into(file, buf, -1)) > 0) {
         buf.len = (uv_buf_len_t)nread;
         async_write_buf(stream, buf);
-        buf.len = (uv_buf_len_t)write_buf_size;
+        buf.len = (uv_buf_len_t)config->read_buf_size;
       };
     }}
   }}
   return lh_value_int(size);
 }
 
+const char* http_static_implicit_exts[] = { "html", "htm", NULL };
 
 static bool http_try_send(const http_static_config_t* config, const char* root, const char* path, const char* ext) {
   // check if it exists
   char fname[MAX_PATH];
   const char* pathsep = (root == NULL ? "" : "/");
   const char* extsep = (ext == NULL ? "" : ".");
-  const char* base = (config->use_implicit_index_html && (nodec_ends_with(path, "/") || (path[0] == 0)) ? "index" : "");
+  const char* base = (config->implicit_index != NULL && (nodec_ends_with(path, "/") || (path[0] == 0)) ? config->implicit_index : "");
   snprintf(fname, MAX_PATH, "%s%s%s%s%s%s", (root == NULL ? "" : root), pathsep, path, base, extsep, (ext == NULL ? "" : ext));
   if (strlen(fname) == 0) return false;
 
   uv_stat_t stat;
   uv_errno_t err = asyncx_stat(fname, &stat);
-  if (err == UV_ENOENT && ext == NULL && config->use_implicit_html_ext) {
-    // not found, try html extensions
-    bool res = http_try_send(config, root, path, "html");
-    if (!res) res = http_try_send(config, root, path, "htm");
+  if (err == UV_ENOENT && ext == NULL && config->implicit_exts != NULL) {
+    // not found, try implicit extensions
+    bool res = false;
+    for (size_t i = 0; !res && config->implicit_exts[i] != NULL; i++) {
+      res = http_try_send(config, root, path, config->implicit_exts[i]);
+    }
     return res;
   }
   else if (err != 0) {

@@ -827,19 +827,14 @@ static bool async_zstream_read_chunks(nodec_zstream_t* zs)
     zs->read_strm.avail_out = dest.len;
     zs->read_strm.next_out = dest.base;
     res = inflate(&zs->read_strm, Z_NO_FLUSH);
-    switch (res) {
-    case Z_NEED_DICT:
-      res = Z_DATA_ERROR;     /* and fall through */
-    case Z_DATA_ERROR:
-    case Z_MEM_ERROR:
-      //(void)inflateEnd(&strm);
-      ;
-    }
-    if (res == 0) {
+    if (res >= Z_OK) {
       size_t nwritten = dest.len - zs->read_strm.avail_out;
       chunks_push(&zs->bstream.chunks, dest, nwritten);
     }
-  } while (res == 0 && zs->read_strm.avail_out == 0);  // while fully written buffers
+    else {
+      nodec_check_msg(UV_EINVAL, "invalid gzip data");
+    }
+  } while (res >= Z_OK && zs->read_strm.avail_out == 0);  // while fully written buffers
   return nodec_buf_is_null(src);
 }
 
@@ -872,19 +867,17 @@ static void async_zstream_write_buf(nodec_zstream_t* zs, uv_buf_t src, int flush
   zs->write_strm.avail_in = src.len;
   zs->write_strm.next_in = src.base;
   int res = 0;
-  size_t nwritten = 0;
   do {
-    //uv_buf_t dest = nodec_buf_alloc(zs->chunk_size);
-    //{using_buf(&dest) {
-      zs->write_strm.avail_out = zs->write_buf.len;
-      zs->write_strm.next_out = zs->write_buf.base;
-      res = deflate(&zs->write_strm, flush);
-      if (res != Z_STREAM_ERROR) {
-        size_t nwritten = zs->write_buf.len - zs->write_strm.avail_out;
+    zs->write_strm.avail_out = zs->write_buf.len;
+    zs->write_strm.next_out = zs->write_buf.base;
+    res = deflate(&zs->write_strm, flush);
+    if (res >= Z_OK) {  // Z_OK || Z_STREAM_END
+      size_t nwritten = zs->write_buf.len - zs->write_strm.avail_out;
+      if (nwritten > 0) {
         async_write_buf(zs->source, nodec_buf(zs->write_buf.base, nwritten));
       }
-    //}}
-  } while (res != Z_STREAM_ERROR && zs->write_strm.avail_out == 0);  // while full buffers
+    }
+  } while (res >= Z_OK && zs->write_strm.avail_out == 0);  // while full buffers
 }
 
 static void async_zstream_write_bufs(nodec_stream_t* s, uv_buf_t bufs[], size_t buf_count) {
@@ -899,7 +892,7 @@ static void async_zstream_write_bufs(nodec_stream_t* s, uv_buf_t bufs[], size_t 
 static void async_zstream_shutdown(nodec_stream_t* stream) {
   nodec_zstream_t* zs = (nodec_zstream_t*)stream;
   if (zs->nwritten > 0) {
-    async_zstream_write_buf(zs, nodec_buf(zs->write_buf.base, 0), Z_FINISH);
+    async_zstream_write_buf(zs, nodec_buf_null(), Z_FINISH);
   }
   async_shutdown(zs->source);
 }

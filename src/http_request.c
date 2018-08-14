@@ -567,6 +567,8 @@ static void _http_out_write_bufs(nodec_stream_t* stream, uv_buf_t bufs[], size_t
       if (total < bufs[i].len) nodec_check(EOVERFLOW);
       xbufs[i + 1] = bufs[i];
     }
+    // prevent terminating the stream pre-maturely and don't write 0-length chunks
+    if (total == 0) return;
     // create pre- and postfix
     char prefix[256];
     snprintf(prefix, 256, "%zX\r\n", total );  // hexadecimal chunk length
