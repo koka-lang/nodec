@@ -148,7 +148,7 @@ void nodec_bufref_freev(lh_value bufref);
 /// Pass the buffer by reference so it will free
 /// the final memory that `bufref->base` points to (and not the initial value).
 /// \param bufref  a reference to the buffer to free after use.
-#define using_on_abort_free_buf(bufref)   on_abort(nodec_bufref_freev,lh_value_any_ptr(bufref))
+#define using_buf_on_abort_free(bufref)   on_abort(nodec_bufref_freev,lh_value_any_ptr(bufref))
 
 /// Don't free a buffer by reference value.
 /// Usually not used directly, but used by using_buf_owned()

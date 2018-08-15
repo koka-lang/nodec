@@ -445,7 +445,7 @@ uv_buf_t async_http_in_read_body(http_in_t* req, size_t read_max) {
      if (clen > read_max) clen = read_max;
      if (clen > 0 && http_in_header(req, "Content-Encoding") == NULL) {
        buf = nodec_buf_alloc(clen);
-       {using_on_abort_free_buf(&buf){
+       {using_buf_on_abort_free(&buf){
           size_t nread = async_read_into(stream, buf);
           nodec_buf_fit(buf, nread);
        }}       

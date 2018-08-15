@@ -193,7 +193,7 @@ size_t async_fread_into(uv_file file, uv_buf_t buf , int64_t file_offset) {
 uv_buf_t async_fread_buf(uv_file file, size_t max, int64_t file_offset) {
   uv_buf_t buf = nodec_buf_alloc(max);
   size_t nread = 0;
-  {using_on_abort_free_buf(&buf) {
+  {using_buf_on_abort_free(&buf) {
     nread = async_fread_into(file, buf, file_offset);
   }}  
   if (nread == 0) {
