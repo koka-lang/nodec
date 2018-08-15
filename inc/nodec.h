@@ -396,7 +396,25 @@ nodec_bstream_t* nodec_bstream_alloc_read_ex(uv_stream_t* stream, size_t read_ma
 
 #ifndef NO_ZLIB
 
+/// Create a stream over another stream that is gzip'd.
+/// Reading unzips, while writing zips again.
+/// Uses a default compression level of 6 and gzip format (instead of deflate).
+/// \param stream the gzipped stream -- after allocation the returned stream
+///               owns this stream and takes care of shutdown and free.
+/// \returns a new buffered stream that automatically (de)compresses.
 nodec_bstream_t* nodec_zstream_alloc(nodec_stream_t* stream);
+
+
+/// Create a stream over another stream that is gzip'd.
+/// Reading unzips automatically, while writing zips again.
+/// \param stream the gzipped stream -- after allocation the returned stream
+///               owns this stream and takes care of shutdown and free.
+/// \param compress_level  the compression level to use between 1 and 9 (6 by default, which
+///                         is a good balance between speed and compression ratio).
+/// \param gzip   if `true` uses the gzip format for compression while reading both
+///               deflate and gzip streams. If false, uses deflate for both compression
+///               and decompression.
+/// \returns a new buffered stream that automatically (de)compresses.
 nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, int compress_level, bool gzip);
 
 #endif
