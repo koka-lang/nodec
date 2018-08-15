@@ -32,6 +32,51 @@ Enjoy!\
 [koka book]: https://bit.do/kokabook
 
 
+# A `Hello World` Mini Server
+
+Here is a mini hello world server:
+```C
+const char* hello_body =
+"<!DOCTYPE html>"
+"<html>\n"
+"<head>\n"
+"  <meta charset=\"utf-8\">\n"
+"</head>\n"
+"<body>\n"
+"  <h1>Hello NodeC World!</h1>\n"
+"</body>\n"
+"</html>\n";
+
+
+static void hello_serve() {
+  // debug
+  printf("strand %i request, url: %s\n", http_req_strand_id(), http_req_url());
+  
+  // do something
+  printf("waiting 2 secs...\n"); 
+  async_wait(2000);
+  
+  // send response (adds content-type and content-length headers)
+  http_resp_send_body_str(out,hello_body,"test/html");
+}
+
+static void hello() {
+  async_http_server_at( "127.0.0.1:8080", NULL, &hello_serve );
+}
+
+int main() {
+  async_main(hello);
+  return 0;
+}
+```
+Note how this uses async/await style programming as with `async_wait` that allows other
+requests to be interleaved while waiting or doing other work. Similarly, we use 
+implicit parameters (or dynamic binding) to bind the current request and response objects
+implicitly without needing to thread it around everywhere, and can thus write 
+`http_req_url()` to get the URL of the current request. Finally, exceptions are used to
+automatically propagate errors and ensure robust resource finalization. All of these
+control-flow features are build upon the algebraic effect handlers provided by [libhandler].
+
 # Why Algebraic Effect handlers
 
 For example, consider the following asynchronous function for closing a file
@@ -57,53 +102,13 @@ exceptions and thus there is no need to check any return value, and through
 the use implicit parameters there is no need to pass around a `loop` parameter anymore.
 
 
-# A `Hello World` Mini Server
-
-Here is a mini hello world server:
-```C
-const char* hello_body =
-"<!DOCTYPE html>"
-"<html>\n"
-"<head>\n"
-"  <meta charset=\"utf-8\">\n"
-"</head>\n"
-"<body>\n"
-"  <h1>Hello NodeC World!</h1>\n"
-"</body>\n"
-"</html>\n";
-
-
-static void hello_serve(int strand_id, http_in_t* in, http_out_t* out, lh_value arg) {
-  // debug
-  printf("strand %i request, url: %s, content length: %llu\n", strand_id, http_in_url(in), http_in_content_length(in));
-  
-  // do something
-  printf("waiting %i secs...\n", 1 + strand_id); 
-  async_wait(1000 + strand_id*1000);
-  
-  // send response
-  http_out_add_header(out,"Content-Type","text/html; charset=utf-8");
-  http_out_send_status_headers(out,HTTP_STATUS_OK,true);
-  http_out_send_body(out,hello_body);
-}
-
-static void hello() {
-  define_ip4_addr("127.0.0.1", 8080,addr);
-  async_http_server_at( addr, 0, 3 /* max concurrency */, 0, &hello_serve, lh_value_null );
-}
-
-int main() {
-  async_main(hello);
-  return 0;
-}
-```
 
 
 # Building
 
 ## Sub projects
 
-NodeC uses the [libhandler], [libuv], and [http-parser] projects.
+NodeC uses the [libhandler], [libuv], [zlib], and [http-parser] projects.
 You need to check them out in a peer directory of `NodeC`, i.e.
 ```
 home\dev\
@@ -111,6 +116,7 @@ home\dev\
   http-parser
   libuv
   nodec
+  zlib
 ```
 
 
@@ -147,6 +153,15 @@ The [libhandler] project is checked out as:
 There is no need to build it, it is included automatically by the NodeC project.
 
 
+### zlib
+
+The [zlib] project is checked out as:
+
+* `> git clone https://github.com/madler/zlib.git`
+
+* And build it as a static library. On Windows open up `contrib\vstudio\vc14\zlibvc.sln`
+  to build the `Debug` and `ReleaseWithoutAsm` versions for `x64`, as `zlibstat.lib`.
+
 ## Windows
 
 Use the Microsoft Visual Studio solution at `ide\msvc\nodec.sln`.
@@ -155,3 +170,4 @@ Use the Microsoft Visual Studio solution at `ide\msvc\nodec.sln`.
 [libuv]: https://github.com/libuv/libuv
 [http-parser]: https://github.com/nodejs/http-parser
 [libhandler]: https://github.com/koka-lang/libhandler
+[zlib]: https://github.com/madler/zlib
