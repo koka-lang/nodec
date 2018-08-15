@@ -112,7 +112,7 @@ void http_in_headers_print(http_in_t* in) {
   while ((name = http_in_header_next(in, &value, &iter)) != NULL) {
     printf(" %s: %s\n", name, value);
   }
-  uv_buf_t buf = async_http_in_read_body(in);
+  uv_buf_t buf = async_http_in_read_body(in, 4*NODEC_MB);
   {using_buf(&buf) {
     if (buf.base != NULL) {
       buf.base[buf.len] = 0;
@@ -289,7 +289,7 @@ void test_as_client() {
       async_wait(250);
     }
     printf("await response...\n");
-    char* body = async_read_all(conn);
+    char* body = async_read_all(conn, 32*NODEC_MB);
     {using_free(body) {
       printf("received:\n%s", body);
     }}
@@ -349,8 +349,8 @@ static void entry() {
   //test_dns();
   //test_http();
   //test_as_client();
-  //test_connect();
-  test_tcp_tty();
+  test_connect();
+  //test_tcp_tty();
   //test_url();
 }
 
