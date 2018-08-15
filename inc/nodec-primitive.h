@@ -70,6 +70,7 @@ bool          channel_is_full(channel_t* channel);
 
 // ---------------------------------------------------------------------------------
 // Internal stream functions
+// Needed to define custom streams.
 // ---------------------------------------------------------------------------------
 
 typedef void     (nodec_stream_free_fun)(nodec_stream_t* stream);
@@ -110,7 +111,7 @@ typedef enum _nodec_chunk_read_t {
 } nodec_chunk_read_t;
 
 typedef void (nodec_pushback_buf_fun)(nodec_bstream_t* bstream, uv_buf_t buf);
-typedef bool (async_read_chunk_fun)(nodec_bstream_t* bstream, nodec_chunk_read_t mode);
+typedef bool (async_read_chunk_fun)(nodec_bstream_t* bstream, nodec_chunk_read_t mode, size_t read_eof_max);
 
 struct _nodec_bstream_t {
   nodec_stream_t          stream_t;
@@ -130,36 +131,28 @@ void nodec_bstream_init(nodec_bstream_t* bstream,
 
 void nodec_bstream_release(nodec_bstream_t* bstream);
 
-void nodec_chunks_pushback_buf(nodec_bstream_t* bstream, uv_buf_t buf);
-void nodec_chunks_push(nodec_bstream_t* bstream, uv_buf_t buf);
-bool nodec_chunks_available(nodec_bstream_t* bstream);
+void   nodec_chunks_pushback_buf(nodec_bstream_t* bstream, uv_buf_t buf);
+void   nodec_chunks_push(nodec_bstream_t* bstream, uv_buf_t buf);
+size_t nodec_chunks_available(nodec_bstream_t* bstream);
 uv_buf_t nodec_chunks_read_buf(nodec_bstream_t* bstream);
 
+
 // ---------------------------------------------------------------------------------
-// LibUV streams 
+// Internal streams over uv_stream_t
 // ---------------------------------------------------------------------------------
-
-
-uv_errno_t asyncx_uv_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count);
-uv_errno_t asyncx_uv_write_buf(uv_stream_t* stream, uv_buf_t buf);
-void async_uv_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count);
-void async_uv_write_buf(uv_stream_t* stream, uv_buf_t buf);
-void async_uv_stream_shutdown(uv_stream_t* stream);
-void nodec_uv_stream_free(uv_stream_t* stream);
-
 
 typedef struct _nodec_uv_stream_t nodec_uv_stream_t;
 nodec_bstream_t* as_bstream(nodec_uv_stream_t* stream);
 
 #define using_uv_stream(s) using_bstream(as_bstream(s))
 
+
 nodec_uv_stream_t* nodec_uv_stream_alloc(uv_stream_t* stream);
-void nodec_uv_stream_read_start(nodec_uv_stream_t* rs, size_t read_max, size_t alloc_init, size_t alloc_max);
+void nodec_uv_stream_read_start(nodec_uv_stream_t* rs, size_t alloc_init, size_t alloc_max);
 void nodec_uv_stream_read_restart(nodec_uv_stream_t* rs);
-void nodec_uv_stream_set_read_max(nodec_uv_stream_t* rs, size_t read_max);
 void nodec_uv_stream_read_stop(nodec_uv_stream_t* rs);
 
-// Used to implement keep-alive
+// Used to implement keep-alive in tcp.c
 uv_errno_t asyncx_uv_stream_await_available(nodec_uv_stream_t* stream, int64_t timeout);
 
 

@@ -30,6 +30,9 @@
     or `lh_value_int` (from int to a value).
 -----------------------------------------------------------------------------*/
 
+#define NODEC_KB  (1024)
+#define NODEC_MB  (1024*NODEC_KB)
+#define NODEC_GB  (1024*NODEC_MB)
 
 // Forward declarations 
 typedef struct _channel_t channel_t;
@@ -56,29 +59,58 @@ available `len` bytes. These buffers are usually passed by value.
 ///   void*  base;
 /// }
 /// ```
+/// Buffer structures are small and always passed and returned _by value_.
 ///
+/// The routines in this module ensure that all buffers actually are allocated
+/// with `len + 1` where `base[len] == 0`, i.e. it is safe to print
+/// the contents as a string as it will be zero terminated.
 /// @{
 
 /// Initialize a libuv buffer, which is a record with a data pointer and its length.
 uv_buf_t nodec_buf(const void* base, size_t len);
+
+/// Initialize a buffer from a string.
 uv_buf_t nodec_buf_str(const char* s);
+
+/// Initialize a buffer from a string.
+/// This (re)allocates the string in the heap which is then owned by the buffer.
 uv_buf_t nodec_buf_strdup(const char* s);
 
 /// Create a null buffer, i.e. `nodec_buf(NULL,0)`.
 uv_buf_t nodec_buf_null();
 
-// Create and allocate a buffer
+/// Create and allocate a buffer of a certain length.
 uv_buf_t nodec_buf_alloc(size_t len);
+
+/// Reallocate a buffer to a given new length.
+/// See also nodec_buf_fit() and nodec_buf_ensure().
 uv_buf_t nodec_buf_realloc(uv_buf_t buf, size_t len);
 
-// Ensure a buffer has at least `needed` size.
-// If `buf` is null, use 8kb for initial size, and after that use doubling of at most 4mb increments.
+/// Ensure a buffer has at least `needed` size.
+/// \param  buf The buffer to potentially reallocate. If `buf` is null, 
+///             use 8kb for initial size, and after that use doubling of at most 
+///             4mb increments.
+/// \param needed the required size of the buffer.
+/// \returns a new buffer that has at least `needed` length.
 uv_buf_t nodec_buf_ensure(uv_buf_t buf, size_t needed);
+
+/// Ensure a buffer has at least `needed` size.
+/// Like nodec_buf_ensure() but with customizable `initial_size` and `max_increase`.
 uv_buf_t nodec_buf_ensure_ex(uv_buf_t buf, size_t needed, size_t initial_size, size_t max_increase);
-// Fit a buffer to `needed` size. Might increase the buffer size, or
-// Reallocate to a smaller size if it was larger than 128 bytes with more than 20% wasted.
+
+/// Fit a buffer to `needed` size. 
+/// Might increase the buffer size, or
+/// Reallocate to a smaller size if it was larger than 128 bytes with more than 
+/// 20% wasted space.
+/// \param buf   the buffer to fit.
+/// \param needed the required space needed.
+/// \returns the new potentially reallocated buffer with a length that fits `needed`.
 uv_buf_t nodec_buf_fit(uv_buf_t buf, size_t needed);
 
+/// Append the contents of `buf2` into `buf1`.
+/// \param buf1 the destination buffer.
+/// \param buf2 the source buffer.
+/// \returns a potentially resized `buf1` that contains the contents of both.
 uv_buf_t nodec_buf_append_into(uv_buf_t buf1, uv_buf_t buf2);
 
 
@@ -87,8 +119,16 @@ uv_buf_t nodec_buf_append_into(uv_buf_t buf1, uv_buf_t buf2);
 /// \returns `true` if the buffer length is 0 or the `base` is `NULL`.
 bool nodec_buf_is_null(uv_buf_t buf);
 
+/// Free a buffer.
+/// This is usually not used directly, but through using_buf().
 void nodec_buf_free(uv_buf_t buf);
+
+/// Free a buffer by reference.
+/// This is usually not used directly, but through using_buf().
 void nodec_bufref_free(uv_buf_t* buf);
+
+/// Free a buffer by reference value.
+/// This is usually not used directly, but through using_buf().
 void nodec_bufref_freev(lh_value bufref);
 
 /// Use a buffer in a scope, freeing automatically when exiting.
@@ -110,8 +150,17 @@ void nodec_bufref_freev(lh_value bufref);
 /// \param bufref  a reference to the buffer to free after use.
 #define using_on_abort_free_buf(bufref)   on_abort(nodec_bufref_freev,lh_value_any_ptr(bufref))
 
+/// Don't free a buffer by reference value.
+/// Usually not used directly, but used by using_buf_owned()
 void nodec_bufref_nofreev(lh_value pv);
 
+/// Use a potentially _owned_ buffer in a scope.
+/// This is used for the `async_read_bufx()` calls where the returned buffer
+/// might be owned (and must be freed), or not (and must not be freed).
+/// Pass the buffer by reference so it will free
+/// the final memory that `bufref->base` points to (and not the initial value).
+/// \param owned   Only free the buffer if `owned` is true.
+/// \param bufref  a reference to the buffer to free after use.
 #define using_buf_owned(owned,bufref)  defer((owned ? nodec_bufref_freev : nodec_bufref_nofreev),lh_value_any_ptr(bufref))
 
 /// @}
@@ -232,7 +281,8 @@ void      nodec_stream_freev(lh_value streamv);
 
 /// Shutdown a stream. 
 ///
-/// This closes the stream gracefully for writes.
+/// This closes the stream gracefully for writes (nodec_stream_free()
+/// does this too but closes the stream abruptly).
 /// Usually this is not used directly but instead using_stream() is used.
 void      async_shutdown(nodec_stream_t* stream);
 
@@ -254,12 +304,31 @@ void      async_shutdown(nodec_stream_t* stream);
     defer_exit(async_shutdown(s),&nodec_stream_freev,lh_value_ptr(s))
 
 /// Asynchronously read a buffer from a stream.
+/// This is the most efficient form of reading since it can even read by providing
+/// _unowned_ view buffers but it is also most complex as returned unowned buffers are
+/// only valid until the next read call. See async_read_buf() for more robust 
+/// reading that always returns callee owned buffers.
 /// \param stream  stream to read from.
 /// \param[out] buf_owned this is set to `true` if the returned buffer is _owned_, i.e. should be freed by the callee.
-/// \returns uv_buf_t  a buffer with the data. This buffer is becomes
-///    the callee's responsibility (see using_buf_owned()) if `buf_owned` is true and is passed without
-///    copying from the lower level read routines. If `buf_owned` is false the buffer should
-///    _not_ be freed by the callee (again, see using_buf_owned()).
+/// \returns a buffer with the data. This buffer is becomes
+///    the callee's responsibility if `buf_owned` is true; otherwise the buffer should
+///    _not_ be freed by the callee. See using_buf_owned() to do this automatically.
+///    Moreover, if a buffer is returned with `*buf_owned` false, the buffer only
+///    stays valid until the next read from that stream. 
+///
+/// \b Example
+/// ```
+/// nodec_stream_t stream = http_req_body();
+/// {using_stream(stream){
+///    uv_buf_t buf;
+///    bool owned;
+///    while( (buf = async_read_bufx(stream,&owned), !nodec_buf_is_null(buf)) ) {
+///      {using_buf_owned(owned,buf){
+///         printf("data read: %s\n", buf.base);
+///      }}
+///    }
+/// }}
+/// ```
 uv_buf_t  async_read_bufx(nodec_stream_t* stream, bool* buf_owned);
 
 /// Asynchronously read a buffer from a stream.
@@ -316,10 +385,16 @@ nodec_stream_t*  as_stream(nodec_bstream_t* stream);
 #define using_bstream(s)  using_stream(as_stream(s))  
 
 /// Read the entire stream as a single buffer.
-uv_buf_t  async_read_buf_all(nodec_bstream_t* bstream);
+/// \param bstream   the stream to read from.
+/// \param read_max  maximum number of bytes to read. Use 0 (or `SIZE_MAX`) for unlimited.
+/// \returns the data read in a callee owned buffer (see using_buf()).
+uv_buf_t  async_read_buf_all(nodec_bstream_t* bstream, size_t read_max);
 
 /// Read the entire stream as a string.
-char*     async_read_all(nodec_bstream_t* bstream);
+/// \param bstream   the stream to read from.
+/// \param read_max  maximum number of bytes to read. Use 0 (or `SIZE_MAX`) for unlimited.
+/// \returns the data read in a callee owned string (see using_str()).
+char*     async_read_all(nodec_bstream_t* bstream, size_t read_max);
 
 /// Read a stream into a pre-allocated buffer.
 /// \param bstream  the stream to read from.
@@ -387,11 +462,10 @@ nodec_bstream_t* nodec_bstream_alloc_read(uv_stream_t* stream);
 /// Low level: Create a buffered stream from an internal `uv_stream_t` for reading.
 ///
 /// \param stream   the underlying `uv_stream_t`. Freed when the #nodec_bstream_t is freed.
-/// \param read_max  return end-of-stream after `read_max` bytes are read. Use 0 for no maximum.
 /// \param alloc_init the initial allocation size for read buffers. Use 0 for default (8k). Doubles on further data until `alloc_max`.
 /// \param alloc_max  the maximal allocation size for read buffers.
 /// \returns a buffered stream.
-nodec_bstream_t* nodec_bstream_alloc_read_ex(uv_stream_t* stream, size_t read_max, size_t alloc_init, size_t alloc_max);
+nodec_bstream_t* nodec_bstream_alloc_read_ex(uv_stream_t* stream, size_t alloc_init, size_t alloc_max);
 
 
 #ifndef NO_ZLIB
@@ -421,45 +495,6 @@ nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, int compress_lev
 
 ///@}
 
-
-/*
-void        nodec_handle_free(uv_handle_t* handle);
-void        nodec_stream_free(uv_stream_t* stream);
-void        nodec_stream_freev(lh_value streamv);
-void        async_shutdown(uv_stream_t* stream);
- 
-#define using_stream(s) \
-    defer_exit(async_shutdown(s),&nodec_stream_freev,lh_value_ptr(s))
-
-// Configure a stream for reading; Normally not necessary to call explicitly
-// unless special configuration needs exist.
-void        nodec_read_start(uv_stream_t* stream, size_t read_max, size_t alloc_init, size_t alloc_max);
-void        nodec_read_stop(uv_stream_t* stream);
-void        nodec_read_restart(uv_stream_t* stream);
-// Set the maximal amount of bytes that can be read from a stream (4Gb default)
-void        nodec_set_read_max(uv_stream_t* stream, size_t read_max);
-
-// Reading from a stream. `async_read_buf` is most efficient.
-uv_buf_t    async_read_buf(uv_stream_t* stream);
-uv_buf_t    async_read_buf_available(uv_stream_t* stream);
-uv_buf_t    async_read_buf_line(uv_stream_t* stream);
-uv_buf_t    async_read_buf_all(uv_stream_t* stream);
-size_t      async_read_into_all(uv_stream_t* stream, uv_buf_t buf, bool* at_eof);
-// Read a buffer from a stream up to and including the first occurrence of `pat`; the pattern
-// can be at most 8 bytes long. Returns the number of bytes read in `*idx` (if not NULL).
-uv_buf_t    async_read_buf_including(uv_stream_t* stream, size_t* idx, const void* pat, size_t pat_len);
-
-char*       async_read(uv_stream_t* stream);
-char*       async_read_all(uv_stream_t* stream);
-char*       async_read_line(uv_stream_t* stream);
-
-// Writing to a stream. `async_write_bufs` is most primitive.
-void        async_write(uv_stream_t* stream, const char* s);
-void        async_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count);
-void        async_write_strs(uv_stream_t* stream, const char* strings[], size_t string_count );
-void        async_write_buf(uv_stream_t* stream, uv_buf_t buf);
-
-*/
 
 /* ----------------------------------------------------------------------------
   IP4 and IP6 Addresses
@@ -621,7 +656,7 @@ nodec_bstream_t* http_in_body(http_in_t* in);
 
 /// Read the full body; the returned buf should be deallocated by the caller.
 /// Uses `Content-Length` when possible to read into a pre-allocated buffer of the right size.
-uv_buf_t async_http_in_read_body(http_in_t* in);
+uv_buf_t async_http_in_read_body(http_in_t* in, size_t read_max);
 
 
 /*-----------------------------------------------------------------
@@ -653,35 +688,94 @@ nodec_stream_t*  http_out_send_request_body(http_out_t* out, http_method_t metho
 /*-----------------------------------------------------------------
   HTTP server implicitly bound request and response
 -----------------------------------------------------------------*/
+///\defgroup http_req_resp HTTP Requests and Responses
+/// The HTTP(S) server implicitly binds the current request
+/// and response objects (as dynamically bound implicit parameters).
+/// They can be accessed through `http_req_xxx` for requests and
+/// `http_resp_xxx` for responses.
+///@{
 
+/// The identify of the current asynchronous strand serving the request.
 int         http_strand_id();
+
+/// Return the current HTTP request.
 http_in_t*  http_req();
+
+/// Return the current HTTP response.
 http_out_t* http_resp();
 
-void            http_resp_add_header(const char* field, const char* value);
+/// Add a header to the current HTTP response.
+/// \param name  the name of the header
+/// \param value the value of the header
+/// the name and value are copied into the header block and can be freed afterwards.
+void            http_resp_add_header(const char* name, const char* value);
+
+/// Send the headers and the response status without a body.
 void            http_resp_send_status(http_status_t status);
+
+/// Send the headers and response status, and return a reponse body stream.
 nodec_stream_t* http_resp_send_status_body(http_status_t status, size_t content_length, const char* content_type);
+
+/// Send the headers and OK response without a body.
+/// Just a shorthand for http_resp_send_status(HTTP_STATUS_OK).
 void            http_resp_send_ok();
+
+/// Send headers, status, and full body as a buffer.
 void            http_resp_send_body_buf(http_status_t status, uv_buf_t buf, const char* content_type);
+
+/// Send headers, status, and full body as a string.
 void            http_resp_send_body_str(http_status_t status, const char* body, const char* content_type);
 
+
+/// Return the current request url.
 const char*   http_req_url();
+
+/// Return the current request path.
 const char*   http_req_path();
+
+/// Return the current request method.
+///
+/// ```
+/// typedef enum _http_method_t {
+///   HTTP_GET,
+///   HTTP_HEAD,
+///   HTTP_PUT,
+///   HTTP_POST,
+///   ...
+/// } http_method_t;
+/// ```
 http_method_t http_req_method();
+
+/// The value of the _Content-Length_ header.
+/// Returns 0 if the _Content-Length_ header was not present.
 uint64_t      http_req_content_length();
+
+/// Return the value of an HTTP request header.
+/// \param name the header name.
+/// \returns the header value (owned by the request object) or NULL
+///  if the header was not present. If there were multiple headers
+///  the values are joined with commas into one value. See http_header_next_field()
+/// for iterating through them.
 const char*   http_req_header(const char* name);
+
+/// Iterate through all headers.
+/// \param[out] value  the value of the current header, or NULL if done iterating.
+/// \param[in,out] iter   the iteration state, should be initialized to 0.
+/// \returns the name of the current header or NULL if done iterating.
 const char*   http_req_header_next(const char** value, size_t* iter);
 
+/// Return the current HTTP request body as a buffered stream.
 nodec_bstream_t* http_req_body();
 
 // Read the full body; the returned buf should be deallocated by the caller.
 // Pass `initial_size` 0 to automatically use the content-length or initially
 // received buffer size.
-uv_buf_t      async_req_read_body();
+uv_buf_t      async_req_read_body(size_t read_max);
 
 // Read the full body as a string. Only works if the body cannot contain 0 characters.
-const char*   async_req_read_body_str();
+const char*   async_req_read_body_str(size_t read_max);
 
+///@}
 
 
 /* ----------------------------------------------------------------------------

@@ -24,7 +24,7 @@ void test_as_client() {
       async_wait(100);
     }
     printf("await response...\n");
-    char* body = async_read_all(conn);
+    char* body = async_read_all(conn, 32*NODEC_MB);
     {using_free(body) {
       printf("received:\n%s", body);
     }}
@@ -56,7 +56,7 @@ static void test_as_client2_connection(nodec_bstream_t* conn) {
     for (const char* pch = s; *pch; pch++)
       write_one_char(conn, pch);
   printf("await response...\n");
-  char* body = async_read_all(conn);
+  char* body = async_read_all(conn, 32*NODEC_MB);
   {using_free(body) {
     printf("received:\n%s", body);
   }}
@@ -117,7 +117,7 @@ static void test_client_file(const char* path) {
     {using_bstream(conn) {
       async_write_buf(as_stream(conn), buf);
       printf("await response...\n");
-      char* body = async_read_all(conn);
+      char* body = async_read_all(conn, 32*NODEC_MB);
       {using_free(body) {
         printf("received:\n%s", body);
       }}

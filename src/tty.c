@@ -54,7 +54,7 @@ char* async_tty_readline() {
   if (tty->_stdin == NULL) {
     uv_tty_t* hstdin = nodec_zero_alloc(uv_tty_t);
     nodec_check(uv_tty_init(async_loop(), hstdin, 0, 1));
-    tty->_stdin = nodec_bstream_alloc_read_ex(stream_of_tty(hstdin), 0, 64, 64);
+    tty->_stdin = nodec_bstream_alloc_read_ex(stream_of_tty(hstdin), 64, 64);
   }
   return async_read_line(tty->_stdin);
 }
