@@ -52,13 +52,7 @@ available `len` bytes. These buffers are usually passed by value.
 -----------------------------------------------------------------------------*/
 
 /// \defgroup buffers Buffer's
-/// Convenience routines around the \a libuv `uv_buf_t` structure:
-/// ```
-/// struct uv_buf_t {
-///   size_t len;
-///   void*  base;
-/// }
-/// ```
+/// Convenience routines around the \a libuv #uv_buf_t` structure
 /// Buffer structures are small and always passed and returned _by value_.
 ///
 /// The routines in this module ensure that all buffers actually are allocated
@@ -263,7 +257,7 @@ uv_errno_t  using_asyncx_fopen(const char* path, int flags, int mode, nodec_file
 /* ----------------------------------------------------------------------------
   Streams
 -----------------------------------------------------------------------------*/
-///\defgroup stream Streams
+///\defgroup streams Streams
 ///@{
 
 /// Basic unbuffered streams.
@@ -525,6 +519,8 @@ void nodec_free_addrinfov(lh_value infov);
 /* ----------------------------------------------------------------------------
   TCP
 -----------------------------------------------------------------------------*/
+/// \defgroup tcp TCP connections
+/// @{
 
 /// \defgroup tcpx Low level TCP connections
 /// @{
@@ -543,8 +539,6 @@ uv_stream_t*    async_tcp_channel_receive(tcp_channel_t* ch);
 
 /// @}
 
-/// \defgroup tcp TCP connections
-/// @{
 
 /// Establish a TCP connection.
 /// \param addr   Connection address. 
@@ -595,11 +589,35 @@ void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* confi
 /* ----------------------------------------------------------------------------
   HTTP
 -----------------------------------------------------------------------------*/
+/// \defgroup http HTTP Connections
+/// @{
+
+/// \defgroup http_connect HTTP Connect
+/// @{
 typedef enum http_status http_status_t;
 typedef enum http_method http_method_t;
+/// @}
 
+/// \defgroup http_in_out HTTP incoming and outgoing data.
+/// These are the request- and response objects for the server,
+/// and the response- and request objects for a client connection.
+/// Servers bind these implicitly to http_req() and http_resp() for
+/// the current request- and response objects so that the explicit
+/// #http_in_t and #http_out_t objects don't need to be threaded around
+/// explicitly.
+/// @{
+
+/// HTTP incoming data object
 typedef struct _http_in_t http_in_t;
+
+/// HTTP outgoing data object
 typedef struct _http_out_t http_out_t;
+
+/// @}
+
+
+/// \addtogroup http_connect 
+/// @{
 
 void throw_http_err(http_status_t status);
 void throw_http_err_str(http_status_t status, const char* msg);
@@ -621,11 +639,13 @@ typedef lh_value (http_connect_fun)(http_in_t* in, http_out_t* out, lh_value arg
 
 lh_value async_http_connect(const char* url, http_connect_fun* connectfun, lh_value arg);
 
+/// @}
 
 /* ----------------------------------------------------------------------------
   HTTP incoming connection
 -----------------------------------------------------------------------------*/
-
+/// \addtogroup http_in_out 
+/// @{
 void   http_in_clear(http_in_t* in);
 void   http_in_clearv(lh_value inv);
 
@@ -658,7 +678,6 @@ nodec_bstream_t* http_in_body(http_in_t* in);
 /// Uses `Content-Length` when possible to read into a pre-allocated buffer of the right size.
 uv_buf_t async_http_in_read_body(http_in_t* in, size_t read_max);
 
-
 /*-----------------------------------------------------------------
   HTTP outgoing
 -----------------------------------------------------------------*/
@@ -677,7 +696,8 @@ void http_out_add_header(http_out_t* out, const char* field, const char* value);
 
 // Send headers and get a possible body write stream
 
-/// Use this as a `content_length` to use a _chunked_ transfer encoding.
+/// Use this as a `content_length` to use a _chunked_ transfer encoding
+/// in http_out_send_status_body() and http_resp_send_status_body().
 #define NODEC_CHUNKED ((size_t)(-1))
 
 void             http_out_send_status(http_out_t* out, http_status_t status);
@@ -685,17 +705,20 @@ nodec_stream_t*  http_out_send_status_body(http_out_t* out, http_status_t status
 void             http_out_send_request(http_out_t* out, http_method_t method, const char* url);
 nodec_stream_t*  http_out_send_request_body(http_out_t* out, http_method_t method, const char* url, size_t content_length, const char* content_type);
 
+bool http_out_status_sent(http_out_t* out);
+/// @}
+
 /*-----------------------------------------------------------------
   HTTP server implicitly bound request and response
 -----------------------------------------------------------------*/
-///\defgroup http_req_resp HTTP Requests and Responses
+///\defgroup http_req_resp HTTP server requests and responses.
 /// The HTTP(S) server implicitly binds the current request
 /// and response objects (as dynamically bound implicit parameters).
 /// They can be accessed through `http_req_xxx` for requests and
 /// `http_resp_xxx` for responses.
 ///@{
 
-/// The identify of the current asynchronous strand serving the request.
+/// The identity of the current asynchronous strand serving the request.
 int         http_strand_id();
 
 /// Return the current HTTP request.
@@ -710,21 +733,37 @@ http_out_t* http_resp();
 /// the name and value are copied into the header block and can be freed afterwards.
 void            http_resp_add_header(const char* name, const char* value);
 
+
+/// Return `true` if the HTTP response status was sent.
+bool http_resp_status_sent();
+
 /// Send the headers and the response status without a body.
-void            http_resp_send_status(http_status_t status);
+/// \param status The HTTP response status.
+void  http_resp_send_status(http_status_t status);
 
 /// Send the headers and response status, and return a reponse body stream.
+/// \param status  The HTTP response status
+/// \param content_length  The length of the response body. Use #NODEC_CHUNKED for
+///                         a _chunked_ transfer encoding where the content length
+///                         is unknown ahead of time.
+/// \param content_type    The mime content type (like `text/html`). The `charset`
+///                        can be specified too (like `text/html;charset=UTF-8`) but
+///                        is otherwise determined automatically from the mime type.
+///                         if the `content_type` is `NULL` no _Content-Type_ header
+///                         is added.
+/// \returns A stream to write the body to; this is automatically chunked if
+/// #NODEC_CHUNKED was passed as the `content_length`.
 nodec_stream_t* http_resp_send_status_body(http_status_t status, size_t content_length, const char* content_type);
 
 /// Send the headers and OK response without a body.
 /// Just a shorthand for http_resp_send_status(HTTP_STATUS_OK).
-void            http_resp_send_ok();
+void http_resp_send_ok();
 
 /// Send headers, status, and full body as a buffer.
-void            http_resp_send_body_buf(http_status_t status, uv_buf_t buf, const char* content_type);
+void http_resp_send_body_buf(http_status_t status, uv_buf_t buf, const char* content_type);
 
 /// Send headers, status, and full body as a string.
-void            http_resp_send_body_str(http_status_t status, const char* body, const char* content_type);
+void http_resp_send_body_str(http_status_t status, const char* body, const char* content_type);
 
 
 /// Return the current request url.
@@ -765,18 +804,33 @@ const char*   http_req_header(const char* name);
 const char*   http_req_header_next(const char** value, size_t* iter);
 
 /// Return the current HTTP request body as a buffered stream.
+/// Handles chunked bodies, and does automatic decompression if the 
+/// `Content-Encoding` was `gzip`.
 nodec_bstream_t* http_req_body();
 
-// Read the full body; the returned buf should be deallocated by the caller.
-// Pass `initial_size` 0 to automatically use the content-length or initially
-// received buffer size.
+/// Read the full HTTP request body.
+/// The returned buffer should be deallocated by the caller.
+/// \param read_max   maximum bytes to read (or 0 for unlimited reading)
+/// \returns the buffer with the full request body.
+/// Handles `chunked` request bodies, and does automatic decompression 
+/// if the request body had a Content-Encoding of `gzip`.
 uv_buf_t      async_req_read_body(size_t read_max);
 
-// Read the full body as a string. Only works if the body cannot contain 0 characters.
+/// Read the full body as a string. 
+/// Only works if the body cannot contain 0 characters.
+/// The returned string should be deallocated by the caller.
+/// \param read_max   maximum bytes to read (or 0 for unlimited reading)
+/// \returns the buffer with the full request body.
+/// Handles `chunked` request bodies, and does automatic decompression 
+/// if the request body had a Content-Encoding of `gzip`.
 const char*   async_req_read_body_str(size_t read_max);
 
 ///@}
+// HTTP Request & Response
 
+
+/// @}
+// HTTP connections
 
 /* ----------------------------------------------------------------------------
    URL's

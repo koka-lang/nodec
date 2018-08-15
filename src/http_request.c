@@ -528,6 +528,7 @@ typedef struct _http_out_t {
   nodec_stream_t* stream;
   uv_buf_t         head;
   size_t           head_offset;
+  bool             status_sent;
 } http_out_t;
 
 void http_out_init(http_out_t* out, nodec_stream_t* stream) {
@@ -589,6 +590,7 @@ static void http_out_send_raw_headers(http_out_t* out, uv_buf_t prefix, uv_buf_t
   async_write_bufs(out->stream, bufs, 3);
   nodec_bufref_free(&out->head);
   out->head_offset = 0;
+  out->status_sent = true;
 }
 
 static void http_out_send_headers(http_out_t* out, const char* prefix, const char* postfix) {
@@ -637,6 +639,10 @@ static void http_out_add_headers_body(http_out_t* out, size_t content_length, co
   else {
     http_out_add_header(out, "Transfer-Encoding", "chunked");
   }
+}
+
+bool http_out_status_sent(http_out_t* out) {
+  return out->status_sent;
 }
 
 /*-----------------------------------------------------------------
@@ -830,6 +836,10 @@ void http_resp_add_header(const char* field, const char* value) {
 void http_resp_send_status(http_status_t status) {
   http_out_t* resp = http_resp();
   http_out_send_status(resp, status);
+}
+
+bool http_resp_status_sent() {
+  return http_out_status_sent(http_resp());
 }
 
 nodec_stream_t* http_resp_send_status_body(http_status_t status, size_t content_length, const char* content_type) {
