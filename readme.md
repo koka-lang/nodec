@@ -8,9 +8,7 @@ code {
 [TITLE]
 -->
 
-<div style="float:right">
-  <img src="doc/logo-blue-100.png"/>
-</div>
+<img align="right" width="100" height="100" src="doc/logo-blue-100.png"/>
 
 # NodeC
 
