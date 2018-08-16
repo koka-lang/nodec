@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['streams',['Streams',['../group__streams.html',1,'']]]
+  ['generic_20values',['Generic Values',['../group__effect__value.html',1,'']]]
 ];

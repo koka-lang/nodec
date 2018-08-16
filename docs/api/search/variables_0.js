@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['backlog',['backlog',['../group__tcp.html#a64ed27e28dbbddbcf1fe1fed3538014b',1,'tcp_server_config_t']]],
-  ['base',['base',['../group__buffers.html#a728c18d77668f4691201c4937133d7f0',1,'uv_buf_t']]]
+  ['_5fis_5falloced',['_is_alloced',['../group__effect__exn.html#a42489ecd1468adadd6bd9c8d6fc7850e',1,'lh_exception']]]
 ];

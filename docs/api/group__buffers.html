@@ -118,13 +118,13 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:gac1eb74560e4589e704bebc105d6343d3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#gac1eb74560e4589e704bebc105d6343d3">using_buf</a>(bufref)&#160;&#160;&#160;defer(<a class="el" href="group__buffers.html#ga91c4241a67c3eee14fd4f9ee8d94def0">nodec_bufref_freev</a>,lh_value_any_ptr(bufref))</td></tr>
+<tr class="memitem:gac1eb74560e4589e704bebc105d6343d3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#gac1eb74560e4589e704bebc105d6343d3">using_buf</a>(bufref)</td></tr>
 <tr class="memdesc:gac1eb74560e4589e704bebc105d6343d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use a buffer in a scope, freeing automatically when exiting.  <a href="#gac1eb74560e4589e704bebc105d6343d3">More...</a><br /></td></tr>
 <tr class="separator:gac1eb74560e4589e704bebc105d6343d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga66f1fa47b02d2868d948e319d7855a03"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#ga66f1fa47b02d2868d948e319d7855a03">using_buf_on_abort_free</a>(bufref)&#160;&#160;&#160;on_abort(<a class="el" href="group__buffers.html#ga91c4241a67c3eee14fd4f9ee8d94def0">nodec_bufref_freev</a>,lh_value_any_ptr(bufref))</td></tr>
+<tr class="memitem:ga66f1fa47b02d2868d948e319d7855a03"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#ga66f1fa47b02d2868d948e319d7855a03">using_buf_on_abort_free</a>(bufref)</td></tr>
 <tr class="memdesc:ga66f1fa47b02d2868d948e319d7855a03"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use a buffer in a scope, freeing automatically only when an exception is thrown.  <a href="#ga66f1fa47b02d2868d948e319d7855a03">More...</a><br /></td></tr>
 <tr class="separator:ga66f1fa47b02d2868d948e319d7855a03"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3e5bc4c460db62160c8642b8e1d65c1b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#ga3e5bc4c460db62160c8642b8e1d65c1b">using_buf_owned</a>(owned,  bufref)&#160;&#160;&#160;defer((owned ? <a class="el" href="group__buffers.html#ga91c4241a67c3eee14fd4f9ee8d94def0">nodec_bufref_freev</a> : <a class="el" href="group__buffers.html#ga5f1b0e1ca03687d24bd982c34f8b4bd4">nodec_bufref_nofreev</a>),lh_value_any_ptr(bufref))</td></tr>
+<tr class="memitem:ga3e5bc4c460db62160c8642b8e1d65c1b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#ga3e5bc4c460db62160c8642b8e1d65c1b">using_buf_owned</a>(owned,  bufref)</td></tr>
 <tr class="memdesc:ga3e5bc4c460db62160c8642b8e1d65c1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use a potentially <em>owned</em> buffer in a scope.  <a href="#ga3e5bc4c460db62160c8642b8e1d65c1b">More...</a><br /></td></tr>
 <tr class="separator:ga3e5bc4c460db62160c8642b8e1d65c1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -173,10 +173,10 @@ Functions</h2></td></tr>
 <tr class="memitem:gaa6ccecc9f6261de344980239606f436f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#gaa6ccecc9f6261de344980239606f436f">nodec_bufref_free</a> (<a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a> *buf)</td></tr>
 <tr class="memdesc:gaa6ccecc9f6261de344980239606f436f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free a buffer by reference.  <a href="#gaa6ccecc9f6261de344980239606f436f">More...</a><br /></td></tr>
 <tr class="separator:gaa6ccecc9f6261de344980239606f436f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga91c4241a67c3eee14fd4f9ee8d94def0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#ga91c4241a67c3eee14fd4f9ee8d94def0">nodec_bufref_freev</a> (lh_value bufref)</td></tr>
+<tr class="memitem:ga91c4241a67c3eee14fd4f9ee8d94def0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#ga91c4241a67c3eee14fd4f9ee8d94def0">nodec_bufref_freev</a> (<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> bufref)</td></tr>
 <tr class="memdesc:ga91c4241a67c3eee14fd4f9ee8d94def0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free a buffer by reference value.  <a href="#ga91c4241a67c3eee14fd4f9ee8d94def0">More...</a><br /></td></tr>
 <tr class="separator:ga91c4241a67c3eee14fd4f9ee8d94def0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5f1b0e1ca03687d24bd982c34f8b4bd4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#ga5f1b0e1ca03687d24bd982c34f8b4bd4">nodec_bufref_nofreev</a> (lh_value pv)</td></tr>
+<tr class="memitem:ga5f1b0e1ca03687d24bd982c34f8b4bd4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffers.html#ga5f1b0e1ca03687d24bd982c34f8b4bd4">nodec_bufref_nofreev</a> (<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> pv)</td></tr>
 <tr class="memdesc:ga5f1b0e1ca03687d24bd982c34f8b4bd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Don't free a buffer by reference value.  <a href="#ga5f1b0e1ca03687d24bd982c34f8b4bd4">More...</a><br /></td></tr>
 <tr class="separator:ga5f1b0e1ca03687d24bd982c34f8b4bd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -227,7 +227,7 @@ The length of the buffer data. </td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">bufref</td><td>)</td>
-          <td>&#160;&#160;&#160;defer(<a class="el" href="group__buffers.html#ga91c4241a67c3eee14fd4f9ee8d94def0">nodec_bufref_freev</a>,lh_value_any_ptr(bufref))</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -253,7 +253,7 @@ The length of the buffer data. </td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">bufref</td><td>)</td>
-          <td>&#160;&#160;&#160;on_abort(<a class="el" href="group__buffers.html#ga91c4241a67c3eee14fd4f9ee8d94def0">nodec_bufref_freev</a>,lh_value_any_ptr(bufref))</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -289,7 +289,7 @@ The length of the buffer data. </td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;defer((owned ? <a class="el" href="group__buffers.html#ga91c4241a67c3eee14fd4f9ee8d94def0">nodec_bufref_freev</a> : <a class="el" href="group__buffers.html#ga5f1b0e1ca03687d24bd982c34f8b4bd4">nodec_bufref_nofreev</a>),lh_value_any_ptr(bufref))</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -593,7 +593,7 @@ The length of the buffer data. </td></tr>
         <tr>
           <td class="memname">void nodec_bufref_freev </td>
           <td>(</td>
-          <td class="paramtype">lh_value&#160;</td>
+          <td class="paramtype"><a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>&#160;</td>
           <td class="paramname"><em>bufref</em></td><td>)</td>
           <td></td>
         </tr>
@@ -614,7 +614,7 @@ The length of the buffer data. </td></tr>
         <tr>
           <td class="memname">void nodec_bufref_nofreev </td>
           <td>(</td>
-          <td class="paramtype">lh_value&#160;</td>
+          <td class="paramtype"><a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>&#160;</td>
           <td class="paramname"><em>pv</em></td><td>)</td>
           <td></td>
         </tr>

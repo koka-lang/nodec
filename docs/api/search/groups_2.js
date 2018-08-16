@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['low_20level_20tcp_20connections',['Low level TCP connections',['../group__tcpx.html',1,'']]]
+  ['effect_20handlers',['Effect Handlers',['../group__effect.html',1,'']]],
+  ['effect_20definition_20helpers',['Effect Definition helpers',['../group__effect__def.html',1,'']]],
+  ['exceptions_20and_20finally_20clauses',['Exceptions and Finally clauses',['../group__effect__exn.html',1,'']]]
 ];

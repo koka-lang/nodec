@@ -109,10 +109,10 @@ $(document).ready(function(){initNavTree('group__streams.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:gaf8015d9228ada99910bc414d748536e8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#gaf8015d9228ada99910bc414d748536e8">using_stream</a>(s)&#160;&#160;&#160;defer_exit(<a class="el" href="group__streams.html#ga530b49b85b811a2377209a55b2e670cb">async_shutdown</a>(s),&amp;<a class="el" href="group__streams.html#ga29902a3b1e06b6d1b87e11b12bfbb11a">nodec_stream_freev</a>,lh_value_ptr(s))</td></tr>
+<tr class="memitem:gaf8015d9228ada99910bc414d748536e8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#gaf8015d9228ada99910bc414d748536e8">using_stream</a>(s)</td></tr>
 <tr class="memdesc:gaf8015d9228ada99910bc414d748536e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use a stream in a scope, freeing the stream when exiting.  <a href="#gaf8015d9228ada99910bc414d748536e8">More...</a><br /></td></tr>
 <tr class="separator:gaf8015d9228ada99910bc414d748536e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3371300a9eea0177e792b08bb5b3bf3d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga3371300a9eea0177e792b08bb5b3bf3d">using_bstream</a>(s)&#160;&#160;&#160;<a class="el" href="group__streams.html#gaf8015d9228ada99910bc414d748536e8">using_stream</a>(<a class="el" href="group__streams.html#ga5086fb89c05a1dc0ecf923af3e953403">as_stream</a>(s))</td></tr>
+<tr class="memitem:ga3371300a9eea0177e792b08bb5b3bf3d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga3371300a9eea0177e792b08bb5b3bf3d">using_bstream</a>(s)</td></tr>
 <tr class="memdesc:ga3371300a9eea0177e792b08bb5b3bf3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use a buffered stream in a scope, freeing the stream when exiting.  <a href="#ga3371300a9eea0177e792b08bb5b3bf3d">More...</a><br /></td></tr>
 <tr class="separator:ga3371300a9eea0177e792b08bb5b3bf3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -134,7 +134,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ga7a87a30d292c709502440b0d95b9cb0b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga7a87a30d292c709502440b0d95b9cb0b">nodec_stream_free</a> (<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream)</td></tr>
 <tr class="memdesc:ga7a87a30d292c709502440b0d95b9cb0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free a basic stream.  <a href="#ga7a87a30d292c709502440b0d95b9cb0b">More...</a><br /></td></tr>
 <tr class="separator:ga7a87a30d292c709502440b0d95b9cb0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga29902a3b1e06b6d1b87e11b12bfbb11a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga29902a3b1e06b6d1b87e11b12bfbb11a">nodec_stream_freev</a> (lh_value streamv)</td></tr>
+<tr class="memitem:ga29902a3b1e06b6d1b87e11b12bfbb11a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga29902a3b1e06b6d1b87e11b12bfbb11a">nodec_stream_freev</a> (<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> streamv)</td></tr>
 <tr class="memdesc:ga29902a3b1e06b6d1b87e11b12bfbb11a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free a basic stream as an <code>lh_value</code>.  <a href="#ga29902a3b1e06b6d1b87e11b12bfbb11a">More...</a><br /></td></tr>
 <tr class="separator:ga29902a3b1e06b6d1b87e11b12bfbb11a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga530b49b85b811a2377209a55b2e670cb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga530b49b85b811a2377209a55b2e670cb">async_shutdown</a> (<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream)</td></tr>
@@ -223,7 +223,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">s</td><td>)</td>
-          <td>&#160;&#160;&#160;<a class="el" href="group__streams.html#gaf8015d9228ada99910bc414d748536e8">using_stream</a>(<a class="el" href="group__streams.html#ga5086fb89c05a1dc0ecf923af3e953403">as_stream</a>(s))</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -249,7 +249,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">s</td><td>)</td>
-          <td>&#160;&#160;&#160;defer_exit(<a class="el" href="group__streams.html#ga530b49b85b811a2377209a55b2e670cb">async_shutdown</a>(s),&amp;<a class="el" href="group__streams.html#ga29902a3b1e06b6d1b87e11b12bfbb11a">nodec_stream_freev</a>,lh_value_ptr(s))</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -852,7 +852,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
         <tr>
           <td class="memname">void nodec_stream_freev </td>
           <td>(</td>
-          <td class="paramtype">lh_value&#160;</td>
+          <td class="paramtype"><a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>&#160;</td>
           <td class="paramname"><em>streamv</em></td><td>)</td>
           <td></td>
         </tr>

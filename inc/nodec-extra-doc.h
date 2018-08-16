@@ -9,17 +9,17 @@
 #error "don't include this file; it is for documentation only"
 
 /// \addtogroup streams
-/// @{
+/// \{
 
 /// A `libuv` stream.
 /// Try not to use these directly but wrap it into a buffered stream,
 /// See nodec_bstream_alloc() and nodec_bstream_alloc_read().
 typedef struct _uv_stream_t uv_stream_t;
 
-/// @}
+/// \}
 
 /// \addtogroup buffers
-/// @{
+/// \{
 
 /// A `libuv` buffer.
 /// These are small and always passed by value.
@@ -30,10 +30,11 @@ typedef struct _uv_buf_t {
   void*  base;
 } uv_buf_t;
 
-/// @}
+/// \}
+
 
 /// \addtogroup http_connect
-/// @{
+/// \{
 
 /// The HTTP method enumeration. 
 /// The first 5 (8) are commonly used while the others are used in various
@@ -146,7 +147,7 @@ typedef enum http_status {
   HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED  ///< 511, Network Authentication Required) 
 } http_status_t;
 
-/// @}
+/// \}
 
 /*! \mainpage
 

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['timeout',['timeout',['../group__tcp.html#aa1a3af7b0980e3c45cc618c2bf7f076f',1,'tcp_server_config_t']]],
-  ['timeout_5ftotal',['timeout_total',['../group__tcp.html#a4af6558b9d474340373020ccfef5026c',1,'tcp_server_config_t']]]
+  ['code',['code',['../group__effect__exn.html#a2f415f8397a6e3e497814e50fbb3eb35',1,'lh_exception']]]
 ];

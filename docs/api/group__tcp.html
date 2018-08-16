@@ -123,13 +123,13 @@ Data Structures</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ga178d806e948c857f5599ee9462d18720"><td class="memItemLeft" align="right" valign="top"><a id="ga178d806e948c857f5599ee9462d18720"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#ga178d806e948c857f5599ee9462d18720">tcp_server_config</a>()&#160;&#160;&#160;{ 0, 0, 0, 0 }</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#ga178d806e948c857f5599ee9462d18720">tcp_server_config</a>()</td></tr>
 <tr class="memdesc:ga178d806e948c857f5599ee9462d18720"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default TCP server configuration. <br /></td></tr>
 <tr class="separator:ga178d806e948c857f5599ee9462d18720"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:gad94b4def2662a4a6360144e62a851b3f"><td class="memItemLeft" align="right" valign="top">typedef void()&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#gad94b4def2662a4a6360144e62a851b3f">nodec_tcp_servefun</a>(int id, <a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *client, lh_value arg)</td></tr>
+<tr class="memitem:gad94b4def2662a4a6360144e62a851b3f"><td class="memItemLeft" align="right" valign="top">typedef void()&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#gad94b4def2662a4a6360144e62a851b3f">nodec_tcp_servefun</a>(int id, <a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *client, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
 <tr class="memdesc:gad94b4def2662a4a6360144e62a851b3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The server callback when listening on a TCP connection.  <a href="#gad94b4def2662a4a6360144e62a851b3f">More...</a><br /></td></tr>
 <tr class="separator:gad94b4def2662a4a6360144e62a851b3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -144,7 +144,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ga4e0db7845d0a6de8355c58e172e7d1f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#ga4e0db7845d0a6de8355c58e172e7d1f1">async_tcp_connect</a> (const char *host)</td></tr>
 <tr class="memdesc:ga4e0db7845d0a6de8355c58e172e7d1f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Establish a TCP connection.  <a href="#ga4e0db7845d0a6de8355c58e172e7d1f1">More...</a><br /></td></tr>
 <tr class="separator:ga4e0db7845d0a6de8355c58e172e7d1f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf2f87fdb9879b343523156e08e521184"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#gaf2f87fdb9879b343523156e08e521184">async_tcp_server_at</a> (const struct sockaddr *addr, <a class="el" href="group__tcp.html#structtcp__server__config__t">tcp_server_config_t</a> *config, <a class="el" href="group__tcp.html#gad94b4def2662a4a6360144e62a851b3f">nodec_tcp_servefun</a> *servefun, lh_actionfun *on_exn, lh_value arg)</td></tr>
+<tr class="memitem:gaf2f87fdb9879b343523156e08e521184"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#gaf2f87fdb9879b343523156e08e521184">async_tcp_server_at</a> (const struct sockaddr *addr, <a class="el" href="group__tcp.html#structtcp__server__config__t">tcp_server_config_t</a> *config, <a class="el" href="group__tcp.html#gad94b4def2662a4a6360144e62a851b3f">nodec_tcp_servefun</a> *servefun, <a class="el" href="group__effect__value.html#ga5a08b630153ff4e9c2120d0bb2debd89">lh_actionfun</a> *on_exn, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
 <tr class="memdesc:gaf2f87fdb9879b343523156e08e521184"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a TCP server.  <a href="#gaf2f87fdb9879b343523156e08e521184">More...</a><br /></td></tr>
 <tr class="separator:gaf2f87fdb9879b343523156e08e521184"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -200,7 +200,7 @@ total allowed connection time in ms; 0 = infinite </td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef void() nodec_tcp_servefun(int id, <a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *client, lh_value arg)</td>
+          <td class="memname">typedef void() nodec_tcp_servefun(int id, <a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *client, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -345,13 +345,13 @@ total allowed connection time in ms; 0 = infinite </td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">lh_actionfun *&#160;</td>
+          <td class="paramtype"><a class="el" href="group__effect__value.html#ga5a08b630153ff4e9c2120d0bb2debd89">lh_actionfun</a> *&#160;</td>
           <td class="paramname"><em>on_exn</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">lh_value&#160;</td>
+          <td class="paramtype"><a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>&#160;</td>
           <td class="paramname"><em>arg</em>&#160;</td>
         </tr>
         <tr>

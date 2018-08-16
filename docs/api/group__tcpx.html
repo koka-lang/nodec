@@ -110,7 +110,7 @@ $(document).ready(function(){initNavTree('group__tcpx.html','');});
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ga825c98c2b6b2953de7b04536f20da980"><td class="memItemLeft" align="right" valign="top"><a id="ga825c98c2b6b2953de7b04536f20da980"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>using_tcp_channel</b>(ch)&#160;&#160;&#160;defer(channel_freev,lh_value_ptr(ch))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>using_tcp_channel</b>(ch)</td></tr>
 <tr class="separator:ga825c98c2b6b2953de7b04536f20da980"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
@@ -122,7 +122,7 @@ typedef struct _channel_t&#160;</td><td class="memItemRight" valign="bottom"><b>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:gaa8d4dc8105e1a0739eeeacfdbec9b2e8"><td class="memItemLeft" align="right" valign="top"><a id="gaa8d4dc8105e1a0739eeeacfdbec9b2e8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>channel_freev</b> (lh_value vchannel)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>channel_freev</b> (<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> vchannel)</td></tr>
 <tr class="separator:gaa8d4dc8105e1a0739eeeacfdbec9b2e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf506ab421b3437058c0015a7502dfd8a"><td class="memItemLeft" align="right" valign="top"><a id="gaf506ab421b3437058c0015a7502dfd8a"></a>
 uv_tcp_t *&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_tcp_alloc</b> ()</td></tr>
@@ -131,7 +131,7 @@ uv_tcp_t *&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_tcp_alloc
 void&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_tcp_free</b> (uv_tcp_t *tcp)</td></tr>
 <tr class="separator:ga8224ae0735bba0ec202aa93b86e4279e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaef55ce8f063f215ab8da437e01472ac0"><td class="memItemLeft" align="right" valign="top"><a id="gaef55ce8f063f215ab8da437e01472ac0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_tcp_freev</b> (lh_value tcp)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_tcp_freev</b> (<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> tcp)</td></tr>
 <tr class="separator:gaef55ce8f063f215ab8da437e01472ac0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6e47a85082c9feb21421a429557862ef"><td class="memItemLeft" align="right" valign="top"><a id="ga6e47a85082c9feb21421a429557862ef"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_tcp_bind</b> (uv_tcp_t *handle, const struct sockaddr *addr, unsigned int flags)</td></tr>

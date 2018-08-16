@@ -113,9 +113,9 @@ $(document).ready(function(){initNavTree('group__http__in__out.html','');});
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:gaf797eb0c94a182cac97edff49726f490"><td class="memItemLeft" align="right" valign="top"><a id="gaf797eb0c94a182cac97edff49726f490"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>using_http_out</b>(stream,  out)&#160;&#160;&#160;<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> _resp; <a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a>* out = &amp;_resp; http_out_init(out,stream); defer(http_out_clearv,lh_value_any_ptr(out))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>using_http_out</b>(stream,  out)</td></tr>
 <tr class="separator:gaf797eb0c94a182cac97edff49726f490"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaa8e34fdd12cb1290da994deab9d64594"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__in__out.html#gaa8e34fdd12cb1290da994deab9d64594">NODEC_CHUNKED</a>&#160;&#160;&#160;((size_t)(-1))</td></tr>
+<tr class="memitem:gaa8e34fdd12cb1290da994deab9d64594"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__in__out.html#gaa8e34fdd12cb1290da994deab9d64594">NODEC_CHUNKED</a></td></tr>
 <tr class="memdesc:gaa8e34fdd12cb1290da994deab9d64594"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use this as a <code>content_length</code> to use a <em>chunked</em> transfer encoding in http_out_send_status_body() and <a class="el" href="group__http__req__resp.html#gac4b657f50f7b004fdc226c7aad4cef5c" title="Send the headers and response status, and return a reponse body stream. ">http_resp_send_status_body()</a>.  <a href="#gaa8e34fdd12cb1290da994deab9d64594">More...</a><br /></td></tr>
 <tr class="separator:gaa8e34fdd12cb1290da994deab9d64594"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -136,7 +136,7 @@ Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_clear</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
 <tr class="separator:gabd7a855d112ea50205797ca274f07652"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga1cbb58a3ee4f340c6f949a9fa7155c29"><td class="memItemLeft" align="right" valign="top"><a id="ga1cbb58a3ee4f340c6f949a9fa7155c29"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_clearv</b> (lh_value inv)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_clearv</b> (<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> inv)</td></tr>
 <tr class="separator:ga1cbb58a3ee4f340c6f949a9fa7155c29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabc85896fd13e513b330b2fe9e45d09aa"><td class="memItemLeft" align="right" valign="top"><a id="gabc85896fd13e513b330b2fe9e45d09aa"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>async_http_in_init</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in, <a class="el" href="group__streams.html#gaa1b461b8603be0c65dbf1e6037b01668">uv_stream_t</a> *stream, bool is_request)</td></tr>
@@ -187,7 +187,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_init_client<
 void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_clear</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out)</td></tr>
 <tr class="separator:ga90725921850afba1800bb4e3f36ee46f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4d8a7ed654e936048836bb910c937043"><td class="memItemLeft" align="right" valign="top"><a id="ga4d8a7ed654e936048836bb910c937043"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_clearv</b> (lh_value respv)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_clearv</b> (<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> respv)</td></tr>
 <tr class="separator:ga4d8a7ed654e936048836bb910c937043"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5848e556a928d0c8417a4e14333ef185"><td class="memItemLeft" align="right" valign="top"><a id="ga5848e556a928d0c8417a4e14333ef185"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_add_header</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, const char *field, const char *value)</td></tr>
@@ -219,7 +219,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_status_sent<
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define NODEC_CHUNKED&#160;&#160;&#160;((size_t)(-1))</td>
+          <td class="memname">#define NODEC_CHUNKED</td>
         </tr>
       </table>
 </div><div class="memdoc">
