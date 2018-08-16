@@ -8,7 +8,11 @@ code {
 [TITLE]
 -->
 
-# ![NodeC](doc/logo-blue-100.png) NodeC
+<div style="float:right">
+  <img src="doc/logo-blue-100.png"/>
+</div>
+
+# NodeC
 
 Warning: this library is still under active development and experimental.
 It is not yet ready for general use. Current development is mostly for Windows x64.
