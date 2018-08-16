@@ -147,3 +147,13 @@ typedef enum http_status {
 } http_status_t;
 
 /// @}
+
+/*! \mainpage
+
+This is the API documentation of the 
+<a class="external" href="https://github.com/koka-lang/nodec">NodeC</a> project
+
+See the <a class="external" href="./modules.html">Modules</a> section for an 
+overview of the API functionality.
+
+*/
