@@ -8,7 +8,7 @@ code {
 [TITLE]
 -->
 
-# ![NodeC](doc/logo-blue-100.png?raw=true) NodeC
+# ![NodeC](doc/logo-blue-100.png) NodeC
 
 Warning: this library is still under active development and experimental.
 It is not yet ready for general use. Current development is mostly for Windows x64.
