@@ -41,6 +41,9 @@ Enjoy!\
 
 Here is a mini hello world server:
 ```C
+#include <stdio.h>
+#include <nodec.h>
+
 const char* hello_body =
 "<!DOCTYPE html>"
 "<html>\n"
