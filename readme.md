@@ -8,9 +8,10 @@ code {
 [TITLE]
 -->
 
-<img align="right" width="100" height="100" src="doc/logo-blue-100.png"/>
 
 # NodeC
+
+<img align="left" width="100" height="100" src="doc/logo-blue-100.png"/>
 
 Warning: this library is still under active development and experimental.
 It is not yet ready for general use. Current development is mostly for Windows x64.
