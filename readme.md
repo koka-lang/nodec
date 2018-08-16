@@ -18,8 +18,8 @@ code {
 Warning: this library is still under active development and experimental.
 It is not yet ready for general use. Current development is mostly for Windows x64.
 
-`NodeC` is a _lean and mean_ version of [NodeJS] which aims to provide
-similar functionality as NodeJS but using C. The main goal is improved
+`NodeC` is a _lean and mean_ version of [Node.js] which aims to provide
+similar functionality as Node.js but using C directly. The main goal is improved
 efficiency and resource usage (in particular more predictable resource
 usage) but highly robust and asynchronous. 
 
@@ -179,3 +179,4 @@ Use the Microsoft Visual Studio solution at `ide\msvc\nodec.sln`.
 [http-parser]: https://github.com/nodejs/http-parser
 [libhandler]: https://github.com/koka-lang/libhandler
 [zlib]: https://github.com/madler/zlib
+[Node.js]: https://nodejs.org
