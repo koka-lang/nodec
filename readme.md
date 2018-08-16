@@ -15,19 +15,20 @@ code {
 # NodeC
 
   \
-Warning: this library is still under active development and experimental.
-It is not yet ready for general use. Current development is mostly for Windows x64.
+Warning: this library is still under heavy active development and experimental.
+It is not yet ready for general use. Current development is mostly for Windows x64 using Visual Studio 2017.
 
-`NodeC` is a _lean and mean_ version of [Node.js] which aims to provide
+NodeC is a _lean and mean_ version of [Node.js] which aims to provide
 similar functionality as Node.js but using C directly. The main goal is improved
 efficiency and resource usage (in particular more predictable resource
 usage) but highly robust and asynchronous. 
 
 Previously, this would be very cumbersome as _async/await_ style programming 
-is very difficult in C. NodeC uses the `libhandler` library to provide algebraic 
+is very difficult in C. NodeC uses the [libhandler] library to provide algebraic 
 effect handlers directly in C making it much easier to write highly asynchronous
 and robust code directly in C. 
 
+Preliminary NodeC [API documentation][apidoc] is available.
 For a primer on algebraic effects, see the relevant section in the [koka book].
 
 Enjoy!\
@@ -35,9 +36,10 @@ Enjoy!\
 
 [tr]: https://www.microsoft.com/en-us/research/publication/implementing-algebraic-effects-c
 [koka book]: https://bit.do/kokabook
+[apidoc]: https://koka-lang.github.io/nodec/api
 
 
-# A `Hello World` Mini Server
+# A "Hello World" Server
 
 Here is a mini hello world server:
 ```C
