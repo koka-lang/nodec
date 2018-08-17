@@ -28,8 +28,8 @@ IF NOT EXIST %LIBUV% (
 
 SET MBEDTLS=%ROOT%\mbedtls\builds\%MPLATFORM%\library\%CONFIG%\mbedTLS.lib
 IF NOT EXIST %MBEDTLS% (
-  ECHO %MBEDTLS% does not exist
-  GOTO ERROR
+   ECHO %MBEDTLS% does not exist
+REM  GOTO ERROR
 )
 
 SET ZLIB=%ROOT%\zlib\contrib\vstudio\vc14\%ZPLATFORM%\ZlibStat%ZCONFIG%\zlibstat.lib
@@ -55,29 +55,50 @@ IF NOT EXIST %COMBINED_DIR% (
   ECHO Creating %COMBINED_DIR%
   MKDIR %COMBINED_DIR%
 )
+
+REM Create combined library as nodecx
+REM SET LIBS=%LIBUV% %ZLIB% %LIBHANDLER% %MBEDTLS% %NODEC%
+SET LIBS=%LIBUV% %ZLIB% %LIBHANDLER% %NODEC%
 SET COMBINED=%COMBINED_DIR%\nodecx.lib
-@ECHO Creating %COMBINED%
-lib /OUT:%COMBINED%  %LIBUV% %MBEDTLS% %ZLIB% %LIBHANDLER% %NODEC%
+@ECHO Creating %COMBINED% from %LIBS%
+lib /OUT:%COMBINED% %LIBS%
 IF NOT ERRORLEVEL 0 GOTO ERROR
+
+REM Copy pdb files for debugging
+IF "%CONFIG%"=="Debug" (  
+  FOR %%A in (%LIBS%) DO (
+    IF "%%~nA"=="libuv" (
+      @ECHO copy /Y %%~dpA..\libuv.pdb %%~dpAlibuv.pdb
+      COPY /Y %%~dpA..\libuv.pdb %%~dpAlibuv.pdb
+    )
+    @ECHO copy /Y %%~dpnA.pdb %COMBINED_DIR%
+    @COPY /Y %%~dpnA.pdb %COMBINED_DIR%
+  )
+)
 
 
 SET INCDIR=.\..\..\out\msvc-%PLATFORM%\nodecx\inc
 IF NOT EXIST %INCDIR% (
   ECHO Creating %INCDIR%
   MKDIR %INCDIR%
-  ECHO Creating %INCDIR%\libuv\include
-  MKDIR %INCDIR%\libuv\include
+  ECHO Creating %INCDIR%\libuv\include\uv
+  MKDIR %INCDIR%\libuv\include\uv
+  ECHO Creating %INCDIR%\http-parser
+  MKDIR %INCDIR%\http-parser
+  ECHO Creating %INCDIR%\libhandler\inc
+  MKDIR %INCDIR%\libhandler\inc
   ECHO Creating %INCDIR%\mbedtls
   MKDIR %INCDIR%\mbedtls
 )
 
 @ECHO Collecting include files to %INCDIR%
-COPY %ROOT%\libuv\include\*.h  %INCDIR%\libuv\include
-COPY %ROOT%\mbedtls\include\mbedtls\*.h %INCDIR%\mbedtls
-COPY %ROOT%\http-parser\http_parser.h %INCDIR%
-COPY %ROOT%\libhandler\inc\libhandler.h %INCDIR%
-COPY %ROOT%\nodec\inc\nodec.h %INCDIR%
-COPY %ROOT%\nodec\inc\nodec-primitive.h %INCDIR%
+COPY /Y %ROOT%\libuv\include\*.h  %INCDIR%\libuv\include
+COPY /Y %ROOT%\libuv\include\uv\*.h  %INCDIR%\libuv\include\uv
+REM COPY %ROOT%\mbedtls\include\mbedtls\*.h %INCDIR%\mbedtls
+COPY /Y %ROOT%\http-parser\http_parser.h %INCDIR%\http-parser
+COPY /Y %ROOT%\libhandler\inc\libhandler.h %INCDIR%\libhandler\inc
+COPY /Y %ROOT%\nodec\inc\nodec.h %INCDIR%
+COPY /Y %ROOT%\nodec\inc\nodec-primitive.h %INCDIR%
 
 
 ENDLOCAL

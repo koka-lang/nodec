@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{55E37DDC-1F27-4D9F-AD95-C1BF83D33EFF}</ProjectGuid>
     <RootNamespace>testslibuv</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -131,7 +131,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\libhandler\inc;..\..\..\http-parser;..\..\..;..\..\inc;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../out/mscv-$(Platform)/nodecx/inc;.</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -140,11 +140,6 @@
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ProjectReference Include="nodec.vcxproj">
-      <Project>{c17f698b-0cf9-4034-9f70-ccb61de46812}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\test\debug.c" />
     <ClCompile Include="..\..\test\kvp.c" />
@@ -155,23 +150,14 @@
     <ClCompile Include="..\..\test\utils.c" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\..\libuv\$(Configuration)\lib\libuv.lib" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(Platform)'=='Win32'">
-    <Library Include="..\..\..\zlib\contrib\vstudio\vc14\x86\ZlibStat$(Configuration)\zlibstat.lib" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Library Include="..\..\..\zlib\contrib\vstudio\vc14\$(Platform)\ZlibStat$(Configuration)WithoutAsm\zlibstat.lib" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Library Include="..\..\..\zlib\contrib\vstudio\vc14\$(Platform)\ZlibStat$(Configuration)\zlibstat.lib" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\test\debug.h" />
     <ClInclude Include="..\..\test\kvp.h" />
     <ClInclude Include="..\..\test\request.h" />
     <ClInclude Include="..\..\test\sbuf.h" />
     <ClInclude Include="..\..\test\utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\..\out\msvc-$(Platform)\nodecx\$(Configuration)\nodecx.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

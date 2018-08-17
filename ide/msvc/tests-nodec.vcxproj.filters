@@ -38,8 +38,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\..\libuv\$(Configuration)\lib\libuv.lib" />
-    <Library Include="..\..\..\zlib\contrib\vstudio\vc14\$(Platform)\ZlibStat$(Configuration)\zlibstat.lib" />
+    <Library Include="..\..\out\msvc-$(Platform)\nodecx\$(Configuration)\nodecx.lib" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\debug.h">

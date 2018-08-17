@@ -9,9 +9,9 @@
 #ifndef __nodec_h 
 #define __nodec_h
 
-#include <libhandler.h>
+#include <libhandler/inc/libhandler.h>
 #include <libuv/include/uv.h>
-#include <http_parser.h>
+#include <http-parser/http_parser.h>
 #include <fcntl.h>
 #include <time.h>
 
