@@ -3,3 +3,9 @@
 
 # Declare files that will always have CRLF line endings on checkout.
 *.http eol=crlf
+
+# Treat certain files as binary
+*.sln binary
+*.suo binary
+*.vcxproj binary
+*.png binary

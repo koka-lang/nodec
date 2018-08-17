@@ -112,9 +112,8 @@ void http_in_headers_print(http_in_t* in) {
   while ((name = http_in_header_next(in, &value, &iter)) != NULL) {
     printf(" %s: %s\n", name, value);
   }
-  uv_buf_t buf = nodec_buf_null();
+  uv_buf_t buf = async_http_in_read_body(in, 4*NODEC_MB);
   {using_buf(&buf) {
-    buf = async_http_in_read_body(in, 4*NODEC_MB);
     if (buf.base != NULL) {
       buf.base[buf.len] = 0;
       if (buf.len <= 80) {
@@ -257,6 +256,7 @@ const char* http_request =
 
 lh_value test_connection(http_in_t* in, http_out_t* out, lh_value arg) {
   http_out_add_header(out, "Connection", "close");
+  http_out_add_header(out, "Accept-Encoding", "gzip");
   http_out_send_request(out, HTTP_GET, "/");
   async_http_in_read_headers(in); // wait for response
   printf("received, status: %i, content length: %llu\n", http_in_status(in), http_in_content_length(in));
@@ -349,8 +349,8 @@ static void entry() {
   //test_dns();
   //test_http();
   //test_as_client();
-  //test_connect();
-  test_tcp_tty();
+  test_connect();
+  //test_tcp_tty();
   //test_url();
 }
 

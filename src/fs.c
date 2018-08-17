@@ -85,7 +85,7 @@ uv_stat_t async_fstat(uv_file file) {
 -----------------------------------------------------------------*/
 
 
-uv_errno_t asyncx_fopen(const char* path, int flags, int mode, uv_file* file) {
+uv_errno_t asyncx_fopen(const char* path, nodec_open_flags_t flags, int mode, uv_file* file) {
   *file = -1;
   uv_errno_t err = 0;
   {using_fs_req(req, loop) {
@@ -96,7 +96,7 @@ uv_errno_t asyncx_fopen(const char* path, int flags, int mode, uv_file* file) {
   return err;
 }
 
-uv_file async_fopen(const char* path, int flags, int mode) {
+uv_file async_fopen(const char* path, nodec_open_flags_t flags, int mode) {
   uv_file file = -1;
   nodec_check_msg(asyncx_fopen(path, flags, mode, &file), path);
   return file;
@@ -147,13 +147,13 @@ static lh_value _fopen_action(lh_value argsv) {
   return args->action(args->file, args->path, args->arg);
 }
 
-uv_errno_t using_asyncx_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg, lh_value* result) {
+uv_errno_t using_asyncx_fopen(const char* path, nodec_open_flags_t flags, int mode, nodec_file_fun* action, lh_value arg, lh_value* result) {
   if (result != NULL) *result = lh_value_null;
   _fopen_args args;
   args.arg = arg;
   args.path = path;
   args.action = action;
-  uv_errno_t err = asyncx_fopen(path, flags, 0, &args.file);
+  uv_errno_t err = asyncx_fopen(path, flags, mode, &args.file);
   if (err == 0) {
     lh_value res = lh_finally(
       &_fopen_action, lh_value_any_ptr(&args),
@@ -164,7 +164,7 @@ uv_errno_t using_asyncx_fopen(const char* path, int flags, int mode, nodec_file_
   return err;
 }
 
-lh_value using_async_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg ) {
+lh_value using_async_fopen(const char* path, nodec_open_flags_t flags, int mode, nodec_file_fun* action, lh_value arg ) {
   _fopen_args args;
   args.arg = arg;
   args.path = path;
@@ -193,7 +193,7 @@ size_t async_fread_into(uv_file file, uv_buf_t buf , int64_t file_offset) {
 uv_buf_t async_fread_buf(uv_file file, size_t max, int64_t file_offset) {
   uv_buf_t buf = nodec_buf_alloc(max);
   size_t nread = 0;
-  {using_on_abort_free_buf(&buf) {
+  {using_buf_on_abort_free(&buf) {
     nread = async_fread_into(file, buf, file_offset);
   }}  
   if (nread == 0) {

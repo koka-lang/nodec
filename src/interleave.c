@@ -185,11 +185,11 @@ bool async_firstof(nodec_actionfun_t* action1, nodec_actionfun_t* action2) {
 
 
 static lh_value _timeout_wait(lh_value timeoutv) {
-  uint64_t timeout = lh_longlong_value(timeoutv);
+  uint64_t timeout = lh_uint64_t_value(timeoutv);
   async_wait(timeout);
   return lh_value_null;
 }
 
 lh_value async_timeout(lh_actionfun* action, lh_value arg, uint64_t timeout, bool* timedout) {
-  return async_firstof_ex(_timeout_wait, lh_value_longlong(timeout), action, arg, timedout, false);
+  return async_firstof_ex(_timeout_wait, lh_value_uint64_t(timeout), action, arg, timedout, false);
 }

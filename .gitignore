@@ -8,3 +8,6 @@ config/hasgot.?
 config/tst.exe
 config/tst
 out/
+docs/api/dir_*.html
+docs/api/dir_*.js
+docs/*.tmp
