@@ -1,21 +1,5 @@
 var searchData=
 [
-  ['url',['URL',['../group__nodec__url.html',1,'']]],
-  ['use_5fetag',['use_etag',['../group__nodec__static.html#ab77a0887c2beea113ae3a647bd5051ed',1,'http_static_config_t']]],
-  ['using_5falloc',['using_alloc',['../group__nodec__alloc.html#ga0d6776c7ec091d6230510370d65be21e',1,'nodec.h']]],
-  ['using_5fasync_5ffopen',['using_async_fopen',['../group__nodec__fs.html#gad8d5ffb33528c583617c42caf1adf7b5',1,'nodec.h']]],
-  ['using_5fasyncx_5ffopen',['using_asyncx_fopen',['../group__nodec__fs.html#gaa4583cf7a1ed43130eff47ef9a95e16b',1,'nodec.h']]],
-  ['using_5fbstream',['using_bstream',['../group__streams.html#ga3371300a9eea0177e792b08bb5b3bf3d',1,'nodec.h']]],
-  ['using_5fbuf',['using_buf',['../group__buffers.html#gac1eb74560e4589e704bebc105d6343d3',1,'nodec.h']]],
-  ['using_5fbuf_5fon_5fabort_5ffree',['using_buf_on_abort_free',['../group__buffers.html#ga66f1fa47b02d2868d948e319d7855a03',1,'nodec.h']]],
-  ['using_5fbuf_5fowned',['using_buf_owned',['../group__buffers.html#ga3e5bc4c460db62160c8642b8e1d65c1b',1,'nodec.h']]],
-  ['using_5fcancel_5fscope',['using_cancel_scope',['../group__nodec__async.html#ga8c7468880da0b583535f0a2c37b2d94b',1,'nodec.h']]],
-  ['using_5ffree',['using_free',['../group__nodec__alloc.html#ga12562044b20322d894cfe686eef25c15',1,'nodec.h']]],
-  ['using_5fimplicit',['using_implicit',['../group__effect__implicit.html#gaea88b12f476f8d029fe6043febecae19',1,'libhandler.h']]],
-  ['using_5fscandir',['using_scandir',['../group__nodec__fs.html#ga7bf547c1e12a2d084a0fbd9ba99749a9',1,'nodec.h']]],
-  ['using_5fstream',['using_stream',['../group__streams.html#gaf8015d9228ada99910bc414d748536e8',1,'nodec.h']]],
-  ['using_5ftty',['using_tty',['../group__nodec__tty.html#ga2ec7f543abd32db9eca229e13e13d4a4',1,'nodec.h']]],
-  ['uv_5fbuf_5ft',['uv_buf_t',['../group__buffers.html#structuv__buf__t',1,'']]],
   ['uv_5fdirent_5fblock',['UV_DIRENT_BLOCK',['../group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335aa070fc602168c3bf34807eba51cd48a2',1,'nodec-extra-doc.h']]],
   ['uv_5fdirent_5fchar',['UV_DIRENT_CHAR',['../group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335a3ab846891d83853555d15168a01d37c1',1,'nodec-extra-doc.h']]],
   ['uv_5fdirent_5fdir',['UV_DIRENT_DIR',['../group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335a8328c19ef64ea79b0526b3dae9f3a555',1,'nodec-extra-doc.h']]],
@@ -23,10 +7,7 @@ var searchData=
   ['uv_5fdirent_5ffile',['UV_DIRENT_FILE',['../group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335ad63276ed636f67c2fb72c1876e500d8c',1,'nodec-extra-doc.h']]],
   ['uv_5fdirent_5flink',['UV_DIRENT_LINK',['../group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335ab72e22fb2ed44083615274b541a16360',1,'nodec-extra-doc.h']]],
   ['uv_5fdirent_5fsocket',['UV_DIRENT_SOCKET',['../group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335ad6adf83f62c4773850963ef9a8fa26de',1,'nodec-extra-doc.h']]],
-  ['uv_5fdirent_5ft',['uv_dirent_t',['../group__nodec__fs.html#structuv__dirent__t',1,'']]],
-  ['uv_5fdirent_5ftype_5ft',['uv_dirent_type_t',['../group__nodec__fs.html#gab17cb1a692145e20d98e980c343a1335',1,'nodec-extra-doc.h']]],
   ['uv_5fdirent_5funknown',['UV_DIRENT_UNKNOWN',['../group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335a947786154c585ee4d79c61f260565b9b',1,'nodec-extra-doc.h']]],
-  ['uv_5ffile',['uv_file',['../group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77',1,'nodec-extra-doc.h']]],
   ['uv_5ffs_5fo_5fappend',['UV_FS_O_APPEND',['../group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a5e55c321069fbde51d1c73c7b6380db3',1,'nodec-extra-doc.h']]],
   ['uv_5ffs_5fo_5fcreat',['UV_FS_O_CREAT',['../group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a01151e2942507154f8e694a950183720',1,'nodec-extra-doc.h']]],
   ['uv_5ffs_5fo_5fdirect',['UV_FS_O_DIRECT',['../group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091ab04df9a4b5eab498be39ccbc9ee33793',1,'nodec-extra-doc.h']]],
@@ -47,6 +28,5 @@ var searchData=
   ['uv_5ffs_5fo_5fsync',['UV_FS_O_SYNC',['../group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a0c5d789e712be5a9a5ead4be23dbb689',1,'nodec-extra-doc.h']]],
   ['uv_5ffs_5fo_5ftemporary',['UV_FS_O_TEMPORARY',['../group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a8180afffb5f59a3f056015cfcc425730',1,'nodec-extra-doc.h']]],
   ['uv_5ffs_5fo_5ftrunc',['UV_FS_O_TRUNC',['../group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a9d4d3b852ae0eeffd11d3bb2cc05f928',1,'nodec-extra-doc.h']]],
-  ['uv_5ffs_5fo_5fwronly',['UV_FS_O_WRONLY',['../group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091aa6ab9adaedf4911b17a998aaf84e2618',1,'nodec-extra-doc.h']]],
-  ['uv_5fstream_5ft',['uv_stream_t',['../group__streams.html#gaa1b461b8603be0c65dbf1e6037b01668',1,'nodec-extra-doc.h']]]
+  ['uv_5ffs_5fo_5fwronly',['UV_FS_O_WRONLY',['../group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091aa6ab9adaedf4911b17a998aaf84e2618',1,'nodec-extra-doc.h']]]
 ];

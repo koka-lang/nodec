@@ -32,6 +32,66 @@ typedef struct _uv_buf_t {
 
 /// \}
 
+/// \addtogroup nodec_fs
+/// \{
+
+/// A platform independent file handle.
+typedef struct _uv_file* uv_file;
+
+/// File open modes, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// The open mode must always include one of `UV_FS_O_RDONLY`, `UV_FS_O_WRONLY`,
+/// or `UV_FS_O_RDWR`. 
+typedef enum _nodec_open_flags_t {	
+  UV_FS_O_APPEND,				///< Open in append mode.
+  UV_FS_O_CREAT,        ///< Create a new file if it does not exist yet; `mode` specifies the permissions in this case.
+  UV_FS_O_EXCL,         ///< Fail if the file already exists.
+  UV_FS_O_RANDOM,       ///< Access is intended to be random.
+  UV_FS_O_RDONLY,       ///< Open for reading only.
+  UV_FS_O_RDWR,         ///< Open for reading and writing.
+  UV_FS_O_SEQUENTIAL,   ///< Access is intended to be sequential.
+  UV_FS_O_SHORT_LIVED,  ///< The file is intended to be short lived.
+  UV_FS_O_TEMPORARY,    ///< The file is intended as a temporary file and should not be flushed. 
+  UV_FS_O_TRUNC,        ///< If the file exists and  opened for writing, it is set to a zero length.
+  UV_FS_O_WRONLY,       ///< Open for writing only.
+  UV_FS_O_DIRECT,       ///< I/O is done directly from buffers that must be aligned.
+  UV_FS_O_DIRECTORY,    ///< If the path is not a directory, fail to open
+  UV_FS_O_DSYNC,        ///< Writing is blocking and only completes if flushed to disk.
+  UV_FS_O_EXLOCK,       ///< Obtain an exclusive lock
+  UV_FS_O_NOATIME,      ///< Do not update the access time of the file.
+  UV_FS_O_NOCTTY,       ///< If the path identifies a terminal device, opening the path will not cause that terminal to become the controlling terminal for the process (if the process does not already have one). (not supported on Windows)
+  UV_FS_O_NOFOLLOW,     ///< If the path is a symbolic link, fail to open. (not supported on Windows)
+  UV_FS_O_NONBLOCK,			///< Open in non-blocking mode (not supported on Windows).
+  UV_FS_O_SYMLINK,      ///< If the path is not a symbolic link, fail to open. (not supported on Windows) 
+  UV_FS_O_SYNC          ///< The file is opened for synchronous I/O. Write operations will complete once all data and all metadata are flushed to disk.
+} nodec_open_flags_t;
+
+/// Permission mode for (user) reading.
+#define R_OK 4
+/// Permission mode for (user) writing.
+#define W_OK 2
+/// Permission mode for (user) execute.
+#define X_OK 1
+
+/// Directory entry types.
+typedef enum {
+  UV_DIRENT_UNKNOWN,  ///< Unknown type.
+  UV_DIRENT_FILE,     ///< A regular file.
+  UV_DIRENT_DIR,      ///< A regular (sub)directory
+  UV_DIRENT_LINK,     ///< A symbolic link.
+  UV_DIRENT_FIFO,     ///< A FIFO queue.
+  UV_DIRENT_SOCKET,   ///< A socket.
+  UV_DIRENT_CHAR,     ///< A character device.
+  UV_DIRENT_BLOCK     ///< A block device.
+} uv_dirent_type_t;
+
+/// Directory entries
+typedef struct uv_dirent_s {
+  const char* name;       ///< Name of the entry.
+  uv_dirent_type_t type;  ///< Type of the entry.
+} uv_dirent_t;
+
+/// \}
+
 
 /// \addtogroup http_setup
 /// \{

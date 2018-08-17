@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['operations',['operations',['../group__effect__handlers.html#a8588e38ec7973da55f90d239f7ec854f',1,'lh_handlerdef']]],
-  ['opfun',['opfun',['../group__effect__handlers.html#a0ccd260a5593683d8343aa0d9a75d7d7',1,'lh_operation']]],
-  ['opkind',['opkind',['../group__effect__handlers.html#a596d55fa9ca51ec0602b60b37e818453',1,'lh_operation']]],
-  ['optag',['optag',['../group__effect__handlers.html#ad8b0fc0385aecd9216ec6df9df996539',1,'lh_operation']]]
+  ['implicit_5fexts',['implicit_exts',['../group__nodec__static.html#a35e38162a485696d0259c3789b690f1d',1,'http_static_config_t']]],
+  ['implicit_5findex',['implicit_index',['../group__nodec__static.html#a6b2390b3780a8912fb6d571aa7a08ba6',1,'http_static_config_t']]]
 ];

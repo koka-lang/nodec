@@ -99,8 +99,10 @@ $(document).ready(function(){initNavTree('group__nodec__fs.html','');});
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">File System</div>  </div>
@@ -110,21 +112,92 @@ $(document).ready(function(){initNavTree('group__nodec__fs.html','');});
 <p>Asynchronous access to the file system.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:structuv__dirent__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#structuv__dirent__t">uv_dirent_t</a></td></tr>
+<tr class="memdesc:structuv__dirent__t"><td class="mdescLeft">&#160;</td><td class="mdescRight">Directory entries.  <a href="group__nodec__fs.html#structuv__dirent__t">More...</a><br /></td></tr>
+<tr class="separator:structuv__dirent__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:ga8a2b6bf1830e4261f2f536dabb0c031a"><td class="memItemLeft" align="right" valign="top"><a id="ga8a2b6bf1830e4261f2f536dabb0c031a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>using_scandir</b>(req)</td></tr>
-<tr class="separator:ga8a2b6bf1830e4261f2f536dabb0c031a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7bf547c1e12a2d084a0fbd9ba99749a9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga7bf547c1e12a2d084a0fbd9ba99749a9">using_scandir</a>(scandir)</td></tr>
+<tr class="memdesc:ga7bf547c1e12a2d084a0fbd9ba99749a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use a <a class="el" href="group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1" title="Used to iterate over the contents of a directory. ">nodec_scandir_t</a> in a scope.  <a href="#ga7bf547c1e12a2d084a0fbd9ba99749a9">More...</a><br /></td></tr>
+<tr class="separator:ga7bf547c1e12a2d084a0fbd9ba99749a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga24a7a0ceb1e8f5f44cb1038bb829030d"><td class="memItemLeft" align="right" valign="top"><a id="ga24a7a0ceb1e8f5f44cb1038bb829030d"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga24a7a0ceb1e8f5f44cb1038bb829030d">R_OK</a></td></tr>
+<tr class="memdesc:ga24a7a0ceb1e8f5f44cb1038bb829030d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Permission mode for (user) reading. <br /></td></tr>
+<tr class="separator:ga24a7a0ceb1e8f5f44cb1038bb829030d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae5acf4043c0903cda7436b108e29e8e6"><td class="memItemLeft" align="right" valign="top"><a id="gae5acf4043c0903cda7436b108e29e8e6"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#gae5acf4043c0903cda7436b108e29e8e6">W_OK</a></td></tr>
+<tr class="memdesc:gae5acf4043c0903cda7436b108e29e8e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Permission mode for (user) writing. <br /></td></tr>
+<tr class="separator:gae5acf4043c0903cda7436b108e29e8e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5e995ef7690698b62bf016b14fbc45ca"><td class="memItemLeft" align="right" valign="top"><a id="ga5e995ef7690698b62bf016b14fbc45ca"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga5e995ef7690698b62bf016b14fbc45ca">X_OK</a></td></tr>
+<tr class="memdesc:ga5e995ef7690698b62bf016b14fbc45ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Permission mode for (user) execute. <br /></td></tr>
+<tr class="separator:ga5e995ef7690698b62bf016b14fbc45ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:ga61fb79bbfca6d44d44f575ace13a53e1"><td class="memItemLeft" align="right" valign="top"><a id="ga61fb79bbfca6d44d44f575ace13a53e1"></a>
-typedef uv_fs_t&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_scandir_t</b></td></tr>
+typedef uv_fs_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1">nodec_scandir_t</a></td></tr>
+<tr class="memdesc:ga61fb79bbfca6d44d44f575ace13a53e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Used to iterate over the contents of a directory. <br /></td></tr>
 <tr class="separator:ga61fb79bbfca6d44d44f575ace13a53e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga340bba31d68b120ee5416378d133d4e3"><td class="memItemLeft" align="right" valign="top"><a id="ga340bba31d68b120ee5416378d133d4e3"></a>
-typedef <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>()&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga340bba31d68b120ee5416378d133d4e3">nodec_file_fun</a>(uv_file file, const char *path, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
+typedef <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>()&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga340bba31d68b120ee5416378d133d4e3">nodec_file_fun</a>(<a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a> file, const char *path, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
 <tr class="memdesc:ga340bba31d68b120ee5416378d133d4e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type of scoped file functions. <br /></td></tr>
 <tr class="separator:ga340bba31d68b120ee5416378d133d4e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0c35c148bf40627f47bc6c2eeb19ea77"><td class="memItemLeft" align="right" valign="top"><a id="ga0c35c148bf40627f47bc6c2eeb19ea77"></a>
+typedef struct _uv_file *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a></td></tr>
+<tr class="memdesc:ga0c35c148bf40627f47bc6c2eeb19ea77"><td class="mdescLeft">&#160;</td><td class="mdescRight">A platform independent file handle. <br /></td></tr>
+<tr class="separator:ga0c35c148bf40627f47bc6c2eeb19ea77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ga6106956895e925e621b1ddfb478d3091"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a> { <br />
+&#160;&#160;<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a5e55c321069fbde51d1c73c7b6380db3">UV_FS_O_APPEND</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a01151e2942507154f8e694a950183720">UV_FS_O_CREAT</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a7b4d0987e0ad7d469157390da427b744">UV_FS_O_EXCL</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a341aae3e5d903898b8a3155c4d4456de">UV_FS_O_RANDOM</a>, 
+<br />
+&#160;&#160;<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091aea8b2813a8dbc3239b75518fac33a782">UV_FS_O_RDONLY</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091ab7bd494e74106113bccb7159ab5269cc">UV_FS_O_RDWR</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a0f3915adbc9debeee85b7aea1c0de2fa">UV_FS_O_SEQUENTIAL</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a0b92d55ae479bd0f30ea3320470955c7">UV_FS_O_SHORT_LIVED</a>, 
+<br />
+&#160;&#160;<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a8180afffb5f59a3f056015cfcc425730">UV_FS_O_TEMPORARY</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a9d4d3b852ae0eeffd11d3bb2cc05f928">UV_FS_O_TRUNC</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091aa6ab9adaedf4911b17a998aaf84e2618">UV_FS_O_WRONLY</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091ab04df9a4b5eab498be39ccbc9ee33793">UV_FS_O_DIRECT</a>, 
+<br />
+&#160;&#160;<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a55de3a2fc80e58c471437064df836fcd">UV_FS_O_DIRECTORY</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091aedd8398c1ed440fa728bf1e9401e70c4">UV_FS_O_DSYNC</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a396c5ed401245f1d9a07571852db822a">UV_FS_O_EXLOCK</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a56ce6efd72a88357032a119468975998">UV_FS_O_NOATIME</a>, 
+<br />
+&#160;&#160;<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a10938f94907d49f2ef35b72c12b91f78">UV_FS_O_NOCTTY</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a92e37f26361e14c4b682957ed3953d44">UV_FS_O_NOFOLLOW</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a0d3b834b425d85f5cda06e0a502c7e03">UV_FS_O_NONBLOCK</a>, 
+<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091af98cfcc223663708b6dbf9c725fd2b72">UV_FS_O_SYMLINK</a>, 
+<br />
+&#160;&#160;<a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a0c5d789e712be5a9a5ead4be23dbb689">UV_FS_O_SYNC</a>
+<br />
+ }</td></tr>
+<tr class="memdesc:ga6106956895e925e621b1ddfb478d3091"><td class="mdescLeft">&#160;</td><td class="mdescRight">File open modes, see <a href="https://linux.die.net/man/2/open">open2()</a>.  <a href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">More...</a><br /></td></tr>
+<tr class="separator:ga6106956895e925e621b1ddfb478d3091"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab17cb1a692145e20d98e980c343a1335"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#gab17cb1a692145e20d98e980c343a1335">uv_dirent_type_t</a> { <br />
+&#160;&#160;<a class="el" href="group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335a947786154c585ee4d79c61f260565b9b">UV_DIRENT_UNKNOWN</a>, 
+<a class="el" href="group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335ad63276ed636f67c2fb72c1876e500d8c">UV_DIRENT_FILE</a>, 
+<a class="el" href="group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335a8328c19ef64ea79b0526b3dae9f3a555">UV_DIRENT_DIR</a>, 
+<a class="el" href="group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335ab72e22fb2ed44083615274b541a16360">UV_DIRENT_LINK</a>, 
+<br />
+&#160;&#160;<a class="el" href="group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335a0fea07d0ee17d3cd9394682eb937be8b">UV_DIRENT_FIFO</a>, 
+<a class="el" href="group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335ad6adf83f62c4773850963ef9a8fa26de">UV_DIRENT_SOCKET</a>, 
+<a class="el" href="group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335a3ab846891d83853555d15168a01d37c1">UV_DIRENT_CHAR</a>, 
+<a class="el" href="group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335aa070fc602168c3bf34807eba51cd48a2">UV_DIRENT_BLOCK</a>
+<br />
+ }</td></tr>
+<tr class="memdesc:gab17cb1a692145e20d98e980c343a1335"><td class="mdescLeft">&#160;</td><td class="mdescRight">Directory entry types.  <a href="group__nodec__fs.html#gab17cb1a692145e20d98e980c343a1335">More...</a><br /></td></tr>
+<tr class="separator:gab17cb1a692145e20d98e980c343a1335"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -135,37 +208,31 @@ uv_errno_t&#160;</td><td class="memItemRight" valign="bottom"><b>asyncx_stat</b>
 uv_stat_t&#160;</td><td class="memItemRight" valign="bottom"><b>async_stat</b> (const char *path)</td></tr>
 <tr class="separator:ga75a518bfdeb8754d7e612396415fa5c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0675549ecd22fdb3d70e280f87a90dab"><td class="memItemLeft" align="right" valign="top"><a id="ga0675549ecd22fdb3d70e280f87a90dab"></a>
-uv_stat_t&#160;</td><td class="memItemRight" valign="bottom"><b>async_fstat</b> (uv_file file)</td></tr>
+uv_stat_t&#160;</td><td class="memItemRight" valign="bottom"><b>async_fstat</b> (<a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a> file)</td></tr>
 <tr class="separator:ga0675549ecd22fdb3d70e280f87a90dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac25368d023d0698cd132bfc92c39d2a3"><td class="memItemLeft" align="right" valign="top">uv_file&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#gac25368d023d0698cd132bfc92c39d2a3">async_fopen</a> (const char *path, int flags, int mode)</td></tr>
-<tr class="memdesc:gac25368d023d0698cd132bfc92c39d2a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a file.  <a href="#gac25368d023d0698cd132bfc92c39d2a3">More...</a><br /></td></tr>
-<tr class="separator:gac25368d023d0698cd132bfc92c39d2a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaca19333be0078c6ea7be4e91ecf23eb6"><td class="memItemLeft" align="right" valign="top">uv_errno_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#gaca19333be0078c6ea7be4e91ecf23eb6">asyncx_fopen</a> (const char *path, int flags, int mode, uv_file *file)</td></tr>
-<tr class="memdesc:gaca19333be0078c6ea7be4e91ecf23eb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a file.  <a href="#gaca19333be0078c6ea7be4e91ecf23eb6">More...</a><br /></td></tr>
-<tr class="separator:gaca19333be0078c6ea7be4e91ecf23eb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga03795062662fab68d33cb2a545f2a216"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga03795062662fab68d33cb2a545f2a216">async_fopen</a> (const char *path, <a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a> flags, int permissions)</td></tr>
+<tr class="memdesc:ga03795062662fab68d33cb2a545f2a216"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a file.  <a href="#ga03795062662fab68d33cb2a545f2a216">More...</a><br /></td></tr>
+<tr class="separator:ga03795062662fab68d33cb2a545f2a216"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae462f9dcfc8afab504f73898734e5493"><td class="memItemLeft" align="right" valign="top">uv_errno_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#gae462f9dcfc8afab504f73898734e5493">asyncx_fopen</a> (const char *path, <a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a> flags, int permissions, <a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a> *file)</td></tr>
+<tr class="memdesc:gae462f9dcfc8afab504f73898734e5493"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a file.  <a href="#gae462f9dcfc8afab504f73898734e5493">More...</a><br /></td></tr>
+<tr class="separator:gae462f9dcfc8afab504f73898734e5493"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9dc5bc16fd8d3fc3fb05b642ef63ce07"><td class="memItemLeft" align="right" valign="top"><a id="ga9dc5bc16fd8d3fc3fb05b642ef63ce07"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>async_fclose</b> (uv_file file)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>async_fclose</b> (<a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a> file)</td></tr>
 <tr class="separator:ga9dc5bc16fd8d3fc3fb05b642ef63ce07"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaa0dc3ed56f6ea22c8741d274de965656"><td class="memItemLeft" align="right" valign="top"><a id="gaa0dc3ed56f6ea22c8741d274de965656"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_into</b> (uv_file file, <a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a> buf, int64_t file_offset)</td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_into</b> (<a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a> file, <a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a> buf, int64_t file_offset)</td></tr>
 <tr class="separator:gaa0dc3ed56f6ea22c8741d274de965656"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga12e76a58c37a396d662adc3c403f2121"><td class="memItemLeft" align="right" valign="top"><a id="ga12e76a58c37a396d662adc3c403f2121"></a>
-<a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_buf</b> (uv_file file, size_t max, int64_t file_offset)</td></tr>
+<a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_buf</b> (<a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a> file, size_t max, int64_t file_offset)</td></tr>
 <tr class="separator:ga12e76a58c37a396d662adc3c403f2121"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaabc23d1f80e7024330e459dcd9050343"><td class="memItemLeft" align="right" valign="top"><a id="gaabc23d1f80e7024330e459dcd9050343"></a>
-<a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_buf_all</b> (uv_file file, size_t max)</td></tr>
+<a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_buf_all</b> (<a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a> file, size_t max)</td></tr>
 <tr class="separator:gaabc23d1f80e7024330e459dcd9050343"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga84f946f8f40c4fd810f070195c373ca4"><td class="memItemLeft" align="right" valign="top"><a id="ga84f946f8f40c4fd810f070195c373ca4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_scandir_free</b> (nodec_scandir_t *scanreq)</td></tr>
-<tr class="separator:ga84f946f8f40c4fd810f070195c373ca4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga2d87b3646e4e6e0d9e3f2f2f8ec3f2ad"><td class="memItemLeft" align="right" valign="top"><a id="ga2d87b3646e4e6e0d9e3f2f2f8ec3f2ad"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_scandir_freev</b> (<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> scanreqv)</td></tr>
-<tr class="separator:ga2d87b3646e4e6e0d9e3f2f2f8ec3f2ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad26564facd91dc0f198e54fb14460cfe"><td class="memItemLeft" align="right" valign="top"><a id="gad26564facd91dc0f198e54fb14460cfe"></a>
-nodec_scandir_t *&#160;</td><td class="memItemRight" valign="bottom"><b>async_scandir</b> (const char *path)</td></tr>
+<tr class="memitem:gad26564facd91dc0f198e54fb14460cfe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1">nodec_scandir_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#gad26564facd91dc0f198e54fb14460cfe">async_scandir</a> (const char *path)</td></tr>
+<tr class="memdesc:gad26564facd91dc0f198e54fb14460cfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initiate scanning a directory.  <a href="#gad26564facd91dc0f198e54fb14460cfe">More...</a><br /></td></tr>
 <tr class="separator:gad26564facd91dc0f198e54fb14460cfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gada696bec2c7dff6f40de926c1162c920"><td class="memItemLeft" align="right" valign="top"><a id="gada696bec2c7dff6f40de926c1162c920"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>async_scandir_next</b> (nodec_scandir_t *scanreq, uv_dirent_t *dirent)</td></tr>
+<tr class="memitem:gada696bec2c7dff6f40de926c1162c920"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#gada696bec2c7dff6f40de926c1162c920">async_scandir_next</a> (<a class="el" href="group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1">nodec_scandir_t</a> *scanreq, <a class="el" href="group__nodec__fs.html#structuv__dirent__t">uv_dirent_t</a> *dirent)</td></tr>
+<tr class="memdesc:gada696bec2c7dff6f40de926c1162c920"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterate over the directory contents.  <a href="#gada696bec2c7dff6f40de926c1162c920">More...</a><br /></td></tr>
 <tr class="separator:gada696bec2c7dff6f40de926c1162c920"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga69819987a7fb1e5c5636d224f4471e73"><td class="memItemLeft" align="right" valign="top"><a id="ga69819987a7fb1e5c5636d224f4471e73"></a>
 char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b> (const char *path)</td></tr>
@@ -173,24 +240,178 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
 <tr class="memitem:ga523164af78525d9a7f0fa6a9bc7fcc43"><td class="memItemLeft" align="right" valign="top"><a id="ga523164af78525d9a7f0fa6a9bc7fcc43"></a>
 <a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_buf_from</b> (const char *path)</td></tr>
 <tr class="separator:ga523164af78525d9a7f0fa6a9bc7fcc43"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga75553891107182cc2d6c6ea037fd5a5e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga75553891107182cc2d6c6ea037fd5a5e">using_async_fopen</a> (const char *path, int flags, int mode, <a class="el" href="group__nodec__fs.html#ga340bba31d68b120ee5416378d133d4e3">nodec_file_fun</a> *action, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
-<tr class="memdesc:ga75553891107182cc2d6c6ea037fd5a5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safely open a file, use it, and close it again.  <a href="#ga75553891107182cc2d6c6ea037fd5a5e">More...</a><br /></td></tr>
-<tr class="separator:ga75553891107182cc2d6c6ea037fd5a5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga09135bbe22680c14c95e0842a7af3ba7"><td class="memItemLeft" align="right" valign="top">uv_errno_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#ga09135bbe22680c14c95e0842a7af3ba7">using_asyncx_fopen</a> (const char *path, int flags, int mode, <a class="el" href="group__nodec__fs.html#ga340bba31d68b120ee5416378d133d4e3">nodec_file_fun</a> *action, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> *result)</td></tr>
-<tr class="memdesc:ga09135bbe22680c14c95e0842a7af3ba7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safely open a file, use it, and close it again.  <a href="#ga09135bbe22680c14c95e0842a7af3ba7">More...</a><br /></td></tr>
-<tr class="separator:ga09135bbe22680c14c95e0842a7af3ba7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad8d5ffb33528c583617c42caf1adf7b5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#gad8d5ffb33528c583617c42caf1adf7b5">using_async_fopen</a> (const char *path, <a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a> flags, int permissions, <a class="el" href="group__nodec__fs.html#ga340bba31d68b120ee5416378d133d4e3">nodec_file_fun</a> *action, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
+<tr class="memdesc:gad8d5ffb33528c583617c42caf1adf7b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safely open a file, use it, and close it again.  <a href="#gad8d5ffb33528c583617c42caf1adf7b5">More...</a><br /></td></tr>
+<tr class="separator:gad8d5ffb33528c583617c42caf1adf7b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa4583cf7a1ed43130eff47ef9a95e16b"><td class="memItemLeft" align="right" valign="top">uv_errno_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__fs.html#gaa4583cf7a1ed43130eff47ef9a95e16b">using_asyncx_fopen</a> (const char *path, <a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a> flags, int permissions, <a class="el" href="group__nodec__fs.html#ga340bba31d68b120ee5416378d133d4e3">nodec_file_fun</a> *action, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> *result)</td></tr>
+<tr class="memdesc:gaa4583cf7a1ed43130eff47ef9a95e16b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safely open a file, use it, and close it again.  <a href="#gaa4583cf7a1ed43130eff47ef9a95e16b">More...</a><br /></td></tr>
+<tr class="separator:gaa4583cf7a1ed43130eff47ef9a95e16b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Asynchronous access to the file system. </p>
-<h2 class="groupheader">Function Documentation</h2>
-<a id="gac25368d023d0698cd132bfc92c39d2a3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gac25368d023d0698cd132bfc92c39d2a3">&#9670;&nbsp;</a></span>async_fopen()</h2>
+<hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="structuv__dirent__t" id="structuv__dirent__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structuv__dirent__t">&#9670;&nbsp;</a></span>uv_dirent_t</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">uv_file async_fopen </td>
+          <td class="memname">struct uv_dirent_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Directory entries. </p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="ac7ce6fb281bd218f7821f6c52a63a737"></a>const char *</td>
+<td class="fieldname">
+name</td>
+<td class="fielddoc">
+Name of the entry. </td></tr>
+<tr><td class="fieldtype">
+<a id="a7343234f6f445689c599b147eeac9658"></a><a class="el" href="group__nodec__fs.html#gab17cb1a692145e20d98e980c343a1335">uv_dirent_type_t</a></td>
+<td class="fieldname">
+type</td>
+<td class="fielddoc">
+Type of the entry. </td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="ga7bf547c1e12a2d084a0fbd9ba99749a9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7bf547c1e12a2d084a0fbd9ba99749a9">&#9670;&nbsp;</a></span>using_scandir</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define using_scandir</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">scandir</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Use a <a class="el" href="group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1" title="Used to iterate over the contents of a directory. ">nodec_scandir_t</a> in a scope. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">scandir</td><td>A <a class="el" href="group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1" title="Used to iterate over the contents of a directory. ">nodec_scandir_t</a> returned from <a class="el" href="group__nodec__fs.html#gad26564facd91dc0f198e54fb14460cfe" title="Initiate scanning a directory. ">async_scandir()</a> </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="ga6106956895e925e621b1ddfb478d3091"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga6106956895e925e621b1ddfb478d3091">&#9670;&nbsp;</a></span>nodec_open_flags_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>File open modes, see <a href="https://linux.die.net/man/2/open">open2()</a>. </p>
+<p>The open mode must always include one of <code>UV_FS_O_RDONLY</code>, <code>UV_FS_O_WRONLY</code>, or <code>UV_FS_O_RDWR</code>. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a5e55c321069fbde51d1c73c7b6380db3"></a>UV_FS_O_APPEND&#160;</td><td class="fielddoc"><p>Open in append mode. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a01151e2942507154f8e694a950183720"></a>UV_FS_O_CREAT&#160;</td><td class="fielddoc"><p>Create a new file if it does not exist yet; <code>mode</code> specifies the permissions in this case. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a7b4d0987e0ad7d469157390da427b744"></a>UV_FS_O_EXCL&#160;</td><td class="fielddoc"><p>Fail if the file already exists. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a341aae3e5d903898b8a3155c4d4456de"></a>UV_FS_O_RANDOM&#160;</td><td class="fielddoc"><p>Access is intended to be random. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091aea8b2813a8dbc3239b75518fac33a782"></a>UV_FS_O_RDONLY&#160;</td><td class="fielddoc"><p>Open for reading only. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091ab7bd494e74106113bccb7159ab5269cc"></a>UV_FS_O_RDWR&#160;</td><td class="fielddoc"><p>Open for reading and writing. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a0f3915adbc9debeee85b7aea1c0de2fa"></a>UV_FS_O_SEQUENTIAL&#160;</td><td class="fielddoc"><p>Access is intended to be sequential. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a0b92d55ae479bd0f30ea3320470955c7"></a>UV_FS_O_SHORT_LIVED&#160;</td><td class="fielddoc"><p>The file is intended to be short lived. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a8180afffb5f59a3f056015cfcc425730"></a>UV_FS_O_TEMPORARY&#160;</td><td class="fielddoc"><p>The file is intended as a temporary file and should not be flushed. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a9d4d3b852ae0eeffd11d3bb2cc05f928"></a>UV_FS_O_TRUNC&#160;</td><td class="fielddoc"><p>If the file exists and opened for writing, it is set to a zero length. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091aa6ab9adaedf4911b17a998aaf84e2618"></a>UV_FS_O_WRONLY&#160;</td><td class="fielddoc"><p>Open for writing only. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091ab04df9a4b5eab498be39ccbc9ee33793"></a>UV_FS_O_DIRECT&#160;</td><td class="fielddoc"><p>I/O is done directly from buffers that must be aligned. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a55de3a2fc80e58c471437064df836fcd"></a>UV_FS_O_DIRECTORY&#160;</td><td class="fielddoc"><p>If the path is not a directory, fail to open. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091aedd8398c1ed440fa728bf1e9401e70c4"></a>UV_FS_O_DSYNC&#160;</td><td class="fielddoc"><p>Writing is blocking and only completes if flushed to disk. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a396c5ed401245f1d9a07571852db822a"></a>UV_FS_O_EXLOCK&#160;</td><td class="fielddoc"><p>Obtain an exclusive lock. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a56ce6efd72a88357032a119468975998"></a>UV_FS_O_NOATIME&#160;</td><td class="fielddoc"><p>Do not update the access time of the file. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a10938f94907d49f2ef35b72c12b91f78"></a>UV_FS_O_NOCTTY&#160;</td><td class="fielddoc"><p>If the path identifies a terminal device, opening the path will not cause that terminal to become the controlling terminal for the process (if the process does not already have one). (not supported on Windows) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a92e37f26361e14c4b682957ed3953d44"></a>UV_FS_O_NOFOLLOW&#160;</td><td class="fielddoc"><p>If the path is a symbolic link, fail to open. (not supported on Windows) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a0d3b834b425d85f5cda06e0a502c7e03"></a>UV_FS_O_NONBLOCK&#160;</td><td class="fielddoc"><p>Open in non-blocking mode (not supported on Windows). </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091af98cfcc223663708b6dbf9c725fd2b72"></a>UV_FS_O_SYMLINK&#160;</td><td class="fielddoc"><p>If the path is not a symbolic link, fail to open. (not supported on Windows) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga6106956895e925e621b1ddfb478d3091a0c5d789e712be5a9a5ead4be23dbb689"></a>UV_FS_O_SYNC&#160;</td><td class="fielddoc"><p>The file is opened for synchronous I/O. Write operations will complete once all data and all metadata are flushed to disk. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="gab17cb1a692145e20d98e980c343a1335"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab17cb1a692145e20d98e980c343a1335">&#9670;&nbsp;</a></span>uv_dirent_type_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__nodec__fs.html#gab17cb1a692145e20d98e980c343a1335">uv_dirent_type_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Directory entry types. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ggab17cb1a692145e20d98e980c343a1335a947786154c585ee4d79c61f260565b9b"></a>UV_DIRENT_UNKNOWN&#160;</td><td class="fielddoc"><p>Unknown type. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggab17cb1a692145e20d98e980c343a1335ad63276ed636f67c2fb72c1876e500d8c"></a>UV_DIRENT_FILE&#160;</td><td class="fielddoc"><p>A regular file. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggab17cb1a692145e20d98e980c343a1335a8328c19ef64ea79b0526b3dae9f3a555"></a>UV_DIRENT_DIR&#160;</td><td class="fielddoc"><p>A regular (sub)directory. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggab17cb1a692145e20d98e980c343a1335ab72e22fb2ed44083615274b541a16360"></a>UV_DIRENT_LINK&#160;</td><td class="fielddoc"><p>A symbolic link. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggab17cb1a692145e20d98e980c343a1335a0fea07d0ee17d3cd9394682eb937be8b"></a>UV_DIRENT_FIFO&#160;</td><td class="fielddoc"><p>A FIFO queue. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggab17cb1a692145e20d98e980c343a1335ad6adf83f62c4773850963ef9a8fa26de"></a>UV_DIRENT_SOCKET&#160;</td><td class="fielddoc"><p>A socket. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggab17cb1a692145e20d98e980c343a1335a3ab846891d83853555d15168a01d37c1"></a>UV_DIRENT_CHAR&#160;</td><td class="fielddoc"><p>A character device. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggab17cb1a692145e20d98e980c343a1335aa070fc602168c3bf34807eba51cd48a2"></a>UV_DIRENT_BLOCK&#160;</td><td class="fielddoc"><p>A block device. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="ga03795062662fab68d33cb2a545f2a216"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga03795062662fab68d33cb2a545f2a216">&#9670;&nbsp;</a></span>async_fopen()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a> async_fopen </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>path</em>, </td>
@@ -198,14 +419,14 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype"><a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a>&#160;</td>
           <td class="paramname"><em>flags</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>mode</em>&#160;</td>
+          <td class="paramname"><em>permissions</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -219,8 +440,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">path</td><td>The file path </td></tr>
-    <tr><td class="paramname">flags</td><td>The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>. </td></tr>
-    <tr><td class="paramname">mode</td><td>The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>. </td></tr>
+    <tr><td class="paramname">flags</td><td>The file open flags. </td></tr>
+    <tr><td class="paramname">mode</td><td>The file permissions mode if it is created (using <a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a01151e2942507154f8e694a950183720" title="Create a new file if it does not exist yet; mode specifies the permissions in this case...">UV_FS_O_CREAT</a>). </td></tr>
   </table>
   </dd>
 </dl>
@@ -228,8 +449,72 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
 
 </div>
 </div>
-<a id="gaca19333be0078c6ea7be4e91ecf23eb6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaca19333be0078c6ea7be4e91ecf23eb6">&#9670;&nbsp;</a></span>asyncx_fopen()</h2>
+<a id="gad26564facd91dc0f198e54fb14460cfe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad26564facd91dc0f198e54fb14460cfe">&#9670;&nbsp;</a></span>async_scandir()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1">nodec_scandir_t</a>* async_scandir </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initiate scanning a directory. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>The directory path. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="gada696bec2c7dff6f40de926c1162c920"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gada696bec2c7dff6f40de926c1162c920">&#9670;&nbsp;</a></span>async_scandir_next()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool async_scandir_next </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1">nodec_scandir_t</a> *&#160;</td>
+          <td class="paramname"><em>scanreq</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="group__nodec__fs.html#structuv__dirent__t">uv_dirent_t</a> *&#160;</td>
+          <td class="paramname"><em>dirent</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Iterate over the directory contents. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">scanreq</td><td>The iteration state. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">dirent</td><td>The directory entry information if successful. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True while there are valid directory entries. <b>Example:</b> <div class="fragment"><div class="line"><a class="code" href="group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1">nodec_scandir_t</a>* scandir = <a class="code" href="group__nodec__fs.html#gad26564facd91dc0f198e54fb14460cfe">async_scandir</a>(<span class="stringliteral">&quot;/foo&quot;</span>);</div><div class="line">{<a class="code" href="group__nodec__fs.html#ga7bf547c1e12a2d084a0fbd9ba99749a9">using_scandir</a>(scandir){</div><div class="line">   <a class="code" href="group__nodec__fs.html#structuv__dirent__t">uv_dirent_t</a> dirent;</div><div class="line">   <span class="keywordflow">while</span>( <a class="code" href="group__nodec__fs.html#gada696bec2c7dff6f40de926c1162c920">async_scandir_next</a>(scandir,&amp;dirent) ) {</div><div class="line">     printf(<span class="stringliteral">&quot;entry: %s\n&quot;</span>, dirent.<a class="code" href="group__nodec__fs.html#ac7ce6fb281bd218f7821f6c52a63a737">name</a>);</div><div class="line">   }</div><div class="line">}}</div></div><!-- fragment --> </dd></dl>
+
+</div>
+</div>
+<a id="gae462f9dcfc8afab504f73898734e5493"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae462f9dcfc8afab504f73898734e5493">&#9670;&nbsp;</a></span>asyncx_fopen()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -243,19 +528,19 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype"><a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a>&#160;</td>
           <td class="paramname"><em>flags</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>mode</em>, </td>
+          <td class="paramname"><em>permissions</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uv_file *&#160;</td>
+          <td class="paramtype"><a class="el" href="group__nodec__fs.html#ga0c35c148bf40627f47bc6c2eeb19ea77">uv_file</a> *&#160;</td>
           <td class="paramname"><em>file</em>&#160;</td>
         </tr>
         <tr>
@@ -270,8 +555,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
 <p>Returns an error code instead of throwing an exception. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir"></td><td class="paramname">path</td><td>The file path </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">flags</td><td>The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>. </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">mode</td><td>The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>. </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">flags</td><td>The file open flags. </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">mode</td><td>The file permissions mode if it is created (using <a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a01151e2942507154f8e694a950183720" title="Create a new file if it does not exist yet; mode specifies the permissions in this case...">UV_FS_O_CREAT</a>). </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">file</td><td>Set to the file handle on success </td></tr>
   </table>
   </dd>
@@ -280,8 +565,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
 
 </div>
 </div>
-<a id="ga75553891107182cc2d6c6ea037fd5a5e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga75553891107182cc2d6c6ea037fd5a5e">&#9670;&nbsp;</a></span>using_async_fopen()</h2>
+<a id="gad8d5ffb33528c583617c42caf1adf7b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad8d5ffb33528c583617c42caf1adf7b5">&#9670;&nbsp;</a></span>using_async_fopen()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -295,14 +580,14 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype"><a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a>&#160;</td>
           <td class="paramname"><em>flags</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>mode</em>, </td>
+          <td class="paramname"><em>permissions</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -328,8 +613,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">path</td><td>The file path </td></tr>
-    <tr><td class="paramname">flags</td><td>The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>. </td></tr>
-    <tr><td class="paramname">mode</td><td>The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>. </td></tr>
+    <tr><td class="paramname">flags</td><td>The file open flags. </td></tr>
+    <tr><td class="paramname">mode</td><td>The file permissions mode if it is created (using <a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a01151e2942507154f8e694a950183720" title="Create a new file if it does not exist yet; mode specifies the permissions in this case...">UV_FS_O_CREAT</a>). </td></tr>
     <tr><td class="paramname">action</td><td>The file open action: called with the opened file handle. </td></tr>
     <tr><td class="paramname">arg</td><td>Extra argument passed to <code>action</code>. </td></tr>
   </table>
@@ -339,8 +624,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
 
 </div>
 </div>
-<a id="ga09135bbe22680c14c95e0842a7af3ba7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga09135bbe22680c14c95e0842a7af3ba7">&#9670;&nbsp;</a></span>using_asyncx_fopen()</h2>
+<a id="gaa4583cf7a1ed43130eff47ef9a95e16b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaa4583cf7a1ed43130eff47ef9a95e16b">&#9670;&nbsp;</a></span>using_asyncx_fopen()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -354,14 +639,14 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype"><a class="el" href="group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091">nodec_open_flags_t</a>&#160;</td>
           <td class="paramname"><em>flags</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>mode</em>, </td>
+          <td class="paramname"><em>permissions</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -393,8 +678,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>async_fread_from</b
 <p>Does not throw an exception on a file open error but returns an <code>uv_errno_t</code> instead. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir"></td><td class="paramname">path</td><td>The file path </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">flags</td><td>The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>. </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">mode</td><td>The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>. </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">flags</td><td>The file open flags. </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">mode</td><td>The file permissions mode if it is created (using <a class="el" href="group__nodec__fs.html#gga6106956895e925e621b1ddfb478d3091a01151e2942507154f8e694a950183720" title="Create a new file if it does not exist yet; mode specifies the permissions in this case...">UV_FS_O_CREAT</a>). </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">action</td><td>The file open action: called with the opened file handle. </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">arg</td><td>Extra argument passed to <code>action</code>. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">result</td><td>The return value of <code>action</code>. </td></tr>

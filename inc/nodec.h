@@ -39,6 +39,7 @@ overview of the API functionality.
 
 // Forward declarations 
 typedef struct _channel_t channel_t;
+typedef int    nodec_open_flags_t;
 
 /// \addtogroup nodec_various
 /// \{
@@ -288,6 +289,9 @@ void async_yield();
   File system (fs)
 -----------------------------------------------------------------------------*/
 
+void        nodec_scandir_free(nodec_scandir_t* scanreq);
+void        nodec_scandir_freev(lh_value scanreqv);
+
 /// \defgroup nodec_fs File System
 /// Asynchronous access to the file system.
 /// \{
@@ -296,33 +300,53 @@ uv_errno_t  asyncx_stat(const char* path, uv_stat_t* stat);
 uv_stat_t   async_stat(const char* path);
 uv_stat_t   async_fstat(uv_file file);
 
+
 /// Open a file.
 /// \param path The file path
-/// \param flags The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>.
-/// \param mode The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param flags The file open flags.
+/// \param mode The file permissions mode if it is created (using #UV_FS_O_CREAT).
 /// \returns The opened file handle on success.
-uv_file     async_fopen(const char* path, int flags, int mode);
+uv_file     async_fopen(const char* path, nodec_open_flags_t flags, int permissions);
 
 /// Open a file.
 /// Returns an error code instead of throwing an exception.
 /// \param path The file path
-/// \param flags The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>.
-/// \param mode The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param flags The file open flags.
+/// \param mode The file permissions mode if it is created (using #UV_FS_O_CREAT).
 /// \param[out] file Set to the file handle on success
 /// \returns A possible error code, or 0 on succes.
-uv_errno_t  asyncx_fopen(const char* path, int flags, int mode, uv_file* file );
+uv_errno_t  asyncx_fopen(const char* path, nodec_open_flags_t flags, int permissions, uv_file* file );
 void        async_fclose(uv_file file);
 
 size_t      async_fread_into(uv_file file, uv_buf_t buf, int64_t file_offset);
 uv_buf_t    async_fread_buf(uv_file file, size_t max, int64_t file_offset);
 uv_buf_t    async_fread_buf_all(uv_file file, size_t max);
 
+/// Used to iterate over the contents of a directory.
 typedef uv_fs_t nodec_scandir_t;
-void        nodec_scandir_free(nodec_scandir_t* scanreq);
-void        nodec_scandir_freev(lh_value scanreqv);
-#define using_scandir(req)  defer(nodec_scandir_freev,lh_value_ptr(req))
 
+/// Use a #nodec_scandir_t in a scope.
+/// \param scandir A #nodec_scandir_t returned from async_scandir()
+#define using_scandir(scandir)  defer(nodec_scandir_freev,lh_value_ptr(req))
+
+/// Initiate scanning a directory.
+/// \param path The directory path.
 nodec_scandir_t* async_scandir(const char* path);
+
+/// Iterate over the directory contents.
+/// \param[in,out] scanreq The iteration state.
+/// \param[out] dirent The directory entry information if successful.
+/// \returns True while there are valid directory entries.
+/// \b Example:
+/// ```
+/// nodec_scandir_t* scandir = async_scandir("/foo");
+/// {using_scandir(scandir){
+///    uv_dirent_t dirent;
+///    while( async_scandir_next(scandir,&dirent) ) {
+///      printf("entry: %s\n", dirent.name);
+///    }
+/// }}
+/// ```
 bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
 
 // ----------------------------------
@@ -336,23 +360,23 @@ typedef lh_value(nodec_file_fun)(uv_file file, const char* path, lh_value arg);
 
 /// Safely open a file, use it, and close it again.
 /// \param path The file path
-/// \param flags The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>.
-/// \param mode The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param flags The file open flags.
+/// \param mode The file permissions mode if it is created (using #UV_FS_O_CREAT).
 /// \param action The file open action: called with the opened file handle.
 /// \param arg Extra argument passed to `action`.
 /// \returns The return value of `action`.
-lh_value    using_async_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
+lh_value    using_async_fopen(const char* path, nodec_open_flags_t flags, int permissions, nodec_file_fun* action, lh_value arg);
 
 /// Safely open a file, use it, and close it again.
 /// Does not throw an exception on a file open error but returns an `uv_errno_t` instead.
 /// \param path The file path
-/// \param flags The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>.
-/// \param mode The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param flags The file open flags.
+/// \param mode The file permissions mode if it is created (using #UV_FS_O_CREAT).
 /// \param action The file open action: called with the opened file handle.
 /// \param arg Extra argument passed to `action`.
 /// \param[out] result The return value of `action`.
 /// \returns A possible error code or 0 on success.
-uv_errno_t  using_asyncx_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg, lh_value* result);
+uv_errno_t  using_asyncx_fopen(const char* path, nodec_open_flags_t flags, int permissions, nodec_file_fun* action, lh_value arg, lh_value* result);
 
 /// \}
 
@@ -1015,22 +1039,29 @@ const char*   async_req_read_body_str(size_t read_max);
 
 /// HTTP Static server configuration.
 typedef struct _http_static_config_t {
-  bool use_etag;
-  const char*  cache_control;    // public, max-age=604800
-  const char** implicit_exts;  // http_static_html_exts
-  const char* implicit_index; // index.html
-  bool   gzip_vary;           // true
-  size_t gzip_min_size;       // 1kb  zip compress above this size
-  size_t content_max_size;    // SIZE_MAX
-  size_t read_buf_size;       // 64kb
+  bool use_etag;               ///< Generate cluster-safe ETag's for efficient caching, By default true. 
+                               ///< However, the server also generates `Last-Modified` headers and respects both
+                               ///< `If-Not-Modified` and `If-None-Match` headers with efficient 304 responses.
+  const char*  cache_control;  ///< If not NULL, specifies the cache control header. By default `"public, max-age=604800"`.
+  const char** implicit_exts;  ///< NULL terminated array of implicit extensions, by default `{".html",".htm",NULL}`.
+  const char* implicit_index;  ///< If not NULL, specifies the default index file, by default `"index.html"`.
+  bool   gzip_vary;            ///< If compression is enabled, add the VARY header. By default true.
+  size_t gzip_min_size;        ///< Enable gzip compression above this file size (default is 1KB) (if the MIME type is compressible). Set to `SIZE_MAX` to disable compression.
+  size_t content_max_size;     ///< Maximum size of content to serve (by default `SIZE_MAX`).
+  size_t read_buf_size;        ///< Read buffer chunk size, by default 64KB.
 } http_static_config_t;
 
+/// Default file extensions for the static content server.
+/// Initialized to `{".html",".htm",NULL}`.
 extern const char* http_static_implicit_exts[];
 
+/// Return the default static server configuration.
 #define http_static_default_config() { true, "public, max-age=604800", http_static_implicit_exts, "index", true, 1024, SIZE_MAX, 64*1024 }
 
 /// Serve static files under a `root` directory. 
 /// \param config The configuration. Can be NULL for the default configuration.
+/// Supports efficient `304 Not-Modified` responses with `Last-Modified` and
+/// and `ETag` headers, and can do dynamic gzip compression (if enabled).
 void http_serve_static(const char* root, const http_static_config_t* config);
 
 /// \}

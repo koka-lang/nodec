@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['name',['name',['../group__nodec__fs.html#ac7ce6fb281bd218f7821f6c52a63a737',1,'uv_dirent_t']]],
   ['nodec_5falloc',['nodec_alloc',['../group__nodec__alloc.html#ga93ffdec72fa29b5f091e428cbd4245a9',1,'nodec.h']]],
   ['nodec_5fbstream_5falloc',['nodec_bstream_alloc',['../group__streams.html#ga3402e9960bf043d2d361225e18483645',1,'nodec.h']]],
   ['nodec_5fbstream_5falloc_5fon',['nodec_bstream_alloc_on',['../group__streams.html#gaa1bf780a5ccea514dc1592f8a0eccb58',1,'nodec.h']]],
@@ -35,8 +36,10 @@ var searchData=
   ['nodec_5fmb',['NODEC_MB',['../group__nodec__various.html#gad8c50b6c480fd1c09e40a5eaa36f87bb',1,'nodec.h']]],
   ['nodec_5fmime_5ffrom_5ffname',['nodec_mime_from_fname',['../group__nodec__mime.html#ga7b0602fccd1407557b341e4d4a5c808b',1,'nodec.h']]],
   ['nodec_5fmime_5finfo_5ffrom_5ffname',['nodec_mime_info_from_fname',['../group__nodec__mime.html#ga3561c055d8e934a49e64105f78dfd4d6',1,'nodec.h']]],
+  ['nodec_5fopen_5fflags_5ft',['nodec_open_flags_t',['../group__nodec__fs.html#ga6106956895e925e621b1ddfb478d3091',1,'nodec-extra-doc.h']]],
   ['nodec_5fparse_5finet_5fdate',['nodec_parse_inet_date',['../group__nodec__various.html#gaa91b31eb8f2fe9557323440b9e1240b7',1,'nodec.h']]],
   ['nodec_5fpushback_5fbuf',['nodec_pushback_buf',['../group__streams.html#gaa2323dea0f12493ae97032fe7e6dcd55',1,'nodec.h']]],
+  ['nodec_5fscandir_5ft',['nodec_scandir_t',['../group__nodec__fs.html#ga61fb79bbfca6d44d44f575ace13a53e1',1,'nodec.h']]],
   ['nodec_5fstarts_5fwith',['nodec_starts_with',['../group__nodec__various.html#ga1f6e5d595c708809db28efd4c4506241',1,'nodec.h']]],
   ['nodec_5fstarts_5fwithi',['nodec_starts_withi',['../group__nodec__various.html#ga1e6a44db408192675d8923ac4ea03ebc',1,'nodec.h']]],
   ['nodec_5fstream_5ffree',['nodec_stream_free',['../group__streams.html#ga7a87a30d292c709502440b0d95b9cb0b',1,'nodec.h']]],

@@ -55,6 +55,8 @@ var searchData=
   ['http_5fserve_5fstatic',['http_serve_static',['../group__nodec__static.html#gaaa8f361e185522a1dea817d83c8d784b',1,'nodec.h']]],
   ['http_20setup',['HTTP Setup',['../group__http__setup.html',1,'']]],
   ['http_5fstatic_5fconfig_5ft',['http_static_config_t',['../group__nodec__static.html#structhttp__static__config__t',1,'']]],
+  ['http_5fstatic_5fdefault_5fconfig',['http_static_default_config',['../group__nodec__static.html#gafee4501f26dcb4de2253ee690fcc9cfa',1,'nodec.h']]],
+  ['http_5fstatic_5fimplicit_5fexts',['http_static_implicit_exts',['../group__nodec__static.html#gae8ac7620c8122033e3239beee552339f',1,'nodec.h']]],
   ['http_5fstatus_5faccepted',['HTTP_STATUS_ACCEPTED',['../group__http__setup.html#ggaf5ffe69ea1b5908893c7eddf74c8151ba95022d17916c4aa66324379ecdd53247',1,'nodec-extra-doc.h']]],
   ['http_5fstatus_5falready_5freported',['HTTP_STATUS_ALREADY_REPORTED',['../group__http__setup.html#ggaf5ffe69ea1b5908893c7eddf74c8151baf60c8de8de4eb8fe02562aff8ee96f1f',1,'nodec-extra-doc.h']]],
   ['http_5fstatus_5fbad_5fgateway',['HTTP_STATUS_BAD_GATEWAY',['../group__http__setup.html#ggaf5ffe69ea1b5908893c7eddf74c8151bac96829d2c2cb76feb1549f0fac72c69e',1,'nodec-extra-doc.h']]],

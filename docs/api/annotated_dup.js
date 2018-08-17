@@ -7,5 +7,6 @@ var annotated_dup =
     [ "lh_optag_", "group__effect__handlers.html#structlh__optag__", "group__effect__handlers_structlh__optag__" ],
     [ "tcp_server_config_t", "group__tcp.html#structtcp__server__config__t", "group__tcp_structtcp__server__config__t" ],
     [ "uv_buf_t", "group__buffers.html#structuv__buf__t", "group__buffers_structuv__buf__t" ],
+    [ "uv_dirent_t", "group__nodec__fs.html#structuv__dirent__t", "group__nodec__fs_structuv__dirent__t" ],
     [ "yieldargs", "group__effect__handlers.html#structyieldargs", "group__effect__handlers_structyieldargs" ]
 ];

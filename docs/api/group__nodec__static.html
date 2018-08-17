@@ -120,7 +120,8 @@ Data Structures</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:gafee4501f26dcb4de2253ee690fcc9cfa"><td class="memItemLeft" align="right" valign="top"><a id="gafee4501f26dcb4de2253ee690fcc9cfa"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>http_static_default_config</b>()</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__static.html#gafee4501f26dcb4de2253ee690fcc9cfa">http_static_default_config</a>()</td></tr>
+<tr class="memdesc:gafee4501f26dcb4de2253ee690fcc9cfa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the default static server configuration. <br /></td></tr>
 <tr class="separator:gafee4501f26dcb4de2253ee690fcc9cfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
@@ -131,8 +132,8 @@ Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:gae8ac7620c8122033e3239beee552339f"><td class="memItemLeft" align="right" valign="top"><a id="gae8ac7620c8122033e3239beee552339f"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><b>http_static_implicit_exts</b> []</td></tr>
+<tr class="memitem:gae8ac7620c8122033e3239beee552339f"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nodec__static.html#gae8ac7620c8122033e3239beee552339f">http_static_implicit_exts</a> []</td></tr>
+<tr class="memdesc:gae8ac7620c8122033e3239beee552339f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default file extensions for the static content server.  <a href="#gae8ac7620c8122033e3239beee552339f">More...</a><br /></td></tr>
 <tr class="separator:gae8ac7620c8122033e3239beee552339f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -157,48 +158,49 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><b>http_static_i
 <td class="fieldname">
 cache_control</td>
 <td class="fielddoc">
-</td></tr>
+If not NULL, specifies the cache control header. By default <code>"public, max-age=604800"</code>. </td></tr>
 <tr><td class="fieldtype">
 <a id="a51e0cb72c8eb93fef2ca61fb599b9a06"></a>size_t</td>
 <td class="fieldname">
 content_max_size</td>
 <td class="fielddoc">
-</td></tr>
+Maximum size of content to serve (by default <code>SIZE_MAX</code>). </td></tr>
 <tr><td class="fieldtype">
 <a id="ae9dca6966cebb3b3dae85e79b561ece8"></a>size_t</td>
 <td class="fieldname">
 gzip_min_size</td>
 <td class="fielddoc">
-</td></tr>
+Enable gzip compression above this file size (default is 1KB) (if the MIME type is compressible). Set to <code>SIZE_MAX</code> to disable compression. </td></tr>
 <tr><td class="fieldtype">
 <a id="a80faaf3f2b7b7d3d9a7271af9f7e667c"></a>bool</td>
 <td class="fieldname">
 gzip_vary</td>
 <td class="fielddoc">
-</td></tr>
+If compression is enabled, add the VARY header. By default true. </td></tr>
 <tr><td class="fieldtype">
 <a id="a35e38162a485696d0259c3789b690f1d"></a>const char **</td>
 <td class="fieldname">
 implicit_exts</td>
 <td class="fielddoc">
-</td></tr>
+NULL terminated array of implicit extensions, by default <code>{".html",".htm",NULL}</code>. </td></tr>
 <tr><td class="fieldtype">
 <a id="a6b2390b3780a8912fb6d571aa7a08ba6"></a>const char *</td>
 <td class="fieldname">
 implicit_index</td>
 <td class="fielddoc">
-</td></tr>
+If not NULL, specifies the default index file, by default <code>"index.html"</code>. </td></tr>
 <tr><td class="fieldtype">
 <a id="a31d97bb6440fc5992cb56fc84d0725fa"></a>size_t</td>
 <td class="fieldname">
 read_buf_size</td>
 <td class="fielddoc">
-</td></tr>
+Read buffer chunk size, by default 64KB. </td></tr>
 <tr><td class="fieldtype">
 <a id="ab77a0887c2beea113ae3a647bd5051ed"></a>bool</td>
 <td class="fieldname">
 use_etag</td>
 <td class="fielddoc">
+Generate cluster-safe ETag's for efficient caching, By default true. <p>However, the server also generates <code>Last-Modified</code> headers and respects both <code>If-Not-Modified</code> and <code>If-None-Match</code> headers with efficient 304 responses. </p>
 </td></tr>
 </table>
 
@@ -234,10 +236,28 @@ use_etag</td>
 <p>Serve static files under a <code>root</code> directory. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">config</td><td>The configuration. Can be NULL for the default configuration. </td></tr>
+    <tr><td class="paramname">config</td><td>The configuration. Can be NULL for the default configuration. Supports efficient <code>304 Not-Modified</code> responses with <code>Last-Modified</code> and and <code>ETag</code> headers, and can do dynamic gzip compression (if enabled). </td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="gae8ac7620c8122033e3239beee552339f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae8ac7620c8122033e3239beee552339f">&#9670;&nbsp;</a></span>http_static_implicit_exts</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* http_static_implicit_exts[]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Default file extensions for the static content server. </p>
+<p>Initialized to <code>{".html",".htm",NULL}</code>. </p>
 
 </div>
 </div>
