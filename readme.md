@@ -105,6 +105,8 @@ function and have the following function signature instead:
 ```C
 void async_fs_close( uv_file file );
 ```
+
+
 Yes! much better. We only pass the essential `file` parameter and that is it. 
 The call is still asynchronous but will continue at that exact point in the
 program when the file is closed (just like async/await). Furthermore, we provide
@@ -171,6 +173,38 @@ The [zlib] project is checked out as:
 
 * And build it as a static library. On Windows open up `contrib\vstudio\vc14\zlibvc.sln`
   to build the `Debug` and `ReleaseWithoutAsm` versions for `x64`, as `zlibstat.lib`.
+
+### mbedtls
+
+I assume that you have installed CMake on your development machine.
+In this discussion let **ROOT** be a path to the parent of the nodec and mbedtls directories.
+
+#### creating the build environments
+
+Perform the following steps at the command line. You type 2015 even if you use Visual Studio 2017.
+```
+cd %ROOT%\mbedtls
+mkdir builds
+pushd builds
+mkdir build32
+pushd build32
+cmake -G "Visual Studio 14 2015" ..\..
+popd
+mkdir build64
+pushd build64
+cmake -G "Visual Studio 14 2015 Win64" ..\..
+popd
+popd
+```
+
+#### building mbedtls ####
+```
+cd %ROOT%\mbedtls\builds
+cmake --build build32 --config Debug
+cmake --build build32 --config Release
+cmake --build build64 --config Debug
+cmake --build build64 --config Release
+```
 
 ## Windows
 
