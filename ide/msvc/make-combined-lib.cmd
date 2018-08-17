@@ -18,19 +18,21 @@ IF "%CONFIG%"=="Release" SET ZCONFIG=ReleaseWithoutAsm
 IF "XCONFIG"=="" GOTO ERROR
 IF "XPLATFORM"=="" GOTO ERROR
 
-SET LIBUV=.\..\..\..\libuv\%CONFIG%\lib\libuv.lib
+SET ROOT=.\..\..\..
+
+SET LIBUV=%ROOT%\libuv\%CONFIG%\lib\libuv.lib
 IF NOT EXIST %LIBUV% (
   ECHO %LIBUV% does not exist
   GOTO ERROR
 )
 
-SET MBEDTLS=.\..\..\..\mbedtls\builds\%MPLATFORM%\library\%CONFIG%\mbedTLS.lib
+SET MBEDTLS=%ROOT%\mbedtls\builds\%MPLATFORM%\library\%CONFIG%\mbedTLS.lib
 IF NOT EXIST %MBEDTLS% (
   ECHO %MBEDTLS% does not exist
   GOTO ERROR
 )
 
-SET ZLIB=.\..\..\..\zlib\contrib\vstudio\vc14\%ZPLATFORM%\ZlibStat%ZCONFIG%\zlibstat.lib
+SET ZLIB=%ROOT%\zlib\contrib\vstudio\vc14\%ZPLATFORM%\ZlibStat%ZCONFIG%\zlibstat.lib
 IF NOT EXIST %ZLIB% (
   ECHO %ZLIB% does not exist
   GOTO ERROR
@@ -57,6 +59,27 @@ SET COMBINED=%COMBINED_DIR%\nodecx.lib
 @ECHO Creating %COMBINED%
 lib /OUT:%COMBINED%  %LIBUV% %MBEDTLS% %ZLIB% %LIBHANDLER% %NODEC%
 IF NOT ERRORLEVEL 0 GOTO ERROR
+
+
+SET INCDIR=.\..\..\out\msvc-%PLATFORM%\nodecx\inc
+IF NOT EXIST %INCDIR% (
+  ECHO Creating %INCDIR%
+  MKDIR %INCDIR%
+  ECHO Creating %INCDIR%\libuv\include
+  MKDIR %INCDIR%\libuv\include
+  ECHO Creating %INCDIR%\mbedtls
+  MKDIR %INCDIR%\mbedtls
+)
+
+@ECHO Collecting include files to %INCDIR%
+COPY %ROOT%\libuv\include\*.h  %INCDIR%\libuv\include
+COPY %ROOT%\mbedtls\include\mbedtls\*.h %INCDIR%\mbedtls
+COPY %ROOT%\http-parser\http_parser.h %INCDIR%
+COPY %ROOT%\libhandler\inc\libhandler.h %INCDIR%
+COPY %ROOT%\nodec\inc\nodec.h %INCDIR%
+COPY %ROOT%\nodec\inc\nodec-primitive.h %INCDIR%
+
+
 ENDLOCAL
 GOTO END
 :ERROR

@@ -20,5 +20,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Library Include="..\..\out\msvc-$(Platform)\nodecx\$(Configuration)\nodecx.lib" />
   </ItemGroup>
 </Project>

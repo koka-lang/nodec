@@ -10,7 +10,7 @@
 #define __nodec_h
 
 #include <libhandler.h>
-#include <uv.h>
+#include <libuv/include/uv.h>
 #include <http_parser.h>
 
 
