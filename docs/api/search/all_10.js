@@ -1,11 +1,9 @@
 var searchData=
 [
-  ['using_5fbstream',['using_bstream',['../group__streams.html#ga3371300a9eea0177e792b08bb5b3bf3d',1,'nodec.h']]],
-  ['using_5fbuf',['using_buf',['../group__buffers.html#gac1eb74560e4589e704bebc105d6343d3',1,'nodec.h']]],
-  ['using_5fbuf_5fon_5fabort_5ffree',['using_buf_on_abort_free',['../group__buffers.html#ga66f1fa47b02d2868d948e319d7855a03',1,'nodec.h']]],
-  ['using_5fbuf_5fowned',['using_buf_owned',['../group__buffers.html#ga3e5bc4c460db62160c8642b8e1d65c1b',1,'nodec.h']]],
-  ['using_5fimplicit',['using_implicit',['../group__effect__implicit.html#gaea88b12f476f8d029fe6043febecae19',1,'libhandler.h']]],
-  ['using_5fstream',['using_stream',['../group__streams.html#gaf8015d9228ada99910bc414d748536e8',1,'nodec.h']]],
-  ['uv_5fbuf_5ft',['uv_buf_t',['../group__buffers.html#structuv__buf__t',1,'']]],
-  ['uv_5fstream_5ft',['uv_stream_t',['../group__streams.html#gaa1b461b8603be0c65dbf1e6037b01668',1,'nodec-extra-doc.h']]]
+  ['tty',['TTY',['../group__nodec__tty.html',1,'']]],
+  ['tcp_20connections',['TCP Connections',['../group__tcp.html',1,'']]],
+  ['tcp_5fserver_5fconfig',['tcp_server_config',['../group__tcp.html#ga178d806e948c857f5599ee9462d18720',1,'nodec.h']]],
+  ['tcp_5fserver_5fconfig_5ft',['tcp_server_config_t',['../group__tcp.html#structtcp__server__config__t',1,'']]],
+  ['timeout',['timeout',['../group__tcp.html#aa1a3af7b0980e3c45cc618c2bf7f076f',1,'tcp_server_config_t']]],
+  ['timeout_5ftotal',['timeout_total',['../group__tcp.html#a4af6558b9d474340373020ccfef5026c',1,'tcp_server_config_t']]]
 ];

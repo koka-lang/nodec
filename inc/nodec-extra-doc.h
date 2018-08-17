@@ -33,7 +33,7 @@ typedef struct _uv_buf_t {
 /// \}
 
 
-/// \addtogroup http_connect
+/// \addtogroup http_setup
 /// \{
 
 /// The HTTP method enumeration. 
@@ -149,12 +149,3 @@ typedef enum http_status {
 
 /// \}
 
-/*! \mainpage
-
-This is the API documentation of the 
-<a class="external" href="https://github.com/koka-lang/nodec">NodeC</a> project
-
-See the <a class="external" href="./modules.html">Modules</a> section for an 
-overview of the API functionality.
-
-*/

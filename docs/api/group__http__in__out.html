@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>NodeC: HTTP incoming and outgoing data.</title>
+<title>NodeC: HTTP Input and Output.</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -103,11 +103,11 @@ $(document).ready(function(){initNavTree('group__http__in__out.html','');});
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">HTTP incoming and outgoing data.<div class="ingroups"><a class="el" href="group__http.html">HTTP Connections</a></div></div>  </div>
+<div class="title">HTTP Input and Output.<div class="ingroups"><a class="el" href="group__http.html">HTTP Connections</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>These are the request- and response objects for the server, and the response- and request objects for a client connection.  
+<p>HTTP incoming and outgoing data.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -145,10 +145,10 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><b>async_http_in_init<
 const char *&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_url</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
 <tr class="separator:gaed4696b81ddcf5b5075cef714fe329af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0be05f2eaed3addcb936b806f1a54457"><td class="memItemLeft" align="right" valign="top"><a id="ga0be05f2eaed3addcb936b806f1a54457"></a>
-<a class="el" href="group__http__connect.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_method</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
+<a class="el" href="group__http__setup.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_method</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
 <tr class="separator:ga0be05f2eaed3addcb936b806f1a54457"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gacfdc89c1437e76e3855f8a4fa2ab6472"><td class="memItemLeft" align="right" valign="top"><a id="gacfdc89c1437e76e3855f8a4fa2ab6472"></a>
-<a class="el" href="group__http__connect.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_status</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
+<a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_status</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
 <tr class="separator:gacfdc89c1437e76e3855f8a4fa2ab6472"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4647440d49724b66fb24f6afcc8d611b"><td class="memItemLeft" align="right" valign="top"><a id="ga4647440d49724b66fb24f6afcc8d611b"></a>
 uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_content_length</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
@@ -193,24 +193,24 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_clearv</b> (
 void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_add_header</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, const char *field, const char *value)</td></tr>
 <tr class="separator:ga5848e556a928d0c8417a4e14333ef185"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gadaaff240d6a10ffc70779c8486219e46"><td class="memItemLeft" align="right" valign="top"><a id="gadaaff240d6a10ffc70779c8486219e46"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_send_status</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, <a class="el" href="group__http__connect.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_send_status</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, <a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status)</td></tr>
 <tr class="separator:gadaaff240d6a10ffc70779c8486219e46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga138b455921840e7c4ee8b0626d5ddcb6"><td class="memItemLeft" align="right" valign="top"><a id="ga138b455921840e7c4ee8b0626d5ddcb6"></a>
-<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_send_status_body</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, <a class="el" href="group__http__connect.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status, size_t content_length, const char *content_type)</td></tr>
+<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_send_status_body</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, <a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status, size_t content_length, const char *content_type)</td></tr>
 <tr class="separator:ga138b455921840e7c4ee8b0626d5ddcb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4ddff36b42a4a3dafc8816ee6644600d"><td class="memItemLeft" align="right" valign="top"><a id="ga4ddff36b42a4a3dafc8816ee6644600d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_send_request</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, <a class="el" href="group__http__connect.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a> method, const char *url)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_send_request</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, <a class="el" href="group__http__setup.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a> method, const char *url)</td></tr>
 <tr class="separator:ga4ddff36b42a4a3dafc8816ee6644600d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9515bd6bc16a36d73669271b8fe8f785"><td class="memItemLeft" align="right" valign="top"><a id="ga9515bd6bc16a36d73669271b8fe8f785"></a>
-<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_send_request_body</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, <a class="el" href="group__http__connect.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a> method, const char *url, size_t content_length, const char *content_type)</td></tr>
+<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_send_request_body</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, <a class="el" href="group__http__setup.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a> method, const char *url, size_t content_length, const char *content_type)</td></tr>
 <tr class="separator:ga9515bd6bc16a36d73669271b8fe8f785"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga770e061af64155a0052eb4957001d27e"><td class="memItemLeft" align="right" valign="top"><a id="ga770e061af64155a0052eb4957001d27e"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_status_sent</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out)</td></tr>
 <tr class="separator:ga770e061af64155a0052eb4957001d27e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>These are the request- and response objects for the server, and the response- and request objects for a client connection. </p>
-<p>Servers bind these implicitly to <a class="el" href="group__http__req__resp.html#ga6fbdd916c136f477bbc3b45402907241" title="Return the current HTTP request. ">http_req()</a> and <a class="el" href="group__http__req__resp.html#gafcc54624869b5d7c85b79843901fefd7" title="Return the current HTTP response. ">http_resp()</a> for the current request- and response objects so that the explicit <a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df" title="HTTP incoming data object. ">http_in_t</a> and <a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf" title="HTTP outgoing data object. ">http_out_t</a> objects don't need to be threaded around explicitly. </p>
+<p>HTTP incoming and outgoing data. </p>
+<p>These are the request- and response objects for the server, and the response- and request objects for a client connection. Servers bind these implicitly to <a class="el" href="group__http__req__resp.html#ga6fbdd916c136f477bbc3b45402907241" title="Return the current HTTP request. ">http_req()</a> and <a class="el" href="group__http__req__resp.html#gafcc54624869b5d7c85b79843901fefd7" title="Return the current HTTP response. ">http_resp()</a> for the current request- and response objects so that the explicit <a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df" title="HTTP incoming data object. ">http_in_t</a> and <a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf" title="HTTP outgoing data object. ">http_out_t</a> objects don't need to be threaded around explicitly. </p>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="gaa8e34fdd12cb1290da994deab9d64594"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#gaa8e34fdd12cb1290da994deab9d64594">&#9670;&nbsp;</a></span>NODEC_CHUNKED</h2>

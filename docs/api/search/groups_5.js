@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['implicit_20parameters',['Implicit Parameters',['../group__effect__implicit.html',1,'']]]
+  ['generic_20values',['Generic Values',['../group__effect__value.html',1,'']]]
 ];

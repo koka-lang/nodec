@@ -105,7 +105,7 @@ $(document).ready(function(){initNavTree('group__effect__implicit.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p>Convenience functions to easily define and use implicit parameters.  
+<p>Functions to easily define and use implicit parameters.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -130,7 +130,7 @@ Macros</h2></td></tr>
 <tr class="separator:gad6572acb8b04d7b33ea661035fb0d8d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>Convenience functions to easily define and use implicit parameters. </p>
+<p>Functions to easily define and use implicit parameters. </p>
 <p><b>Example</b> </p><div class="fragment"><div class="line"><a class="code" href="group__effect__implicit.html#gac94bad95bb8fcb34dcc29f46564bf750">implicit_define</a>(width);</div><div class="line"></div><div class="line"><span class="keywordtype">void</span> bar() {</div><div class="line">  printf(<span class="stringliteral">&quot;width is %i\n&quot;</span>, <a class="code" href="group__effect__value.html#ga11799a8a77ce5e6e76fcc04ea346973b">lh_int_value</a>(<a class="code" href="group__effect__implicit.html#gad6572acb8b04d7b33ea661035fb0d8d2">implicit_get</a>(width)));</div><div class="line">}</div><div class="line"></div><div class="line"><span class="keywordtype">void</span> foo() {</div><div class="line">  {<a class="code" href="group__effect__implicit.html#gaea88b12f476f8d029fe6043febecae19">using_implicit</a>(<a class="code" href="group__effect__value.html#gac14a78aec4be59be7a920507f0e61a32">lh_value_int</a>(42),width){</div><div class="line">    bar();</div><div class="line">  }}</div><div class="line">}</div></div><!-- fragment --> <h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="ga40e8799dc7d3bbaaca7fe49dc134fbe5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga40e8799dc7d3bbaaca7fe49dc134fbe5">&#9670;&nbsp;</a></span>implicit_declare</h2>

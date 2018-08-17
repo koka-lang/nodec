@@ -153,7 +153,7 @@ uv_errno_t using_asyncx_fopen(const char* path, int flags, int mode, nodec_file_
   args.arg = arg;
   args.path = path;
   args.action = action;
-  uv_errno_t err = asyncx_fopen(path, flags, 0, &args.file);
+  uv_errno_t err = asyncx_fopen(path, flags, mode, &args.file);
   if (err == 0) {
     lh_value res = lh_finally(
       &_fopen_action, lh_value_any_ptr(&args),

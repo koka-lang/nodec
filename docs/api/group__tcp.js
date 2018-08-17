@@ -1,6 +1,6 @@
 var group__tcp =
 [
-    [ "Low level TCP connections", "group__tcpx.html", null ],
+    [ "Low level TCP Connections", "group__tcpx.html", null ],
     [ "tcp_server_config_t", "group__tcp.html#structtcp__server__config__t", [
       [ "backlog", "group__tcp.html#a64ed27e28dbbddbcf1fe1fed3538014b", null ],
       [ "max_interleaving", "group__tcp.html#ace7d6ad760cdb393909b6b4496929d4d", null ],

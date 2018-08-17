@@ -8,6 +8,7 @@ var group__http__req__resp =
     [ "http_req_header", "group__http__req__resp.html#gab3b9ae435e3ff47e65c120849637570e", null ],
     [ "http_req_header_next", "group__http__req__resp.html#ga5a4e7beef65369fe9dd0af4e950e0296", null ],
     [ "http_req_method", "group__http__req__resp.html#ga1bbbf2a9c6763cc8abd61c64e3d56be9", null ],
+    [ "http_req_parsed_url", "group__http__req__resp.html#gaa071ab8ae8e6548f41f3945a3a8944ee", null ],
     [ "http_req_path", "group__http__req__resp.html#ga79ccdc504575e50c2c7f7898f9f4e098", null ],
     [ "http_req_url", "group__http__req__resp.html#ga453c19b95ff4853887cc38eab789dc0d", null ],
     [ "http_resp", "group__http__req__resp.html#gafcc54624869b5d7c85b79843901fefd7", null ],

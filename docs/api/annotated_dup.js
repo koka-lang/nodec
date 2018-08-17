@@ -1,6 +1,6 @@
 var annotated_dup =
 [
-    [ "http_static_config_t", "structhttp__static__config__t.html", "structhttp__static__config__t" ],
+    [ "http_static_config_t", "group__nodec__static.html#structhttp__static__config__t", "group__nodec__static_structhttp__static__config__t" ],
     [ "lh_exception", "group__effect__exn.html#structlh__exception", "group__effect__exn_structlh__exception" ],
     [ "lh_handlerdef", "group__effect__handlers.html#structlh__handlerdef", "group__effect__handlers_structlh__handlerdef" ],
     [ "lh_operation", "group__effect__handlers.html#structlh__operation", "group__effect__handlers_structlh__operation" ],

@@ -107,7 +107,7 @@ $(document).ready(function(){initNavTree('group__effect__exn.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p>Convenience functions for standard exceptions and finally handlers.  
+<p>Functions for standard exceptions and finally handlers.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
@@ -179,7 +179,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>lh_exception_is_cance
 <tr class="separator:gaa20744e440a006f9a9379e5be3706259"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>Convenience functions for standard exceptions and finally handlers. </p>
+<p>Functions for standard exceptions and finally handlers. </p>
 <hr/><h2 class="groupheader">Data Structure Documentation</h2>
 <a name="structlh__exception" id="structlh__exception"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structlh__exception">&#9670;&nbsp;</a></span>lh_exception</h2>
@@ -259,7 +259,7 @@ Optional message. </td></tr>
   </table>
   </dd>
 </dl>
-<p><code>defer</code> always needs a scope with double braces. For example: </p><div class="fragment"><div class="line"><span class="keywordtype">void</span>* p = nodec_alloc(10);</div><div class="line">{<a class="code" href="group__effect__exn.html#ga2df9acd0863570798216432d189093c6">defer</a>(nodec_freev,<a class="code" href="group__effect__value.html#gab455eed48ff144c3b8ab0977d8838391">lh_value_ptr</a>(p)){</div><div class="line">  ...</div><div class="line">}}</div></div><!-- fragment --> 
+<p><code>defer</code> always needs a scope with double braces. For example: </p><div class="fragment"><div class="line"><span class="keywordtype">void</span>* p = <a class="code" href="group__nodec__alloc.html#ga93ffdec72fa29b5f091e428cbd4245a9">nodec_alloc</a>(10);</div><div class="line">{<a class="code" href="group__effect__exn.html#ga2df9acd0863570798216432d189093c6">defer</a>(nodec_freev,<a class="code" href="group__effect__value.html#gab455eed48ff144c3b8ab0977d8838391">lh_value_ptr</a>(p)){</div><div class="line">  ...</div><div class="line">}}</div></div><!-- fragment --> 
 </div>
 </div>
 <a id="gabec7bf8798d2386b437e9d069334dcc5"></a>
@@ -302,7 +302,7 @@ Optional message. </td></tr>
   </table>
   </dd>
 </dl>
-<p><code>defer</code> always needs a scope with double braces. For example: </p><div class="fragment"><div class="line"><span class="keywordtype">void</span>* p = nodec_alloc(10);</div><div class="line">{<a class="code" href="group__effect__exn.html#ga2df9acd0863570798216432d189093c6">defer</a>(nodec_freev,<a class="code" href="group__effect__value.html#gab455eed48ff144c3b8ab0977d8838391">lh_value_ptr</a>(p)){</div><div class="line">  ...</div><div class="line">}}</div></div><!-- fragment --> 
+<p><code>defer</code> always needs a scope with double braces. For example: </p><div class="fragment"><div class="line"><span class="keywordtype">void</span>* p = <a class="code" href="group__nodec__alloc.html#ga93ffdec72fa29b5f091e428cbd4245a9">nodec_alloc</a>(10);</div><div class="line">{<a class="code" href="group__effect__exn.html#ga2df9acd0863570798216432d189093c6">defer</a>(nodec_freev,<a class="code" href="group__effect__value.html#gab455eed48ff144c3b8ab0977d8838391">lh_value_ptr</a>(p)){</div><div class="line">  ...</div><div class="line">}}</div></div><!-- fragment --> 
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>

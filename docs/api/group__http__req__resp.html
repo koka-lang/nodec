@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>NodeC: HTTP server requests and responses.</title>
+<title>NodeC: HTTP Server Requests and Responses.</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -101,11 +101,11 @@ $(document).ready(function(){initNavTree('group__http__req__resp.html','');});
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">HTTP server requests and responses.<div class="ingroups"><a class="el" href="group__http.html">HTTP Connections</a></div></div>  </div>
+<div class="title">HTTP Server Requests and Responses.<div class="ingroups"><a class="el" href="group__http.html">HTTP Connections</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>The HTTP(S) server implicitly binds the current request and response objects (as dynamically bound implicit parameters).  
+<p>Implicit bindings for HTTP incoming- and outgoing data for a server.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
@@ -129,33 +129,38 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga2e5c04d158afc7ab3575ba3ddf5c98a0">http_resp_status_sent</a> ()</td></tr>
 <tr class="memdesc:ga2e5c04d158afc7ab3575ba3ddf5c98a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return <code>true</code> if the HTTP response status was sent. <br /></td></tr>
 <tr class="separator:ga2e5c04d158afc7ab3575ba3ddf5c98a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga9299a8391a97562030e97d19dec8e611"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga9299a8391a97562030e97d19dec8e611">http_resp_send_status</a> (<a class="el" href="group__http__connect.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status)</td></tr>
+<tr class="memitem:ga9299a8391a97562030e97d19dec8e611"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga9299a8391a97562030e97d19dec8e611">http_resp_send_status</a> (<a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status)</td></tr>
 <tr class="memdesc:ga9299a8391a97562030e97d19dec8e611"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send the headers and the response status without a body.  <a href="#ga9299a8391a97562030e97d19dec8e611">More...</a><br /></td></tr>
 <tr class="separator:ga9299a8391a97562030e97d19dec8e611"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac4b657f50f7b004fdc226c7aad4cef5c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#gac4b657f50f7b004fdc226c7aad4cef5c">http_resp_send_status_body</a> (<a class="el" href="group__http__connect.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status, size_t content_length, const char *content_type)</td></tr>
+<tr class="memitem:gac4b657f50f7b004fdc226c7aad4cef5c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#gac4b657f50f7b004fdc226c7aad4cef5c">http_resp_send_status_body</a> (<a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status, size_t content_length, const char *content_type)</td></tr>
 <tr class="memdesc:gac4b657f50f7b004fdc226c7aad4cef5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send the headers and response status, and return a reponse body stream.  <a href="#gac4b657f50f7b004fdc226c7aad4cef5c">More...</a><br /></td></tr>
 <tr class="separator:gac4b657f50f7b004fdc226c7aad4cef5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac7cf19d0f1a0d2704f8882b218bdfeec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#gac7cf19d0f1a0d2704f8882b218bdfeec">http_resp_send_ok</a> ()</td></tr>
 <tr class="memdesc:gac7cf19d0f1a0d2704f8882b218bdfeec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send the headers and OK response without a body.  <a href="#gac7cf19d0f1a0d2704f8882b218bdfeec">More...</a><br /></td></tr>
 <tr class="separator:gac7cf19d0f1a0d2704f8882b218bdfeec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga19397cedfdd8a668cf4956891fce3e76"><td class="memItemLeft" align="right" valign="top"><a id="ga19397cedfdd8a668cf4956891fce3e76"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga19397cedfdd8a668cf4956891fce3e76">http_resp_send_body_buf</a> (<a class="el" href="group__http__connect.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status, <a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a> buf, const char *content_type)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga19397cedfdd8a668cf4956891fce3e76">http_resp_send_body_buf</a> (<a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status, <a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a> buf, const char *content_type)</td></tr>
 <tr class="memdesc:ga19397cedfdd8a668cf4956891fce3e76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send headers, status, and full body as a buffer. <br /></td></tr>
 <tr class="separator:ga19397cedfdd8a668cf4956891fce3e76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab7bbb21ed41c9c4adc79aef33f08ddca"><td class="memItemLeft" align="right" valign="top"><a id="gab7bbb21ed41c9c4adc79aef33f08ddca"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#gab7bbb21ed41c9c4adc79aef33f08ddca">http_resp_send_body_str</a> (<a class="el" href="group__http__connect.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status, const char *body, const char *content_type)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#gab7bbb21ed41c9c4adc79aef33f08ddca">http_resp_send_body_str</a> (<a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a> status, const char *body, const char *content_type)</td></tr>
 <tr class="memdesc:gab7bbb21ed41c9c4adc79aef33f08ddca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send headers, status, and full body as a string. <br /></td></tr>
 <tr class="separator:gab7bbb21ed41c9c4adc79aef33f08ddca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga453c19b95ff4853887cc38eab789dc0d"><td class="memItemLeft" align="right" valign="top"><a id="ga453c19b95ff4853887cc38eab789dc0d"></a>
 const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga453c19b95ff4853887cc38eab789dc0d">http_req_url</a> ()</td></tr>
 <tr class="memdesc:ga453c19b95ff4853887cc38eab789dc0d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the current request url. <br /></td></tr>
 <tr class="separator:ga453c19b95ff4853887cc38eab789dc0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa071ab8ae8e6548f41f3945a3a8944ee"><td class="memItemLeft" align="right" valign="top"><a id="gaa071ab8ae8e6548f41f3945a3a8944ee"></a>
+const <a class="el" href="group__nodec__url.html#gaa2a37a3b5cc32bd3cb0c7eebe1eb397f">nodec_url_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#gaa071ab8ae8e6548f41f3945a3a8944ee">http_req_parsed_url</a> ()</td></tr>
+<tr class="memdesc:gaa071ab8ae8e6548f41f3945a3a8944ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the parsed full request url, including the path, hash, query etc. <br /></td></tr>
+<tr class="separator:gaa071ab8ae8e6548f41f3945a3a8944ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga79ccdc504575e50c2c7f7898f9f4e098"><td class="memItemLeft" align="right" valign="top"><a id="ga79ccdc504575e50c2c7f7898f9f4e098"></a>
 const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga79ccdc504575e50c2c7f7898f9f4e098">http_req_path</a> ()</td></tr>
 <tr class="memdesc:ga79ccdc504575e50c2c7f7898f9f4e098"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the current request path. <br /></td></tr>
 <tr class="separator:ga79ccdc504575e50c2c7f7898f9f4e098"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1bbbf2a9c6763cc8abd61c64e3d56be9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__http__connect.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga1bbbf2a9c6763cc8abd61c64e3d56be9">http_req_method</a> ()</td></tr>
-<tr class="memdesc:ga1bbbf2a9c6763cc8abd61c64e3d56be9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the current request method.  <a href="#ga1bbbf2a9c6763cc8abd61c64e3d56be9">More...</a><br /></td></tr>
+<tr class="memitem:ga1bbbf2a9c6763cc8abd61c64e3d56be9"><td class="memItemLeft" align="right" valign="top"><a id="ga1bbbf2a9c6763cc8abd61c64e3d56be9"></a>
+<a class="el" href="group__http__setup.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga1bbbf2a9c6763cc8abd61c64e3d56be9">http_req_method</a> ()</td></tr>
+<tr class="memdesc:ga1bbbf2a9c6763cc8abd61c64e3d56be9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the current request method. <br /></td></tr>
 <tr class="separator:ga1bbbf2a9c6763cc8abd61c64e3d56be9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5639e997c65e093372f3f369decdabbb"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__req__resp.html#ga5639e997c65e093372f3f369decdabbb">http_req_content_length</a> ()</td></tr>
 <tr class="memdesc:ga5639e997c65e093372f3f369decdabbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The value of the <em>Content-Length</em> header.  <a href="#ga5639e997c65e093372f3f369decdabbb">More...</a><br /></td></tr>
@@ -177,8 +182,8 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <tr class="separator:gab2f0f9c13b27e4d3960a40fa4123fa49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>The HTTP(S) server implicitly binds the current request and response objects (as dynamically bound implicit parameters). </p>
-<p>They can be accessed through <code>http_req_xxx</code> for requests and <code>http_resp_xxx</code> for responses. </p>
+<p>Implicit bindings for HTTP incoming- and outgoing data for a server. </p>
+<p>The HTTP(S) server implicitly binds the current request and response objects (as dynamically bound implicit parameters). They can be accessed through <code>http_req_xxx</code> for requests and <code>http_resp_xxx</code> for responses. </p>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="ga90c24eeea159e619c53f08c349930434"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga90c24eeea159e619c53f08c349930434">&#9670;&nbsp;</a></span>async_req_read_body()</h2>
@@ -270,7 +275,7 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 </div><div class="memdoc">
 
 <p>The value of the <em>Content-Length</em> header. </p>
-<p>Returns 0 if the <em>Content-Length</em> header was not present. </p>
+<dl class="section return"><dt>Returns</dt><dd>0 if the <em>Content-Length</em> header was not present. </dd></dl>
 
 </div>
 </div>
@@ -339,25 +344,6 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 
 </div>
 </div>
-<a id="ga1bbbf2a9c6763cc8abd61c64e3d56be9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga1bbbf2a9c6763cc8abd61c64e3d56be9">&#9670;&nbsp;</a></span>http_req_method()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="group__http__connect.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a> http_req_method </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Return the current request method. </p>
-<div class="fragment"><div class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> _http_method_t {</div><div class="line">  <a class="code" href="group__http__connect.html#gga2fd930fba66817097e73ba9b75800eb2a4ad23c3d2f21f7502ba058ef89518166">HTTP_GET</a>,</div><div class="line">  <a class="code" href="group__http__connect.html#gga2fd930fba66817097e73ba9b75800eb2ab547cb50f6792b41c3e7d52ee0f8e442">HTTP_HEAD</a>,</div><div class="line">  <a class="code" href="group__http__connect.html#gga2fd930fba66817097e73ba9b75800eb2a2415577115dd0cd5d5a5aa62d52e1512">HTTP_PUT</a>,</div><div class="line">  <a class="code" href="group__http__connect.html#gga2fd930fba66817097e73ba9b75800eb2aa763023b51da2b3618f24cbf994b34bf">HTTP_POST</a>,</div><div class="line">  ...</div><div class="line">} <a class="code" href="group__http__connect.html#ga2fd930fba66817097e73ba9b75800eb2">http_method_t</a>;</div></div><!-- fragment --> 
-</div>
-</div>
 <a id="gad6f9bebbcdf5329df19b69d0ff915e12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#gad6f9bebbcdf5329df19b69d0ff915e12">&#9670;&nbsp;</a></span>http_resp_add_header()</h2>
 
@@ -424,7 +410,7 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
         <tr>
           <td class="memname">void http_resp_send_status </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="group__http__connect.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a>&#160;</td>
           <td class="paramname"><em>status</em></td><td>)</td>
           <td></td>
         </tr>
@@ -450,7 +436,7 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
         <tr>
           <td class="memname"><a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a>* http_resp_send_status_body </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="group__http__connect.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a>&#160;</td>
           <td class="paramname"><em>status</em>, </td>
         </tr>
         <tr>

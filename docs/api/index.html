@@ -103,7 +103,15 @@ $(document).ready(function(){initNavTree('index.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>This is the API documentation of the <a href="https://github.com/koka-lang/nodec" class="external">NodeC</a> project</p>
-<p>See the <a href="./modules.html" class="external">Modules</a> section for an overview of the API functionality. </p>
+<p>See the <a href="./modules.html" class="external">Modules</a> section for an overview of the API functionality.</p>
+<p><b>Naming:</b> </p><ul>
+<li><code>async_</code> : for asynchronous functions that might interleave</li>
+<li><code>nodec_</code> : synchronous functions that might throw exeptions or use other effects.</li>
+<li><code>nodecx_</code>: synchronous functions that return an explicit error result.</li>
+<li><code>&lt;tp&gt;_t</code> : for types</li>
+<li><code>using_</code> : for scoped combinators, to be used with double curly braces: i.e. <code>{<a class="el" href="group__nodec__alloc.html#ga0d6776c7ec091d6230510370d65be21e" title="Allocate and use a pointer in a scope and free afterwards. ">using_alloc(tp,name)</a>{ ... &lt;use name&gt; ... }}</code></li>
+<li><code>lh_value</code>: an <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83" title="Generic values are represented by an lh_value. ">lh_value</a> is used to mimic polymorphism. There are a host of conversion functions, like <a class="el" href="group__effect__value.html#gac9ebc79475233b3cdc4d8468b05b78aa" title="Convert an lh_value back to a pointer. ">lh_ptr_value()</a> (from value to pointer) or <a class="el" href="group__effect__value.html#ga11799a8a77ce5e6e76fcc04ea346973b" title="Convert an lh_value back to an int. ">lh_int_value()</a> (from value to an int).</li>
+</ul>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

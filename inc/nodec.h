@@ -12,30 +12,43 @@
 #include <libhandler.h>
 #include <uv.h>
 #include <http_parser.h>
+#include <fcntl.h>
+#include <time.h>
 
+/*! \mainpage
 
-/* ----------------------------------------------------------------------------
-  Notes:
-  - Private functions are prepended with an underscore. Dont use them directly.
-  - Pre- and post-fixes:
-    "async_" : for asynchronous functions that might interleave
-    "nodec_" : synchronous functions that might throw exeptions or use other effects.
-    "nodecx_": synchronous functions that return an explicit error result.
-    "..._t"  : for types
-    "using_"  : for scoped combinators, to be used with double curly braces:
-               i.e. "{using_alloc(tp,name){ ... <use name> ... }}"
+This is the API documentation of the
+<a class="external" href="https://github.com/koka-lang/nodec">NodeC</a> project
 
-  - an `lh_value` is used to mimic polymorphism. There are a host of 
-    conversion functions, like `lh_ptr_value` (from value to pointer)
-    or `lh_value_int` (from int to a value).
------------------------------------------------------------------------------*/
+See the <a class="external" href="./modules.html">Modules</a> section for an
+overview of the API functionality.
 
-#define NODEC_KB  (1024)
-#define NODEC_MB  (1024*NODEC_KB)
-#define NODEC_GB  (1024*NODEC_MB)
+\b Naming:
+- `async_` : for asynchronous functions that might interleave
+- `nodec_` : synchronous functions that might throw exeptions or use other effects.
+- `nodecx_`: synchronous functions that return an explicit error result.
+- `<tp>_t`  : for types
+- `using_`  : for scoped combinators, to be used with double curly braces:
+              i.e. `{using_alloc(tp,name){ ... <use name> ... }}`
+- `lh_value`: an #lh_value is used to mimic polymorphism. There are a host of 
+              conversion functions, like lh_ptr_value() (from value to pointer)
+              or lh_int_value() (from value to an int).
+
+.
+*/
 
 // Forward declarations 
 typedef struct _channel_t channel_t;
+
+/// \addtogroup nodec_various
+/// \{
+
+/// 1 KB.
+#define NODEC_KB  (1024)
+/// 1 MB.
+#define NODEC_MB  (1024*NODEC_KB)
+/// 1 GB
+#define NODEC_GB  (1024*NODEC_MB)
 
 /// Throw an error, either an `errno` or `uv_errno_t`.
 /// \param err error code.
@@ -46,19 +59,69 @@ void nodec_throw(int err);
 /// \param msg custom message.
 void nodec_throw_msg(int err, const char* msg);
 
+/// Does a string start with a prefix?
+/// \param s The string to analyze, can be NULL, in which case `false` is returned.
+/// \param prefix The prefix to compare, can be NULL, in which case `false` is returned.
+/// \returns True if the string starts with `prefix`.
+bool nodec_starts_with(const char* s, const char* prefix);
+
+/// Does a string start with a prefix?
+/// Uses case-insensitive comparison.
+/// \param s The string to analyze, can be NULL, in which case `false` is returned.
+/// \param prefix The prefix to compare, can be NULL, in which case `false` is returned.
+/// \returns True if the string starts with `prefix`.
+bool nodec_starts_withi(const char* s, const char* prefix);
+
+/// Does a string end with a postfix?
+/// \param s The string to analyze, can be NULL, in which case `false` is returned.
+/// \param postfix The postfix to compare, can be NULL, in which case `false` is returned.
+/// \returns True if the string ends with `postfix`.
+bool nodec_ends_with(const char* s, const char* postfix);
+
+/// Does a string end with a postfix?
+/// Uses case-insensitive comparison.
+/// \param s The string to analyze, can be NULL, in which case `false` is returned.
+/// \param postfix The postfix to compare, can be NULL, in which case `false` is returned.
+/// \returns True if the string ends with `postfix`.
+bool nodec_ends_withi(const char* s, const char* postfix);
+
+/// Get the current time as a RFC1123 internet date.
+/// Caches previous results to increase efficiency.
+/// \returns The current time in <a href="https://tools.ietf.org/html/rfc1123#page-55">RFC1123</a> format, 
+/// for example `Thu, 01 Jan 1972 00:00:00 GMT`.
+const char* nodec_inet_date_now();
+
+/// Format a time as a RFC1123 internet date.
+/// Caches previous results to increase efficiency.
+/// \param now The time to convert.
+/// \returns The current time in <a href="https://tools.ietf.org/html/rfc1123#page-55">RFC1123</a> format, 
+/// for example `Thu, 01 Jan 1972 00:00:00 GMT`.
+const char* nodec_inet_date(time_t now);
+
+/// Parse a RFC1123 internet date.
+/// \param date  A RFC1123 formatted internet date, for example `Thu, 01 Jan 1972 00:00:00 GMT`. Can be NULL which is treated as an invalid date.
+/// \param[out] t Set to the time according to `date`. If the `date` was not valid, the UNIX epoch is used.
+/// \returns True if successful.
+bool nodec_parse_inet_date(const char* date, time_t* t);
+
+/// \}
+
+
 /* ----------------------------------------------------------------------------
 Buffers are `uv_buf_t` which contain a `base` pointer and the
 available `len` bytes. These buffers are usually passed by value.
 -----------------------------------------------------------------------------*/
 
 /// \defgroup buffers Buffer's
-/// Convenience routines around the \a libuv #uv_buf_t` structure
+/// Memory buffers.
+/// Buffers are the `libuv` #uv_buf_t` structure which contain 
+/// a pointer to the data and their length.
 /// Buffer structures are small and always passed and returned _by value_.
 ///
 /// The routines in this module ensure that all buffers actually are allocated
 /// with `len + 1` where `base[len] == 0`, i.e. it is safe to print
 /// the contents as a string as it will be zero terminated.
-/// @{
+/// \{
 
 /// Initialize a libuv buffer, which is a record with a data pointer and its length.
 uv_buf_t nodec_buf(const void* base, size_t len);
@@ -157,12 +220,8 @@ void nodec_bufref_nofreev(lh_value pv);
 /// \param bufref  a reference to the buffer to free after use.
 #define using_buf_owned(owned,bufref)  defer((owned ? nodec_bufref_freev : nodec_bufref_nofreev),lh_value_any_ptr(bufref))
 
-/// @}
+/// \}
 
-bool nodec_starts_with(const char* s, const char* prefix);
-bool nodec_starts_withi(const char* s, const char* prefix);
-bool nodec_ends_with(const char* s, const char* prefix);
-bool nodec_ends_withi(const char* s, const char* prefix);
 
 
 /* ----------------------------------------------------------------------------
@@ -173,15 +232,26 @@ bool nodec_ends_withi(const char* s, const char* prefix);
 implicit_declare(_cancel_scope)
 lh_value _cancel_scope_alloc();
 
-// execute under a cancelation scope
+/// \defgroup nodec_async Asynchrony
+/// Asynchronous utility functions.
+/// \{
+
+/// Execute under a cancelation scope.
+/// \sa async_scoped_cancel()
 #define using_cancel_scope()        using_implicit_defer(nodec_freev,_cancel_scope_alloc(),_cancel_scope)
 
-// Asynchronously cancel all outstanding requests under the same
-// cancelation scope.
+/// Asynchronously cancel all outstanding requests under the same cancelation scope.
+/// This is a powerful primitive that enables cancelation 
+/// of operations and for example enables timeouts over any composition of
+/// asynchronous operations. When async_scoped_cancel() is called, it cancels
+/// all outstanding (interleaved) operations under the same innermost cancelation
+/// scope (raising a cancel exception for all of them).
 void async_scoped_cancel();
 
-// Is the current scope canceled?
+/// Is the current scope canceled?
 bool async_scoped_is_canceled();
+
+
 
 /* ----------------------------------------------------------------------------
   Asynchronous combinators
@@ -211,22 +281,35 @@ void async_wait(uint64_t timeout);
 // Yield asynchronously to other strands.
 void async_yield();
 
+/// \}
 
-// Get the current time as a RFC1123 internet date.
-// Caches previous results to increase efficiency.
-const char* nodec_inet_date_now();
-const char* nodec_inet_date(time_t now);
-bool nodec_parse_inet_date(const char* date, time_t* t);
 
 /* ----------------------------------------------------------------------------
   File system (fs)
 -----------------------------------------------------------------------------*/
 
+/// \defgroup nodec_fs File System
+/// Asynchronous access to the file system.
+/// \{
+
 uv_errno_t  asyncx_stat(const char* path, uv_stat_t* stat);
 uv_stat_t   async_stat(const char* path);
 uv_stat_t   async_fstat(uv_file file);
 
+/// Open a file.
+/// \param path The file path
+/// \param flags The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param mode The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \returns The opened file handle on success.
 uv_file     async_fopen(const char* path, int flags, int mode);
+
+/// Open a file.
+/// Returns an error code instead of throwing an exception.
+/// \param path The file path
+/// \param flags The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param mode The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param[out] file Set to the file handle on success
+/// \returns A possible error code, or 0 on succes.
 uv_errno_t  asyncx_fopen(const char* path, int flags, int mode, uv_file* file );
 void        async_fclose(uv_file file);
 
@@ -248,17 +331,39 @@ bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
 char*       async_fread_from(const char* path);
 uv_buf_t    async_fread_buf_from(const char* path);
 
+/// Type of scoped file functions.
 typedef lh_value(nodec_file_fun)(uv_file file, const char* path, lh_value arg);
+
+/// Safely open a file, use it, and close it again.
+/// \param path The file path
+/// \param flags The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param mode The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param action The file open action: called with the opened file handle.
+/// \param arg Extra argument passed to `action`.
+/// \returns The return value of `action`.
 lh_value    using_async_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg);
+
+/// Safely open a file, use it, and close it again.
+/// Does not throw an exception on a file open error but returns an `uv_errno_t` instead.
+/// \param path The file path
+/// \param flags The file open flags, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param mode The file open mode, see <a href="https://linux.die.net/man/2/open">open2()</a>.
+/// \param action The file open action: called with the opened file handle.
+/// \param arg Extra argument passed to `action`.
+/// \param[out] result The return value of `action`.
+/// \returns A possible error code or 0 on success.
 uv_errno_t  using_asyncx_fopen(const char* path, int flags, int mode, nodec_file_fun* action, lh_value arg, lh_value* result);
 
-
+/// \}
 
 /* ----------------------------------------------------------------------------
   Streams
 -----------------------------------------------------------------------------*/
 ///\defgroup streams Streams
-///@{
+/// Streaming data.
+/// The main interfaces are plain streams as #nodec_stream_t and
+/// buffered streams #nodec_bstream_t.
+///\{
 
 /// Basic unbuffered streams.
 typedef struct _nodec_stream_t  nodec_stream_t;
@@ -487,21 +592,25 @@ nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, int compress_lev
 
 #endif
 
-///@}
+/// \}
 
 
 /* ----------------------------------------------------------------------------
   IP4 and IP6 Addresses
 -----------------------------------------------------------------------------*/
 
+/// \defgroup nodec_ip IP addresses
+/// Raw IP4 or IP6 addresses.
+/// \{
 void nodec_ip4_addr(const char* ip, int port, struct sockaddr_in* addr);
 void nodec_ip6_addr(const char* ip, int port, struct sockaddr_in6* addr);
 
-// Define `name` as an ip4 or ip6 address
+/// Define `name` as an ip4 address
 #define define_ip4_addr(ip,port,name)  \
   struct sockaddr_in name##_ip4; nodec_ip4_addr(ip,port,&name##_ip4); \
   struct sockaddr* name = (struct sockaddr*)&name##_ip4;
 
+/// Define `name` as an ip4 address
 #define define_ip6_addr(ip,port,name)  \
   struct sockaddr_in name##_ip6; nodec_ip6_addr(ip,port,&name##_ip6); \
   struct sockaddr* name = (struct sockaddr*)&name##_ip6;
@@ -514,16 +623,88 @@ struct addrinfo* async_getaddrinfo(const char* node, const char* service, const 
 void nodec_free_addrinfo(struct addrinfo* info);
 void nodec_free_addrinfov(lh_value infov);
 #define using_addrinfo(name)  defer(nodec_free_addrinfov,lh_value_ptr(name))
+/// \}
+
+/* ----------------------------------------------------------------------------
+URL's
+-----------------------------------------------------------------------------*/
+/// \defgroup nodec_url URL
+/// URL parsing.
+/// \{
+
+/// Structured URL
+typedef struct _nodec_url_t nodec_url_t;
+
+void nodec_url_free(nodec_url_t* url);
+void nodec_url_freev(lh_value urlv);
+
+nodec_url_t*  nodecx_parse_url(const char* url);
+nodec_url_t*  nodecx_parse_host(const char* host);
+nodec_url_t*  nodec_parse_url(const char* url);
+nodec_url_t*  nodec_parse_host(const char* host);
+
+#define using_url(url)        defer(nodec_url_freev,lh_value_ptr(url))
+#define usingx_url(url)       defer(nodec_url_freev,lh_value_ptr(url))
+
+const char* nodec_url_schema(const nodec_url_t* url);
+const char* nodec_url_host(const nodec_url_t* url);
+const char* nodec_url_path(const nodec_url_t* url);
+const char* nodec_url_query(const nodec_url_t* url);
+const char* nodec_url_fragment(const nodec_url_t* url);
+const char* nodec_url_userinfo(const nodec_url_t* url);
+const char* nodec_url_port_str(const nodec_url_t* url);
+uint16_t    nodec_url_port(const nodec_url_t* url);
+bool        nodec_url_is_ip6(const nodec_url_t* url);
+
+/// \}
+
+
+/* ----------------------------------------------------------------------------
+  Mime types
+-----------------------------------------------------------------------------*/
+/// \defgroup nodec_mime MIME Types.
+/// MIME type functionality.
+/// The default MIME information is generated from the
+/// <a href="https://www.npmjs.com/package/mime-db">mime-db</a> project.
+/// \{
+
+/// Mime info from a filename.
+/// \param fname The file name.
+/// \param[out] compressible Set to `true` if this kind of file can be further compressed by gzip.
+/// \param[out] charset      Set to the default character set for this MIME type. (do not free).
+/// \returns The MIME type. (do not free).
+const char* nodec_mime_info_from_fname(const char* fname, bool* compressible, const char** charset);
+
+/// Mime name from a file name.
+/// \param fname The file name.
+/// \returns The MIME type. (do not free).
+const char* nodec_mime_from_fname(const char* fname);
+
+/// Information for a MIME type.
+/// \param mime_type The MIME type.
+/// \param[out] preferred_ext  The preferred extension.
+/// \param[out] compressible Set to `true` if this kind of file can be further compressed by gzip.
+/// \param[out] charset      Set to the default character set for this MIME type. (do not free).
+void        nodec_info_from_mime(const char* mime_type, const char** preferred_ext, bool* compressible, const char** charset);
+
+/// The preferred extension for a MIME type.
+/// \param mime_type The MIME type.
+/// \returns The preferrred extensions (do not free).
+const char* nodec_ext_from_mime(const char* mime_type);
+
+/// \}
 
 
 /* ----------------------------------------------------------------------------
   TCP
 -----------------------------------------------------------------------------*/
-/// \defgroup tcp TCP connections
-/// @{
+/// \defgroup tcp TCP Connections
+/// Communication over the TCP protocol (reliable streaming).
+/// \{
 
-/// \defgroup tcpx Low level TCP connections
-/// @{
+/// \defgroup tcpx Low level TCP Connections
+/// Low level functions to access TCP.
+/// \{
 
 typedef struct _channel_t tcp_channel_t;
 void            channel_freev(lh_value vchannel);
@@ -537,7 +718,7 @@ void            nodec_tcp_bind(uv_tcp_t* handle, const struct sockaddr* addr, un
 tcp_channel_t*  nodec_tcp_listen(uv_tcp_t* tcp, int backlog, bool channel_owns_tcp);
 uv_stream_t*    async_tcp_channel_receive(tcp_channel_t* ch);
 
-/// @}
+/// \}
 
 
 /// Establish a TCP connection.
@@ -582,7 +763,7 @@ typedef void    (nodec_tcp_servefun)(int id, nodec_bstream_t* client, lh_value a
 /// \param arg        Optional argument to pass on to `servefun`, can be `lh_value_null`.
 void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config, nodec_tcp_servefun* servefun, lh_actionfun* on_exn, lh_value arg);
 
-/// @}
+/// \}
 
 
 
@@ -590,22 +771,12 @@ void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* confi
   HTTP
 -----------------------------------------------------------------------------*/
 /// \defgroup http HTTP Connections
-/// @{
+/// Communication over the HTTP 1.1 protocol.
+/// \{
 
-/// \defgroup http_connect HTTP Connect
-/// @{
-typedef enum http_status http_status_t;
-typedef enum http_method http_method_t;
-/// @}
 
-/// \defgroup http_in_out HTTP incoming and outgoing data.
-/// These are the request- and response objects for the server,
-/// and the response- and request objects for a client connection.
-/// Servers bind these implicitly to http_req() and http_resp() for
-/// the current request- and response objects so that the explicit
-/// #http_in_t and #http_out_t objects don't need to be threaded around
-/// explicitly.
-/// @{
+/// \addtogroup http_in_out 
+/// \{
 
 /// HTTP incoming data object
 typedef struct _http_in_t http_in_t;
@@ -613,11 +784,14 @@ typedef struct _http_in_t http_in_t;
 /// HTTP outgoing data object
 typedef struct _http_out_t http_out_t;
 
-/// @}
+/// \}
 
 
-/// \addtogroup http_connect 
-/// @{
+/// \defgroup http_setup HTTP Setup
+/// Initiating HTTP servers or clients.
+/// \{
+typedef enum http_status http_status_t;
+typedef enum http_method http_method_t;
 
 void throw_http_err(http_status_t status);
 void throw_http_err_str(http_status_t status, const char* msg);
@@ -639,13 +813,21 @@ typedef lh_value (http_connect_fun)(http_in_t* in, http_out_t* out, lh_value arg
 
 lh_value async_http_connect(const char* url, http_connect_fun* connectfun, lh_value arg);
 
-/// @}
+/// \}
 
 /* ----------------------------------------------------------------------------
   HTTP incoming connection
 -----------------------------------------------------------------------------*/
-/// \addtogroup http_in_out 
-/// @{
+/// \defgroup http_in_out HTTP Input and Output.
+/// HTTP incoming and outgoing data.
+/// These are the request- and response objects for the server,
+/// and the response- and request objects for a client connection.
+/// Servers bind these implicitly to http_req() and http_resp() for
+/// the current request- and response objects so that the explicit
+/// #http_in_t and #http_out_t objects don't need to be threaded around
+/// explicitly.
+/// \{
+
 void   http_in_clear(http_in_t* in);
 void   http_in_clearv(lh_value inv);
 
@@ -706,17 +888,19 @@ void             http_out_send_request(http_out_t* out, http_method_t method, co
 nodec_stream_t*  http_out_send_request_body(http_out_t* out, http_method_t method, const char* url, size_t content_length, const char* content_type);
 
 bool http_out_status_sent(http_out_t* out);
-/// @}
+/// \}
+
 
 /*-----------------------------------------------------------------
   HTTP server implicitly bound request and response
 -----------------------------------------------------------------*/
-///\defgroup http_req_resp HTTP server requests and responses.
+/// \defgroup http_req_resp HTTP Server Requests and Responses.
+/// Implicit bindings for HTTP incoming- and outgoing data for a server.
 /// The HTTP(S) server implicitly binds the current request
 /// and response objects (as dynamically bound implicit parameters).
 /// They can be accessed through `http_req_xxx` for requests and
 /// `http_resp_xxx` for responses.
-///@{
+/// \{
 
 /// The identity of the current asynchronous strand serving the request.
 int         http_strand_id();
@@ -744,15 +928,15 @@ void  http_resp_send_status(http_status_t status);
 /// Send the headers and response status, and return a reponse body stream.
 /// \param status  The HTTP response status
 /// \param content_length  The length of the response body. Use #NODEC_CHUNKED for
-///                         a _chunked_ transfer encoding where the content length
-///                         is unknown ahead of time.
+///   a _chunked_ transfer encoding where the content length
+///   is unknown ahead of time.
 /// \param content_type    The mime content type (like `text/html`). The `charset`
-///                        can be specified too (like `text/html;charset=UTF-8`) but
-///                        is otherwise determined automatically from the mime type.
-///                         if the `content_type` is `NULL` no _Content-Type_ header
-///                         is added.
+///   can be specified too (like `text/html;charset=UTF-8`) but
+///   is otherwise determined automatically from the mime type.
+///   if the `content_type` is `NULL` no _Content-Type_ header
+///   is added.
 /// \returns A stream to write the body to; this is automatically chunked if
-/// #NODEC_CHUNKED was passed as the `content_length`.
+///   #NODEC_CHUNKED was passed as the `content_length`.
 nodec_stream_t* http_resp_send_status_body(http_status_t status, size_t content_length, const char* content_type);
 
 /// Send the headers and OK response without a body.
@@ -769,24 +953,18 @@ void http_resp_send_body_str(http_status_t status, const char* body, const char*
 /// Return the current request url.
 const char*   http_req_url();
 
+/// Return the parsed full request url, including the path, hash, query etc.
+const nodec_url_t* http_req_parsed_url();
+
+
 /// Return the current request path.
 const char*   http_req_path();
 
 /// Return the current request method.
-///
-/// ```
-/// typedef enum _http_method_t {
-///   HTTP_GET,
-///   HTTP_HEAD,
-///   HTTP_PUT,
-///   HTTP_POST,
-///   ...
-/// } http_method_t;
-/// ```
 http_method_t http_req_method();
 
 /// The value of the _Content-Length_ header.
-/// Returns 0 if the _Content-Length_ header was not present.
+/// \returns 0 if the _Content-Length_ header was not present.
 uint64_t      http_req_content_length();
 
 /// Return the value of an HTTP request header.
@@ -825,53 +1003,17 @@ uv_buf_t      async_req_read_body(size_t read_max);
 /// if the request body had a Content-Encoding of `gzip`.
 const char*   async_req_read_body_str(size_t read_max);
 
-///@}
-// HTTP Request & Response
+/// \}
 
-
-/// @}
-// HTTP connections
-
-/* ----------------------------------------------------------------------------
-   URL's
------------------------------------------------------------------------------*/
-typedef struct _nodec_url_t nodec_url_t;
-
-void nodec_url_free(nodec_url_t* url);
-void nodec_url_freev(lh_value urlv);
-
-nodec_url_t*  nodecx_parse_url(const char* url);
-nodec_url_t*  nodecx_parse_host(const char* host);
-nodec_url_t*  nodec_parse_url(const char* url);
-nodec_url_t*  nodec_parse_host(const char* host);
-
-#define using_url(url)        defer(nodec_url_freev,lh_value_ptr(url))
-#define usingx_url(url)       defer(nodec_url_freev,lh_value_ptr(url))
-
-const char* nodec_url_schema(const nodec_url_t* url);
-const char* nodec_url_host(const nodec_url_t* url);
-const char* nodec_url_path(const nodec_url_t* url);
-const char* nodec_url_query(const nodec_url_t* url);
-const char* nodec_url_fragment(const nodec_url_t* url);
-const char* nodec_url_userinfo(const nodec_url_t* url);
-const char* nodec_url_port_str(const nodec_url_t* url);
-uint16_t    nodec_url_port(const nodec_url_t* url);
-bool        nodec_url_is_ip6(const nodec_url_t* url);
-
-
-/* ----------------------------------------------------------------------------
-  Mime types
------------------------------------------------------------------------------*/
-
-const char* nodec_mime_info_from_fname(const char* fname, bool* compressible, const char** charset);
-const char* nodec_mime_from_fname(const char* fname);
-void        nodec_info_from_mime(const char* mime_type, const char** preferred_ext, bool* compressible, const char** charset);
-const char* nodec_ext_from_mime(const char* mime_type);
 
 /* ----------------------------------------------------------------------------
   HTTP Static web server
 -----------------------------------------------------------------------------*/
+/// \defgroup nodec_static HTTP Static Content Server.
+/// Serve static content over HTTP 1.1.
+/// \{
 
+/// HTTP Static server configuration.
 typedef struct _http_static_config_t {
   bool use_etag;
   const char*  cache_control;    // public, max-age=604800
@@ -883,52 +1025,98 @@ typedef struct _http_static_config_t {
   size_t read_buf_size;       // 64kb
 } http_static_config_t;
 
-const char* http_static_implicit_exts[];
+extern const char* http_static_implicit_exts[];
 
 #define http_static_default_config() { true, "public, max-age=604800", http_static_implicit_exts, "index", true, 1024, SIZE_MAX, 64*1024 }
 
-// Serve static files under a `root` directory. `config` can be NULL for the default configuration.
+/// Serve static files under a `root` directory. 
+/// \param config The configuration. Can be NULL for the default configuration.
 void http_serve_static(const char* root, const http_static_config_t* config);
+
+/// \}
+
+/// \}  HTTP Connections
 
 /* ----------------------------------------------------------------------------
   TTY
 -----------------------------------------------------------------------------*/
 
-lh_value _nodec_tty_allocv();
-void     _nodec_tty_freev(lh_value ttyv);
-
 implicit_declare(tty)
 
+lh_value _nodec_tty_allocv();
+void     _nodec_tty_freev(lh_value ttyv);
+void     async_tty_shutdown();
+
+/// \defgroup nodec_tty TTY 
+/// Terminal input and output.
+/// \{
+
+/// Read from the console.
+/// \returns The input read. Should be freed by the callee (see using_free()).
+char* async_tty_readline();
+
+/// Write to the console.
+/// \param s The string to write to the console. Can contain ANSI escape sequences.
+void  async_tty_write(const char* s);
+
+/// Enable the console in a scope.
+/// Inside the given scope, one can use async_tty_readline() and async_tty_write().
+///
+/// \b Example:
+/// ```
+/// {using_tty() {
+///   async_tty_write("\033[41;37m");         // ANSI escape to set red color
+///   async_tty_write("what is your name? ");
+///   const char* s = async_tty_readline();
+///   {using_free(s) {
+///     printf("I got: %s\n", s);
+///   }}
+/// }}
+/// ```
 #define using_tty()  \
     using_implicit_defer_exit(async_tty_shutdown(),_nodec_tty_freev,_nodec_tty_allocv(),tty)
 
-char* async_tty_readline();
-void  async_tty_write(const char* s);
-void  async_tty_shutdown();
+/// \}
 
 
 /* ----------------------------------------------------------------------------
   Main entry point
------------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
+/// \defgroup nodec_various Various
+/// Various utility functions.
+/// \{
+
+/// Type of the asynchronous main function.
 typedef void (nodec_main_fun_t)();
 
+/// Run the passed in function as the main asynchronous function.
+/// This starts the libuv event loop and sets up the asynchronous and
+/// exception effect handlers.
+/// \param entry The main asynchronous entry point.
+/// \returns A possible error code or 0 on success.
 uv_errno_t  async_main( nodec_main_fun_t* entry );
 
-
-
+/// \} 
 
 /* ----------------------------------------------------------------------------
   Safe allocation
-  These raise an exception on failure
-  The code:
-    {using_alloc(mystruct,name){
-      ...
-    }}
-  will safely allocate a `mystruct*` to `name` which can be used inside `...`
-  and will be deallocated safely if an exception is thrown or when exiting
-  the block scope.
 -----------------------------------------------------------------------------*/
+
+/// \defgroup nodec_alloc Memory Allocation.
+/// Routines for safe memory allocation based on `using`.
+/// These raise an exception on failure and always `free` even 
+/// if exceptions are raised.
+/// The code :
+/// ```
+/// {using_alloc(mystruct_t, name) {
+///   ...
+/// }}
+/// ```
+/// will safely allocate a `mystruct_t*` to `name` which can be used inside `...`
+/// and will be deallocated safely if an exception is thrown or when exiting
+/// the block scope.
+/// \{
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 // Enable debugging logs on msvc 
@@ -974,19 +1162,45 @@ const void* nodec_memmem(const void* src, size_t src_len, const void* pat, size_
 #define nodecx_alloc(tp)          ((tp*)(nodecx_malloc(sizeof(tp))))
 #define nodecx_zero_alloc(tp)     ((tp*)(nodecx_calloc(1,sizeof(tp))))
 
+/// Allocate memory for a type.
+/// \param tp The type to allocate memory for.
+/// \b Example
+/// ```
+/// my_struct_t* p = nodec_alloc(my_struct_t);
+/// {using_free(p){
+///    ...
+/// }}
+/// ```
 #define nodec_alloc(tp)           ((tp*)(nodec_malloc(sizeof(tp))))
 #define nodec_alloc_n(n,tp)       ((tp*)(nodec_malloc((n)*sizeof(tp))))
 #define nodec_zero_alloc_n(n,tp)  ((tp*)(nodec_calloc(n,sizeof(tp))))
 #define nodec_zero_alloc(tp)      nodec_zero_alloc_n(1,tp)
 #define nodec_realloc_n(p,n,tp)   ((tp*)(nodec_realloc(p,(n)*sizeof(tp))))
 
+/// Use a pointer in a scope and free afterwards.
+/// Always frees the pointer, even if an exception is thrown.
+/// \param name The name of the `void*`.
 #define using_free(name)               defer(nodec_freev,lh_value_ptr(name))
+
+/// Allocate and use a pointer in a scope and free afterwards.
+/// Always frees the pointer, even if an exception is thrown.
+/// \param tp   The type of value to allocate.
+/// \param name The name of the `tp*`.
+/// Equivalent to:
+/// ```
+/// tp* name = nodec_alloc(tp);
+/// {using_free(name){
+///   ...
+/// }}
+/// ```
 #define using_alloc(tp,name)           tp* name = nodec_alloc(tp); using_free(name)
+
 #define using_alloc_n(n,tp,name)       tp* name = nodec_alloc_n(n,tp); using_free(name)
 #define using_zero_alloc_n(n,tp,name)  tp* name = nodec_zero_alloc_n(n,tp); using_free(name)
 #define using_zero_alloc(tp,name)      using_zero_alloc_n(1,tp,name)
 
 #define nodec_zero(tp,ptr)        memset(ptr,0,sizeof(tp));
 
+/// \} 
 
 #endif // __nodec_h

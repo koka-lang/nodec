@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['debugging',['Debugging',['../group__effect__debug.html',1,'']]]
+  ['buffer_27s',['Buffer&apos;s',['../group__buffers.html',1,'']]]
 ];
