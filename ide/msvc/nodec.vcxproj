@@ -47,16 +47,11 @@
     <ClCompile Include="..\..\src\timer.c" />
     <ClCompile Include="..\..\src\tty.c" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\libhandler\ide\msvc\libhandler.vcxproj">
-      <Project>{e48c6a35-8732-4436-80d8-d51f7cb7efde}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C17F698B-0CF9-4034-9F70-CCB61DE46812}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>nodec</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -131,7 +126,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\inc;..\..\..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\inc;..\..\deps</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -172,7 +167,7 @@
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
-      <AdditionalIncludeDirectories>..\..\inc;..\..\..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\inc;..\..\deps</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -198,7 +193,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\inc;..\..\..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\inc;..\..\deps</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
@@ -226,7 +221,7 @@
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
-      <AdditionalIncludeDirectories>..\..\inc;..\..\..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\inc;..\..\deps</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

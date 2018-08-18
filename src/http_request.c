@@ -139,7 +139,7 @@ typedef struct _http_in_t
   bool            is_request;
   const char*     url;            // parsed url (for client request)
   http_status_t   status;         // parsed status (for server response)
-  size_t          content_length; // real content length from headers
+  uint64_t        content_length; // real content length from headers
   http_headers_t  headers; // parsed headers; usually pointing into `prefix`
   uv_buf_t        prefix;  // the initially read buffer that holds all initial headers
   size_t          body_start;     // offset of the body start in the prefix buffer
@@ -173,7 +173,7 @@ static int on_header_value(http_parser* parser, const char* at, size_t len) {
   if (_stricmp(req->current_field, "content-length")==0) {
     long long len = atoll(at);
     // printf("read content-length: %lli\n", len);
-    if (len > 0 && len <= SIZE_MAX) req->content_length = (size_t)len;
+    if (len > 0 && len <= SIZE_MAX) req->content_length = (uint64_t)len;
   }
   req->current_field = NULL;
   return 0;
@@ -483,7 +483,7 @@ http_method_t http_in_method(http_in_t* req) {
   return (http_method_t)(req->parser.method);
 }
 
-size_t http_in_content_length(http_in_t* req) {
+uint64_t http_in_content_length(http_in_t* req) {
   return req->content_length;
 }
 

@@ -10,15 +10,13 @@ SET XPLATFORM=""
 SET XCONFIG=""
 
 IF "%PLATFORM%"=="x64"   SET ZPLATFORM=x64
-IF "%PLATFORM%"=="x64"   SET MPLATFORM=build64
 IF "%PLATFORM%"=="Win32" SET ZPLATFORM=x86
-IF "%PLATFORM%"=="Win32" SET MPLATFORM=build32
 IF "%CONFIG%"=="Debug"   SET ZCONFIG=Debug
 IF "%CONFIG%"=="Release" SET ZCONFIG=ReleaseWithoutAsm
 IF "XCONFIG"=="" GOTO ERROR
 IF "XPLATFORM"=="" GOTO ERROR
 
-SET ROOT=.\..\..\..
+SET ROOT=.\..\..\deps
 
 SET LIBUV=%ROOT%\libuv\%CONFIG%\lib\libuv.lib
 IF NOT EXIST %LIBUV% (
@@ -26,10 +24,10 @@ IF NOT EXIST %LIBUV% (
   GOTO ERROR
 )
 
-SET MBEDTLS=%ROOT%\mbedtls\builds\%MPLATFORM%\library\%CONFIG%\mbedTLS.lib
+SET MBEDTLS=%ROOT%\mbedtls\visualc\VS2010\%PLATFORM%\%CONFIG%\mbedtls-vs2017.lib
 IF NOT EXIST %MBEDTLS% (
    ECHO %MBEDTLS% does not exist
-REM  GOTO ERROR
+   GOTO ERROR
 )
 
 SET ZLIB=%ROOT%\zlib\contrib\vstudio\vc14\%ZPLATFORM%\ZlibStat%ZCONFIG%\zlibstat.lib
@@ -38,7 +36,7 @@ IF NOT EXIST %ZLIB% (
   GOTO ERROR
 )
 
-SET LIBHANDLER=.\..\..\out\msvc-%PLATFORM%\libhandler\%CONFIG%\libhandler.lib
+SET LIBHANDLER=%ROOT%\libhandler\out\msvc-%PLATFORM%\libhandler\%CONFIG%\libhandler.lib
 IF NOT EXIST %LIBHANDLER% (
   ECHO %LIBHANDLER% does not exist
   GOTO ERROR
@@ -57,8 +55,7 @@ IF NOT EXIST %COMBINED_DIR% (
 )
 
 REM Create combined library as nodecx
-REM SET LIBS=%LIBUV% %ZLIB% %LIBHANDLER% %MBEDTLS% %NODEC%
-SET LIBS=%LIBUV% %ZLIB% %LIBHANDLER% %NODEC%
+SET LIBS=%LIBUV% %ZLIB% %LIBHANDLER% %MBEDTLS% %NODEC%
 SET COMBINED=%COMBINED_DIR%\nodecx.lib
 @ECHO Creating %COMBINED% from %LIBS%
 lib /OUT:%COMBINED% %LIBS%
@@ -97,8 +94,8 @@ COPY /Y %ROOT%\libuv\include\uv\*.h  %INCDIR%\libuv\include\uv
 REM COPY %ROOT%\mbedtls\include\mbedtls\*.h %INCDIR%\mbedtls
 COPY /Y %ROOT%\http-parser\http_parser.h %INCDIR%\http-parser
 COPY /Y %ROOT%\libhandler\inc\libhandler.h %INCDIR%\libhandler\inc
-COPY /Y %ROOT%\nodec\inc\nodec.h %INCDIR%
-COPY /Y %ROOT%\nodec\inc\nodec-primitive.h %INCDIR%
+COPY /Y .\..\..\inc\nodec.h %INCDIR%
+COPY /Y .\..\..\inc\nodec-primitive.h %INCDIR%
 
 
 ENDLOCAL
