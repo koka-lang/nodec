@@ -34,6 +34,12 @@ For a primer on algebraic effects, see the relevant section in the [koka book].
 Enjoy!\
 -- Daan.
 
+Note: Clone the repository using `--recursive` as:
+```
+git clone --recursive https://github.com/koka-lang/nodec.git
+```
+
+
 [tr]: https://www.microsoft.com/en-us/research/publication/implementing-algebraic-effects-c
 [koka book]: https://bit.do/kokabook
 [apidoc]: https://koka-lang.github.io/nodec/api
@@ -118,63 +124,35 @@ the use implicit parameters there is no need to pass around a `loop` parameter a
 
 ## Sub projects
 
-NodeC uses the [libhandler], [libuv], [zlib], and [http-parser] projects.
-You need to check them out in a peer directory of `NodeC`, i.e.
+NodeC uses the [libhandler], [libuv], [zlib], [http-parser], and [mbedTLS] projects.
+All of these are registered as submodules under the `deps` directory and are automatically
+checkout out at the right version when giving the `--recursive` flag to `clone`:
 ```
-home\dev\
-  libhandler
-  http-parser
-  libuv
-  nodec
-  zlib
+git clone --recursive https://github.com/koka-lang/nodec.git
 ```
 
-
-### LibUV
-
-For the `test\libuv` example, you need to get the [libuv] project as:
-
-* Check out `libuv`  
-  `> git clone https://github.com/libuv/libuv.git`
-
-* And build a static library. On windows use:  
-  `> cd libuv`  
-  `> ./vcbuild debug x64 static`
-
-* You may need to install Python too.
+(if you have cloned initially without `--recursive` you can use the `git submodule update`
+command to fetch the submodules).
 
 
-### http-parser
+## Building on Windows
 
-The [http-parser] project is checked out as:
+You will need:
 
-* `> git clone https://github.com/nodejs/http-parser.git`
+1. [Microsoft Visual Studio 2017][vs2017].
+2. [Python 2.7][python] (for building [libuv]).
 
-There is no need to build it, it is included automatically by the NodeC project.
+When you have installed those, you can run `msvc-build.bat` to build
+the NodeC library and all its dependencies:
+```
+> .\msvc-build.bat  [debug/release] [x86/x64]
+```
+By default it will build the x64 debug version. 
+(Unfortunately, the way `libuv` is built means that you can choose `x86` or `x64` only
+once for a checkout).
 
-
-### libhandler
-
-
-The [libhandler] project is checked out as:
-
-* `> git clone https://github.com/koka-lang/libhandler.git`
-
-There is no need to build it, it is included automatically by the NodeC project.
-
-
-### zlib
-
-The [zlib] project is checked out as:
-
-* `> git clone https://github.com/madler/zlib.git`
-
-* And build it as a static library. On Windows open up `contrib\vstudio\vc14\zlibvc.sln`
-  to build the `Debug` and `ReleaseWithoutAsm` versions for `x64`, as `zlibstat.lib`.
-
-## Windows
-
-Use the Microsoft Visual Studio solution at `ide\msvc\nodec.sln`.
+After it builds successfully, you can use the Microsoft Visual Studio solution at 
+`ide\msvc\nodec.sln` to play with examples.
 
 
 [libuv]: https://github.com/libuv/libuv
@@ -182,3 +160,5 @@ Use the Microsoft Visual Studio solution at `ide\msvc\nodec.sln`.
 [libhandler]: https://github.com/koka-lang/libhandler
 [zlib]: https://github.com/madler/zlib
 [Node.js]: https://nodejs.org
+[vs2017]: https://visualstudio.microsoft.com/vs/community/
+[python]: https://www.python.org/downloads/release/python-2715/
