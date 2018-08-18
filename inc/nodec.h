@@ -9,9 +9,9 @@
 #ifndef __nodec_h 
 #define __nodec_h
 
-#include <libhandler.h>
-#include <uv.h>
-#include <http_parser.h>
+#include <libhandler/inc/libhandler.h>
+#include <libuv/include/uv.h>
+#include <http-parser/http_parser.h>
 #include <fcntl.h>
 #include <time.h>
 
@@ -289,8 +289,6 @@ void async_yield();
   File system (fs)
 -----------------------------------------------------------------------------*/
 
-void        nodec_scandir_free(nodec_scandir_t* scanreq);
-void        nodec_scandir_freev(lh_value scanreqv);
 
 /// \defgroup nodec_fs File System
 /// Asynchronous access to the file system.
@@ -325,9 +323,14 @@ uv_buf_t    async_fread_buf_all(uv_file file, size_t max);
 /// Used to iterate over the contents of a directory.
 typedef uv_fs_t nodec_scandir_t;
 
+/// \cond
+void        nodec_scandir_free(nodec_scandir_t* scanreq);
+void        nodec_scandir_freev(lh_value scanreqv);
+/// \endcond
+
 /// Use a #nodec_scandir_t in a scope.
 /// \param scandir A #nodec_scandir_t returned from async_scandir()
-#define using_scandir(scandir)  defer(nodec_scandir_freev,lh_value_ptr(req))
+#define using_scandir(scandir)  defer(nodec_scandir_freev,lh_value_ptr(scandir))
 
 /// Initiate scanning a directory.
 /// \param path The directory path.

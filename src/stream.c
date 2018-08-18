@@ -833,7 +833,7 @@ nodec_bstream_t* nodec_bstream_alloc_read(uv_stream_t* stream) {
 
 #ifndef NO_ZLIB
 
-#include <zlib.h>
+#include <zlib/zlib.h>
 
 typedef struct _nodec_zstream_t {
   nodec_bstream_t bstream;

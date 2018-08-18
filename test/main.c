@@ -1,9 +1,6 @@
 #include <stdio.h>
 
 #include <nodec.h>
-#include <nodec-primitive.h>
-#include <http_parser.h>
-#include "request.h"
 
 /*-----------------------------------------------------------------
   Test files
