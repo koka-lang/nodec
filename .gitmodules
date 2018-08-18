@@ -7,3 +7,6 @@
 [submodule "deps/http-parser"]
 	path = deps/http-parser
 	url = https://github.com/nodejs/http-parser.git
+[submodule "deps/zlib"]
+	path = deps/zlib
+	url = https://github.com/madler/zlib.git
