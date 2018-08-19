@@ -271,15 +271,18 @@ static lh_value tcp_servev(lh_value argsv) {
       tcp_client_args cargs = { id, args.timeout, client, args.serve, 5, args.arg };
       lh_try( &exn, &tcp_serve_keepalive, lh_value_any_ptr(&cargs)); 
       if (exn != NULL) {
-        // send an exception response
-        // wrap in try itself in case writing gives an error too!
-        lh_exception* wrap = lh_exception_alloc(exn->code, exn->msg);
-        wrap->data = client;
-        lh_exception* ignore_exn = NULL;
-        lh_try(&ignore_exn, args.on_exn, lh_value_any_ptr(wrap));
-        lh_exception_free(wrap);
-        lh_exception_free(exn);
-        lh_exception_free(ignore_exn);
+        // ignore closed client connections..
+        if (!(exn->data == uvclient && exn->code == UV_ECANCELED)) {
+          // send an exception response
+          // wrap in try itself in case writing gives an error too!
+          lh_exception* wrap = lh_exception_alloc(exn->code, exn->msg);
+          wrap->data = client;
+          lh_exception* ignore_exn = NULL;
+          lh_try(&ignore_exn, args.on_exn, lh_value_any_ptr(wrap));
+          lh_exception_free(wrap);
+          lh_exception_free(exn);
+          lh_exception_free(ignore_exn);
+        }
       }
     }}
   } while (true);  // should be until termination
