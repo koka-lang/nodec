@@ -83,9 +83,11 @@ static const char* http_headers_lookup_from(http_headers_t* headers, const char*
       }
       else {
         // found another entry.. we string append into the first entry and NULL this one out
-        if (nodec_buf_is_null(newvalue)) newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(found->value));
-        newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(","));
-        newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(h->value));
+        if (h->value != NULL && h->value[0] != 0) {
+          if (nodec_buf_is_null(newvalue)) newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(found->value));
+          newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(","));
+          newvalue = nodec_buf_append_into(newvalue, nodec_buf_str(h->value));
+        }
         http_header_clear(h);  // clear the current entry
       }
     }
@@ -168,8 +170,12 @@ static int on_header_field(http_parser* parser, const char* at, size_t len) {
 
 static int on_header_value(http_parser* parser, const char* at, size_t len) {
   http_in_t* req = (http_in_t*)parser->data;
+  // remove trailing comma and spaces
+  while (len > 0 && (at[len - 1] == ',' || at[len - 1] == ' ')) len--;
   terminate(req, at, len);
+  // add to the headers
   http_headers_add(&req->headers, req->current_field, at, req->headers_complete); // allocate if the headers are complete as the buffer might have changed
+  // treat special headers
   if (_stricmp(req->current_field, "content-length")==0) {
     long long len = atoll(at);
     // printf("read content-length: %lli\n", len);
@@ -256,8 +262,8 @@ static nodec_bstream_t* http_in_stream_alloc(http_in_t* req);
 size_t async_http_in_read_headers(http_in_t* in ) 
 {
   // and read until the double empty line is seen  (\r\n\r\n); the end of the headers 
-  size_t idx = 0;
-  uv_buf_t buf = async_read_buf_including(in->stream, &idx, "\r\n\r\n", 4, HTTP_MAX_HEADERS);
+  uv_buf_t buf = async_read_buf_upto(in->stream, "\r\n\r\n", 4, HTTP_MAX_HEADERS);
+  size_t idx = buf.len;
   if (idx == 0 || nodec_buf_is_null(buf) || idx > HTTP_MAX_HEADERS) {
     if (!nodec_buf_is_null(buf)) nodec_buf_free(buf);
     if (idx == 0) {
@@ -282,7 +288,9 @@ size_t async_http_in_read_headers(http_in_t* in )
   in->parser_settings.on_status = &on_status;
 
   // parse the headers
-  size_t nread = http_parser_execute(&in->parser, &in->parser_settings, in->prefix.base, in->prefix.len);
+  size_t nread = http_parser_execute(&in->parser, &in->parser_settings, in->prefix.base, 
+                    idx // do not use in->prefix.len because requests can be pipe-lined.
+                  );
   check_http_errno(&in->parser);
 
   // remember where we are at in the current buffer for further body reads 
@@ -587,6 +595,9 @@ static void http_out_send_raw_str(http_out_t* out, const char* s) {
 static void http_out_send_raw_headers(http_out_t* out, uv_buf_t prefix, uv_buf_t postfix) {
   uv_buf_t buf = nodec_buf(out->head.base, out->head_offset);
   uv_buf_t bufs[3] = { prefix, buf, postfix };
+#ifndef NDEBUG
+  fprintf(stderr, "%s%s%s\n", prefix.base, buf.base, postfix.base);
+#endif
   async_write_bufs(out->stream, bufs, 3);
   nodec_bufref_free(&out->head);
   out->head_offset = 0;
