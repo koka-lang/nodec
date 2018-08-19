@@ -418,7 +418,7 @@ uv_buf_t async_read_buf_upto(nodec_bstream_t* bstream, const void* pat, size_t p
   assert(toread < buf.len);
   size_t n = buf.len - toread;
   uv_buf_t xbuf = nodec_buf_alloc(n);
-  memcpy(buf.base + toread, xbuf.base, n);
+  memcpy(xbuf.base, buf.base + toread, n);
   nodec_pushback_buf(bstream, xbuf);
   return nodec_buf_fit(buf, toread);
 }
@@ -542,11 +542,11 @@ static uv_errno_t asyncx_uv_write_buf(uv_stream_t* stream, uv_buf_t buf) {
 }
 
 static void async_uv_write_bufs(uv_stream_t* stream, uv_buf_t bufs[], size_t buf_count) {
-  nodec_check(asyncx_uv_write_bufs(stream, bufs, buf_count));
+  nodec_check_data(asyncx_uv_write_bufs(stream, bufs, buf_count),stream);
 }
 
 void async_uv_write_buf(uv_stream_t* stream, uv_buf_t buf) {
-  nodec_check(asyncx_uv_write_buf(stream, buf));
+  nodec_check_data(asyncx_uv_write_buf(stream, buf),stream);
 }
 
 void async_uv_stream_shutdown(uv_stream_t* stream) {
