@@ -139,16 +139,21 @@ static void http_in_status_print(http_in_t* in) {
 static void test_http_serve() {
   int strand_id = http_strand_id();
   // input
-  printf("strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), http_req_content_length());
+#ifndef NDEBUG
+  fprintf(stderr,"strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), http_req_content_length());
   http_req_print();
-
+#endif
   // work
   //printf("waiting %i secs...\n", 2); 
   //async_wait(1000);
   //check_uverr(UV_EADDRINUSE);
 
-  http_serve_static( "C:/Users/daan/Dropbox/dev/kuma-v5/web" //"../.."
-                   , NULL);
+  http_static_config_t config = http_static_default_config();
+  config.use_last_modified = false;
+  config.use_etag = false;
+  config.gzip_min_size = SIZE_MAX;
+  http_serve_static( "../../../nodec-bench/web" 
+                   , &config );
   
   // response
   /*
@@ -160,12 +165,12 @@ static void test_http_serve() {
     http_resp_send_ok();
   }
   */
-  printf("request handled\n\n\n");
+  //printf("request handled\n\n\n");
 }
 
 static void test_tcp() {
-  tcp_server_config_t config = tcp_server_config();
-  config.max_interleaving = 3;
+  //tcp_server_config_t config = tcp_server_config();
+  //config.max_interleaving = 500;
   const char* host = "127.0.0.1:8080";
   printf("serving at: %s\n", host);
   async_http_server_at( host, NULL, &test_http_serve);
@@ -346,8 +351,8 @@ static void entry() {
   //test_dns();
   //test_http();
   //test_as_client();
-  test_connect();
-  //test_tcp_tty();
+  //test_connect();
+  test_tcp_tty();
   //test_url();
 }
 

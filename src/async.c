@@ -94,31 +94,59 @@ void async_await_owned(uv_req_t* uvreq, void* owner) {
 Throw on errors
 -----------------------------------------------------------------*/
 
+
 // Throw a uv error exception
-void nodec_throw(int err) {
+void nodec_throw_data(int err, void* data) {
+  lh_exception* exn;
   if (err < 0) {
     if (err == UV_ETHROWCANCEL) {
-      lh_throw_cancel();
+      exn = lh_exception_alloc_cancel();
     }
     else {
-      lh_throw(lh_exception_alloc_strdup(err, uv_strerror(err)));
+      exn = lh_exception_alloc_strdup(err, uv_strerror(err));
     }
   }
   else {
-    lh_throw_errno(err);
+    char msg[256];
+    strerror_s(msg, 255, err); msg[255] = 0;
+    exn = lh_exception_alloc_strdup(err, msg);
   }
+  exn->data = data;
+  lh_throw(exn);
+}
+
+void nodec_throw_msg_data(int err, const char* msg, void* data) {
+  if (msg == NULL) {
+    nodec_throw_data(err, data);
+    return;
+  }
+  lh_exception* exn;
+  char buf[256];
+  if (err < 0) {
+    if (err == UV_ETHROWCANCEL) {
+      exn = lh_exception_alloc_cancel();
+    }
+    else {
+      snprintf(buf, 255, "%s: %s", uv_strerror(err), msg); buf[255] = 0;
+      exn = lh_exception_alloc_strdup(err, buf);
+    }
+  }
+  else {
+    strerror_s(buf, 255, err); buf[255] = 0;
+    size_t n = strlen(buf);
+    snprintf(buf + n, 255 - n, ": %s", msg); buf[255] = 0;
+    exn = lh_exception_alloc_strdup(err, buf);
+  }
+  exn->data = data;
+  lh_throw(exn);
+}
+
+void nodec_throw(int err) {
+  nodec_throw_data(err, NULL);
 }
 
 void nodec_throw_msg(int err, const char* msg) {
-  if (err == UV_ETHROWCANCEL) {
-    lh_throw_cancel();
-  }
-  else {
-    char buf[256];
-    snprintf(buf, 255, "%s: %s", uv_strerror(err), msg);
-    buf[255] = 0;
-    lh_throw_strdup(err, buf);
-  }
+  nodec_throw_msg_data(err, msg, NULL);
 }
 
 
@@ -135,6 +163,18 @@ void nodec_check_msg(uverr_t err, const char* msg) {
     nodec_throw_msg(err, msg);
   }
 }
+
+void nodec_check_data(uverr_t err, void* data) {
+  if (err != 0) {
+    nodec_throw_data(err, data);
+  }
+}
+void nodec_check_msg_data(uverr_t err, const char* msg, void* data) {
+  if (err != 0) {
+    nodec_throw_msg_data(err, msg, data);
+  }
+}
+
 
 
 /*-----------------------------------------------------------------

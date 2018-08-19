@@ -41,7 +41,9 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
 
   // Add Last-Modified and ETag header
   time_t mtime = (time_t)stat->st_mtim.tv_sec;
-  http_resp_add_header("Last-Modified", nodec_inet_date(mtime));
+  if (config->use_last_modified) {
+    http_resp_add_header("Last-Modified", nodec_inet_date(mtime));
+  }
   if (config->use_etag) {
     char etag[ETAG_LEN + 1];
     // just modified time and size but no inode to cache properly on clusters

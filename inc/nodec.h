@@ -1042,9 +1042,11 @@ const char*   async_req_read_body_str(size_t read_max);
 
 /// HTTP Static server configuration.
 typedef struct _http_static_config_t {
+  bool use_last_modified;      ///< Generate `Last-Modified` headers for efficient caching, By default true. 
+                               /// The server checks `If-Modified-Since` headers with efficient 304 responses.
   bool use_etag;               ///< Generate cluster-safe ETag's for efficient caching, By default true. 
                                ///< However, the server also generates `Last-Modified` headers and respects both
-                               ///< `If-Not-Modified` and `If-None-Match` headers with efficient 304 responses.
+                               ///< `If-Modified-Since` and `If-None-Match` headers with efficient 304 responses.
   const char*  cache_control;  ///< If not NULL, specifies the cache control header. By default `"public, max-age=604800"`.
   const char** implicit_exts;  ///< NULL terminated array of implicit extensions, by default `{".html",".htm",NULL}`.
   const char* implicit_index;  ///< If not NULL, specifies the default index file, by default `"index.html"`.
@@ -1059,7 +1061,7 @@ typedef struct _http_static_config_t {
 extern const char* http_static_implicit_exts[];
 
 /// Return the default static server configuration.
-#define http_static_default_config() { true, "public, max-age=604800", http_static_implicit_exts, "index", true, 1024, SIZE_MAX, 64*1024 }
+#define http_static_default_config() { true, true, "public, max-age=604800", http_static_implicit_exts, "index", true, 1024, SIZE_MAX, 64*1024 }
 
 /// Serve static files under a `root` directory. 
 /// \param config The configuration. Can be NULL for the default configuration.

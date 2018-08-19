@@ -18,9 +18,16 @@
 
 typedef int uverr_t;
 
+void nodec_throw(uverr_t err);
+void nodec_throw_msg(uverr_t err, const char* msg);
+void nodec_throw_data(uverr_t err, void* data);
+void nodec_throw_msg_data(uverr_t err, const char* msg, void* data);
+
 // Check the an error value and throw if it is not zero.
 void nodec_check(uverr_t err);
 void nodec_check_msg(uverr_t err, const char* msg);
+void nodec_check_data(uverr_t err,void* data);
+void nodec_check_msg_data(uverr_t err, const char* msg, void* data);
 
 #if (defined(_WIN32) || defined(_WIN64))
 typedef ULONG  uv_buf_len_t;
