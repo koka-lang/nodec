@@ -176,11 +176,13 @@ static int on_header_value(http_parser* parser, const char* at, size_t len) {
   // add to the headers
   http_headers_add(&req->headers, req->current_field, at, req->headers_complete); // allocate if the headers are complete as the buffer might have changed
   // treat special headers
+  /*
   if (_stricmp(req->current_field, "content-length")==0) {
     long long len = atoll(at);
     // printf("read content-length: %lli\n", len);
     if (len > 0 && len <= SIZE_MAX) req->content_length = (uint64_t)len;
   }
+  */
   req->current_field = NULL;
   return 0;
 }
@@ -215,6 +217,9 @@ static int on_body(http_parser* parser, const char* at, size_t len) {
 static int on_headers_complete(http_parser* parser) {
   http_in_t* req = (http_in_t*)parser->data;
   req->headers_complete = true;
+  if ((parser->flags & F_CONTENTLENGTH) == F_CONTENTLENGTH) {
+    req->content_length = parser->content_length;
+  }
   return 0;
 }
 
@@ -262,15 +267,15 @@ static nodec_bstream_t* http_in_stream_alloc(http_in_t* req);
 size_t async_http_in_read_headers(http_in_t* in ) 
 {
   // and read until the double empty line is seen  (\r\n\r\n); the end of the headers 
-  uv_buf_t buf = async_read_buf_upto(in->stream, "\r\n\r\n", 4, HTTP_MAX_HEADERS);
-  size_t idx = buf.len;
-  if (idx == 0 || nodec_buf_is_null(buf) || idx > HTTP_MAX_HEADERS) {
+  size_t headers_len = 0;
+  uv_buf_t buf = async_read_buf_including(in->stream, &headers_len, "\r\n\r\n", 4, HTTP_MAX_HEADERS);
+  if (nodec_buf_is_null(buf) || headers_len > HTTP_MAX_HEADERS) {
     if (!nodec_buf_is_null(buf)) nodec_buf_free(buf);
-    if (idx == 0) {
+    if (headers_len == 0) {
       // eof; means client closed the stream; no problem
       return 0;
     }
-    throw_http_err((idx > HTTP_MAX_HEADERS ? HTTP_STATUS_PAYLOAD_TOO_LARGE : HTTP_STATUS_BAD_REQUEST));
+    throw_http_err((headers_len > HTTP_MAX_HEADERS ? HTTP_STATUS_PAYLOAD_TOO_LARGE : HTTP_STATUS_BAD_REQUEST));
   }
   //printf("\n\nraw prefix read: %s\n\n\n", buf.base);  // only print idx length here
 
@@ -289,23 +294,40 @@ size_t async_http_in_read_headers(http_in_t* in )
 
   // parse the headers
   size_t nread = http_parser_execute(&in->parser, &in->parser_settings, in->prefix.base, 
-                    idx // do not use in->prefix.len because requests can be pipe-lined.
+                    headers_len // do not use in->prefix.len because requests can be pipe-lined.
                   );
   check_http_errno(&in->parser);
+  assert(nread == headers_len);
+  assert(nodec_buf_is_null(in->current_body));
+  bool hasbody = (((in->parser.flags & F_CHUNKED) == F_CHUNKED || in->content_length > 0) 
+                  && (in->parser.flags & F_SKIPBODY) == 0);
 
   // remember where we are at in the current buffer for further body reads 
   in->body_start = nread;
-  if (in->complete && nodec_buf_is_null(in->current_body)) {
+  if (!hasbody) {
+    // potentially push back extra read bytes (due to pipe-lined requests)
+    if (headers_len < buf.len) {
+      size_t n = buf.len - headers_len;
+      uv_buf_t xbuf = nodec_buf_alloc(n);
+      memcpy(xbuf.base, buf.base + headers_len, n);
+      nodec_pushback_buf(in->stream, xbuf);
+      buf.len = headers_len;
+    }
+    // read on 0 more bytes to close down the parser
+    http_parser_pause(&in->parser, 0); // unpause
+    http_parser_execute(&in->parser, &in->parser_settings, in->prefix.base + nread, headers_len - nread);
+    check_http_errno(&in->parser);
     in->body_stream = NULL;
   }
   else {
+    // allocate body stream, this will point to the `buf` at the `body_start`.
     in->body_stream = http_in_stream_alloc(in);
     if (http_in_header_contains(in,"Content-Encoding", "gzip")) {
       printf("use gzip!\n");
       in->body_stream = nodec_zstream_alloc(as_stream(in->body_stream));
     }
   }
-  return idx; // size of the headers
+  return headers_len;
 }
 
 /*-----------------------------------------------------------------
@@ -387,6 +409,8 @@ static uv_buf_t http_in_read_bufx(nodec_stream_t* stream, bool* owned) {
 
 static void http_in_pushback_buf(nodec_bstream_t* bstream, uv_buf_t buf) {
   if (nodec_chunks_available(bstream) > 0) {
+    // TODO: can this happen? Perhaps in this case we should push
+    // back all chunks back onto the underlying tcp stream?
     nodec_chunks_pushback_buf(bstream, buf);
   }
   else {
