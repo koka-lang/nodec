@@ -299,23 +299,19 @@ size_t async_http_in_read_headers(http_in_t* in )
   check_http_errno(&in->parser);
   assert(nread == headers_len);
   assert(nodec_buf_is_null(in->current_body));
-  bool hasbody = (((in->parser.flags & F_CHUNKED) == F_CHUNKED || in->content_length > 0) 
-                  && (in->parser.flags & F_SKIPBODY) == 0);
+  assert(in->headers_complete);
 
   // remember where we are at in the current buffer for further body reads 
   in->body_start = nread;
-  if (!hasbody) {
+  if (in->complete) {
     // potentially push back extra read bytes (due to pipe-lined requests)
     if (headers_len < buf.len) {
       size_t n = buf.len - headers_len;
       uv_buf_t xbuf = nodec_buf_alloc(n);
       memcpy(xbuf.base, buf.base + headers_len, n);
       nodec_pushback_buf(in->stream, xbuf);
-      buf.len = headers_len;
+      buf.len = (uv_buf_len_t)headers_len;
     }
-    // read on 0 more bytes to close down the parser
-    http_parser_pause(&in->parser, 0); // unpause
-    http_parser_execute(&in->parser, &in->parser_settings, in->prefix.base + nread, headers_len - nread);
     check_http_errno(&in->parser);
     in->body_stream = NULL;
   }
@@ -323,7 +319,9 @@ size_t async_http_in_read_headers(http_in_t* in )
     // allocate body stream, this will point to the `buf` at the `body_start`.
     in->body_stream = http_in_stream_alloc(in);
     if (http_in_header_contains(in,"Content-Encoding", "gzip")) {
-      printf("use gzip!\n");
+#ifndef NDEBUG
+      fprintf(stderr,"use gzip!\n");
+#endif
       in->body_stream = nodec_zstream_alloc(as_stream(in->body_stream));
     }
   }
@@ -366,18 +364,20 @@ static uv_buf_t http_in_read_body_bufx(http_in_stream_t* hs, bool* owned)
       hs->current_offset = 0;
     
       // and read a fresh buffer async from the stream; use `bufx` variant for efficiency
+      // we may get a NULL buffer back (due to EOF) which is ok; the parser should
+      // be called with a zero length to signal EOF to the parser.
       hs->current = async_read_bufx(as_stream(hs->req->stream), &hs->current_owned);
-      if (nodec_buf_is_null(hs->current)) throw_http_err(HTTP_STATUS_BAD_REQUEST);
+      //if (nodec_buf_is_null(hs->current)) throw_http_err(HTTP_STATUS_BAD_REQUEST);
       //hs->current.base[hs->current.len] = 0;
       //printf("\n\nraw body read: %s\n\n\n", hs->current.base);
     }
 
-    // we have a current buffer, parse a body piece (or read to eof)
-    assert(hs->current.base != NULL && hs->current_offset < hs->current.len);
+    // we (might) have a current buffer, parse a body piece (or read to eof)
+    assert(hs->current.base == NULL || hs->current_offset < hs->current.len);
     http_parser_pause(&(hs->req->parser), 0); // unpause
     size_t nread = http_parser_execute(&(hs->req->parser), &(hs->req->parser_settings), 
-                        hs->current.base + hs->current_offset, 
-                        hs->current.len - hs->current_offset);
+                        (hs->current.base==NULL ? NULL : hs->current.base + hs->current_offset), 
+                        (hs->current.base==NULL ? 0 : hs->current.len - hs->current_offset));
     hs->current_offset += nread;
     check_http_errno(&(hs->req->parser));
 
@@ -392,7 +392,9 @@ static uv_buf_t http_in_read_body_bufx(http_in_stream_t* hs, bool* owned)
   assert(!nodec_buf_is_null(hs->req->current_body));
   uv_buf_t body = hs->req->current_body;
   hs->req->current_body = nodec_buf_null();
-  printf("read body part: len: %i\n", body.len);
+#ifndef NDEBUG
+  fprintf(stderr,"read body part: len: %i\n", body.len);
+#endif
   return body;  // a view into our current buffer, valid until the next read
 }
 
