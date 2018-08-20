@@ -280,9 +280,9 @@ static lh_value tcp_servev(lh_value argsv) {
           lh_exception* ignore_exn = NULL;
           lh_try(&ignore_exn, args.on_exn, lh_value_any_ptr(wrap));
           lh_exception_free(wrap);
-          lh_exception_free(exn);
           lh_exception_free(ignore_exn);
         }
+        lh_exception_free(exn);
       }
     }}
   } while (true);  // should be until termination
