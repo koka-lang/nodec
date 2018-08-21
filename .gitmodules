@@ -1,15 +1,20 @@
 [submodule "deps/libhandler"]
 	path = deps/libhandler
 	url = https://github.com/koka-lang/libhandler.git
+	branch = master
 [submodule "deps/libuv"]
 	path = deps/libuv
 	url = https://github.com/libuv/libuv.git
+	branch = master
 [submodule "deps/http-parser"]
 	path = deps/http-parser
 	url = https://github.com/nodejs/http-parser.git
+	branch = master
 [submodule "deps/zlib"]
 	path = deps/zlib
 	url = https://github.com/madler/zlib.git
+	branch = master
 [submodule "deps/mbedtls"]
 	path = deps/mbedtls
 	url = https://github.com/ARMmbed/mbedtls.git
+	branch = master
