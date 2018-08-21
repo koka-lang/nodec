@@ -643,10 +643,10 @@ static lh_value _channel_async_owner_release(lh_resume r, lh_value localv, lh_va
 
 static const lh_operation _channel_async_ops[] = {
   { LH_OP_GENERAL, LH_OPTAG(async,req_await), &_channel_async_req_await },
-  { LH_OP_TAIL, LH_OPTAG(async,uv_loop), NULL },
-  { LH_OP_TAIL, LH_OPTAG(async,req_register), NULL },
-  { LH_OP_TAIL, LH_OPTAG(async,uv_cancel), NULL },
-  { LH_OP_TAIL, LH_OPTAG(async,owner_release), NULL },
+  { LH_OP_FORWARD, LH_OPTAG(async,uv_loop), NULL },
+  { LH_OP_FORWARD, LH_OPTAG(async,req_register), NULL },
+  { LH_OP_FORWARD, LH_OPTAG(async,uv_cancel), NULL },
+  { LH_OP_FORWARD, LH_OPTAG(async,owner_release), NULL },
   { LH_OP_NULL, lh_op_null, NULL }
 };
 static const lh_handlerdef _channel_async_hdef = { LH_EFFECT(async), NULL, NULL, NULL, _channel_async_ops };
