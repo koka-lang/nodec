@@ -258,14 +258,30 @@ bool async_scoped_is_canceled();
   Asynchronous combinators
 -----------------------------------------------------------------------------*/
 
-// Interleave `n` actions with arguments `arg_results`. 
-// The result of each action is stored again in `arg_results`; when
-// an exception is raised, it is rethrown from `interleave` once all
-// its actions have finished. Interleave introduces a cancelation 
-// scope.
+/// Interleave `n` actions.
+/// Interleave with arguments `arg_results`. 
+/// The result of each action is stored again in `arg_results`; when
+/// an exception is raised, it is rethrown from `interleave` once all
+/// its actions have finished. Interleave introduces a cancelation 
+/// scope.
 void interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]);
 
-// General timeout routine over an `action`. 
+/// Dynamically spawn an interleaved action.
+/// Only works in the action given to async_interleave_dynamic()!
+lh_value async_dynamic_spawn(lh_actionfun* action, lh_value arg, lh_exception** exn);
+
+/// Interleave a dynamic number of actions.
+/// \param action The initial action. This can use async_dynamic_spawn() to dynamically interleave more actions.
+/// \param arg  Argument passed to action.
+/// \returns The result from `action`. Only returns once `action` and all dynamically spawned actions are done.
+lh_value async_interleave_dynamic(lh_actionfun action, lh_value arg);
+
+/// General timeout routine over an `action`. 
+/// \param action  The action to run.
+/// \param arg     Argument passed to action.
+/// \param timeout The time in milli-seconds after which `action` is canceled.
+/// \param timedout If not NULL, gets set whether the action timed out or not.
+/// \returns The result of `action` or `lh_value_null` if it timed out.
 lh_value async_timeout(lh_actionfun* action, lh_value arg, uint64_t timeout, bool* timedout);
 
 // Return when the either action is done, canceling the other.

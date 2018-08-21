@@ -13,40 +13,52 @@
   Interleave
 -----------------------------------------------------------------*/
 
-typedef struct _interleave_strand_args {
+
+static void isolate(lh_actionfun* action, lh_value arg, lh_value* xres, lh_exception** xexn, volatile ssize_t* todo) {
+  lh_exception* exn = NULL;
+  lh_value      res = lh_value_null;
+  if (async_scoped_is_canceled()) {
+    // an earlier strand called `cancel` already, don't start this strand
+    if (xexn != NULL) exn = lh_exception_alloc_cancel();
+  }
+  else {
+    res = lh_try_all(&exn, action, arg);
+  }
+  if (todo != NULL) *todo = *todo - 1;
+  if (xres != NULL) *xres = res;
+  if (xexn != NULL) {
+    *xexn = exn;
+  }
+  else {
+    if (exn != NULL) lh_exception_free(exn);
+  }
+}
+
+
+typedef struct _isolate_args_t {
   lh_actionfun*  action;
   lh_value       arg;
   lh_value*      res;
   lh_exception** exception;
   volatile ssize_t* todo;
-} interleave_strand_args;
+} isolate_args_t;
 
-static lh_value _interleave_strand(lh_value vargs) {
+static lh_value isolate_action(lh_value vargs) {
   // copy args by value
-  interleave_strand_args args = *((interleave_strand_args*)lh_ptr_value(vargs));
-  lh_exception* exn = NULL;
-  lh_value      res = lh_value_null;
-  if (async_scoped_is_canceled()) {
-    // an earlier strand called `cancel` already, don't start this strand
-    exn = lh_exception_alloc_cancel();
-  }
-  else {
-    res = lh_try_all(&exn, args.action, args.arg);
-  }
-  *args.todo = *args.todo - 1;
-  if (args.res != NULL) *args.res = res;
-  if (args.exception != NULL) *args.exception = exn;
+  isolate_args_t* args = ((isolate_args_t*)lh_ptr_value(vargs));
+  isolate(args->action, args->arg, args->res, args->exception, args->todo);
   return lh_value_null;
 }
 
-static void _handle_interleave_strand(channel_t* channel, interleave_strand_args* args) {
-  _channel_async_handler(channel, &_interleave_strand, lh_value_any_ptr(args));
+static void _handle_interleave_strand(channel_t* channel, isolate_args_t* args) {
+  _channel_async_handler(channel, &isolate_action, lh_value_any_ptr(args));
 }
+
 
 LH_DEFINE_EFFECT1(spawn,spawn)
 
-void nodec_dynamic_spawn(lh_actionfun* action, lh_value arg) {
-  lh_yieldN(LH_OPTAG(spawn, spawn), 2, lh_value_ptr(action), arg);
+lh_value async_dynamic_spawn(lh_actionfun* action, lh_value arg, lh_exception** exn) {
+  return lh_yieldN(LH_OPTAG(spawn, spawn), 3, lh_value_ptr(action), arg, lh_value_any_ptr(exn));
 }
 
 typedef struct _spawn_local_t {
@@ -56,18 +68,18 @@ typedef struct _spawn_local_t {
 
 
 static lh_value _spawn_spawn(lh_resume resume, lh_value localv, lh_value argsv) {
-  spawn_local_t* local = (spawn_local_t*)lh_ptr_value(localv);
   yieldargs* yargs = lh_yieldargs_value(resume, argsv);
-  assert(yargs->argcount == 2);
-  // execute action in the context just outside of the spawn handler
+  assert(yargs->argcount == 3);
+  // execute action in the context just outside of the spawn handler (and under the channel handler)
+  spawn_local_t* local = (spawn_local_t*)lh_ptr_value(localv);
+  lh_actionfun* action = (lh_actionfun*)lh_ptr_value(yargs->args[0]);
+  lh_exception** exn = (lh_exception**)lh_ptr_value(yargs->args[2]);
   *local->todo = *local->todo + 1;
-  interleave_strand_args args = { 
-      (lh_actionfun*)lh_ptr_value(yargs->args[0]),  yargs->args[1], 
-      NULL, NULL, local->todo 
-  };
-  _handle_interleave_strand(local->channel, &args);
+  lh_value res = lh_value_null;
+  isolate_args_t iargs = { action, yargs->args[1], &res, exn, local->todo };
+  _handle_interleave_strand(local->channel, &iargs);
   // and return
-  return lh_tail_resume(resume, localv, lh_value_null);
+  return lh_tail_resume(resume, localv, res);
 }
 
 static const lh_operation spawn_ops[] = {
@@ -77,7 +89,7 @@ static const lh_operation spawn_ops[] = {
 static const lh_handlerdef spawn_def = { LH_EFFECT(spawn), NULL, NULL, NULL, spawn_ops };
 
 static lh_value handle_spawn(channel_t* channel, volatile ssize_t* todo, lh_actionfun action, lh_value arg) {
-  lh_value res = lh_value_null;
+  lh_value res;
   {using_zero_alloc(spawn_local_t, local) {
     local->channel = channel;
     local->todo = todo;
@@ -87,43 +99,38 @@ static lh_value handle_spawn(channel_t* channel, volatile ssize_t* todo, lh_acti
 }
 
 typedef struct _spawn_action_args_t {
-  lh_actionfun* action;
-  lh_value      arg;
-  lh_value*     res;
-  lh_exception** exn;
-  channel_t*    channel;
-  volatile ssize_t* todo;
+  isolate_args_t iargs;
+  channel_t*     channel;  
 } spawn_action_args_t;
 
-static lh_value spawn_action(lh_value arg) {
+static lh_value spawn_action(lh_value argsv) {
   // run the action inside interleave strand itself
-  spawn_action_args_t* args = (spawn_action_args_t*)lh_ptr_value(arg);
-  interleave_strand_args iargs = {
-      (lh_actionfun*)lh_ptr_value(args->action),  args->arg, args->res, args->exn, args->todo 
-  };
-  _handle_interleave_strand(args->channel, &iargs);
+  spawn_action_args_t* args = (spawn_action_args_t*)lh_ptr_value(argsv);
+  volatile ssize_t* todo = args->iargs.todo;
+  channel_t* channel = args->channel;
+  _handle_interleave_strand(channel, &args->iargs);
+  while (*todo > 0) {
+    // a receive should never be canceled since it should wait until
+    // it children are canceled (and then continue). 
+    lh_value resumev;
+    lh_value arg;
+    int err = channel_receive_nocancel(channel, &resumev, &arg);
+    if (resumev != lh_value_null) { // can happen on cancel
+      lh_release_resume((lh_resume)lh_ptr_value(resumev), arg, lh_value_int(err));
+    }
+  }
   return lh_value_null;
 }
 
-lh_value interleave_dynamic(lh_actionfun action, lh_value arg) {
+lh_value async_interleave_dynamic(lh_actionfun action, lh_value arg) {
   lh_value res = lh_value_null;
   lh_exception* exn = NULL;
   volatile size_t* todo = nodec_alloc(size_t);
-  {defer(nodec_freev, lh_value_ptr((void*)todo)) {
+  {using_free(todo){
     *todo = 1;
     {using_channel(channel) {
-      spawn_action_args_t sargs = { action, arg, &res, &exn, channel, todo };
-      handle_spawn(channel, todo, &spawn_action, lh_value_any_ptr(&sargs));
-      while (*todo > 0) {
-        // a receive should never be canceled since it should wait until
-        // it children are canceled (and then continue). 
-        lh_value resumev;
-        lh_value arg;
-        int err = channel_receive_nocancel(channel, &resumev, &arg);
-        if (resumev != lh_value_null) { // can happen on cancel
-          lh_release_resume((lh_resume)lh_ptr_value(resumev), arg, lh_value_int(err));
-        }
-      }
+      spawn_action_args_t sargs = { { action, arg, &res, &exn, todo }, channel };
+      handle_spawn(channel,todo,&spawn_action, lh_value_any_ptr(&sargs));            
     }}
   }}
   if (exn != NULL) lh_throw(exn);
@@ -137,7 +144,7 @@ static void  _interleave_n(size_t n, lh_actionfun** actions, lh_value* arg_resul
     *todo = n;
     {using_channel(channel) {      
       for (size_t i = 0; i < n; i++) {
-        interleave_strand_args args = {
+        isolate_args_t args = {
           actions[i],
           arg_results[i],
           &arg_results[i],

@@ -211,6 +211,7 @@ typedef struct _tcp_serve_args {
   nodec_tcp_servefun* serve;
   lh_actionfun*       on_exn;
   lh_value            arg;
+  uv_stream_t*        uvclient;
 } tcp_serve_args;
 
 typedef struct _tcp_client_args {
@@ -259,6 +260,64 @@ static lh_value tcp_serve_keepalive(lh_value argsv) {
   }
 }
 
+static lh_value tcp_serve_clientv(lh_value argsv) {
+  tcp_serve_args args = *((tcp_serve_args*)lh_ptr_value(argsv)); // copy by value
+  nodec_uv_stream_t* client = nodec_uv_stream_alloc(args.uvclient);    
+  {using_uv_stream(client) {
+    lh_exception* exn;
+    tcp_client_args cargs = { 0, args.timeout, client, args.serve, 5, args.arg };
+    lh_try(&exn, &tcp_serve_keepalive, lh_value_any_ptr(&cargs));
+    if (exn != NULL) {
+      // ignore closed client connections..
+      if (!(exn->data == args.uvclient && exn->code == UV_ECANCELED)) {
+        // send an exception response
+        // wrap in try itself in case writing gives an error too!
+        lh_exception* wrap = lh_exception_alloc(exn->code, exn->msg);
+        wrap->data = client;
+        lh_exception* ignore_exn = NULL;
+        lh_try(&ignore_exn, args.on_exn, lh_value_any_ptr(wrap));
+        lh_exception_free(wrap);
+        lh_exception_free(ignore_exn);
+      }
+      lh_exception_free(exn);
+    }
+  }}
+  return lh_value_null;
+}
+
+static lh_value tcp_servev(lh_value argsv) {
+  static int ids = 0;
+  int id = ids++;
+  tcp_serve_args args = *((tcp_serve_args*)lh_ptr_value(argsv));
+  do {
+    uv_stream_t* uvclient = async_tcp_channel_receive(args.ch);
+    tcp_serve_args sargs = args;
+    sargs.uvclient = uvclient;
+    async_dynamic_spawn(&tcp_serve_clientv, lh_value_any_ptr(&sargs), NULL);    
+  } while (true);  // should be until termination
+  return lh_value_null;
+}
+
+void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config,
+  nodec_tcp_servefun* servefun, lh_actionfun* on_exn,
+  lh_value arg)
+{
+  tcp_server_config_t default_config = tcp_server_config();
+  if (config == NULL) config = &default_config;
+  tcp_channel_t* ch = nodec_tcp_listen_at(addr, config->backlog);
+  {using_tcp_channel(ch) {
+    {using_zero_alloc(tcp_serve_args, sargs) {
+      sargs->ch = ch;
+      sargs->timeout = config->timeout;
+      sargs->serve = servefun;
+      sargs->arg = arg;
+      sargs->on_exn = (on_exn == NULL ? &async_log_tcp_exn : on_exn);
+      async_interleave_dynamic(&tcp_servev, lh_value_ptr(sargs));
+    }}
+  }}
+}
+
+/*
 static lh_value tcp_servev(lh_value argsv) {
   static int ids = 0;
   int id = ids++;
@@ -317,4 +376,5 @@ void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* confi
     }}
   }}
 }
+*/
 
