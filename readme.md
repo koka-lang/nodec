@@ -21,12 +21,11 @@ It is not yet ready for general use. Current development is mostly for Windows x
 NodeC is a _lean and mean_ version of [Node.js] which aims to provide
 similar functionality as Node.js but using C directly. The main goal is improved
 efficiency and resource usage (in particular more predictable resource
-usage) but highly robust and asynchronous. 
+usage) but robust and asynchronous. 
 
 Previously, this would be very cumbersome as _async/await_ style programming 
 is very difficult in C. NodeC uses the [libhandler] library to provide algebraic 
-effect handlers directly in C making it much easier to write highly asynchronous
-and robust code directly in C. 
+effect handlers directly in C, making it _much_ easier to write such code. 
 
 Preliminary NodeC [API documentation][apidoc] is available.
 For a primer on algebraic effects, see the relevant section in the [koka book].
@@ -85,7 +84,7 @@ int main() {
   return 0;
 }
 ```
-Note how this uses async/await style programming as with `async_wait` that allows other
+Note how this uses async/await style programming (as with the `async_wait` function) to allow other
 requests to be interleaved while waiting or doing other work. Similarly, we use 
 implicit parameters (or dynamic binding) to bind the current request and response objects
 implicitly without needing to thread it around everywhere, and can thus write 
@@ -100,9 +99,15 @@ in plain [libuv]:
 ```C
 int uv_fs_close(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb);
 ```
-We need to pass around a `loop` parameter everywhere, and create a fresh request 
-object `req`. Then we can pass in the actualy file to close, `file`, but then need
-a top-level continuation function `cb`. If there are any locals you need in that
+An `int` is returned for error codes, the `loop` parameter identifies the outer 
+event loop (and must be explcitly passed around everywhere), the `req` parameter identifies 
+the current request object and is used to communicate local state to the callback, 
+the `file` is the file to close, and finally, the callback cb is called when the closing finishes and gets the stored local state of the request object.
+
+The `loop` parameter identifies the outer 
+event loop and must be explicitly passed around everywhere. We also need to pass a fresh request 
+object `req` and can then pass in the actualy file to close, `file`. After that we need
+a top-level continuation function `cb` -- if there are any locals you need in that
 callback you need to explicitly allocate them and store them into the request object
 to pass them to the callback. Finally, an `int` is returned in case an error happens.
 
@@ -111,13 +116,11 @@ function and have the following function signature instead:
 ```C
 void async_fs_close( uv_file file );
 ```
-
-
 Yes! much better. We only pass the essential `file` parameter and that is it. 
 The call is still asynchronous but will continue at that exact point in the
 program when the file is closed (just like async/await). Furthermore, we provide
 exceptions and thus there is no need to check any return value, and through
-the use implicit parameters there is no need to pass around a `loop` parameter anymore.
+the use implicit parameters there is no need to explicitly pass around a `loop` parameter.
 
 
 
