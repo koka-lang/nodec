@@ -99,11 +99,6 @@ in plain [libuv]:
 ```C
 int uv_fs_close(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb);
 ```
-An `int` is returned for error codes, the `loop` parameter identifies the outer 
-event loop (and must be explcitly passed around everywhere), the `req` parameter identifies 
-the current request object and is used to communicate local state to the callback, 
-the `file` is the file to close, and finally, the callback cb is called when the closing finishes and gets the stored local state of the request object.
-
 The `loop` parameter identifies the outer 
 event loop and must be explicitly passed around everywhere. We also need to pass a fresh request 
 object `req` and can then pass in the actualy file to close, `file`. After that we need
