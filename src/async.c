@@ -618,29 +618,6 @@ static lh_value _channel_async_req_await(lh_resume r, lh_value local, lh_value a
   return lh_value_null;  // exit to our local async handler back to interleaved
 }
 
-// Return the current libUV event loop
-static lh_value _channel_async_uv_loop(lh_resume r, lh_value local, lh_value arg) {
-  return lh_tail_resume(r, local, lh_value_ptr(async_loop()));  // pass through to parent
-}
-
-// Register an outstanding request
-static lh_value _channel_async_req_register(lh_resume r, lh_value localv, lh_value arg) {
-  async_req_register(lh_async_request_ptr_value(arg));     // pass through to parent
-  return lh_tail_resume(r, localv, lh_value_null);
-}
-
-// Cancel inside a scope
-static lh_value _channel_async_uv_cancel(lh_resume r, lh_value localv, lh_value arg) {
-  async_uv_cancel(lh_cancel_scope_ptr_value(arg));     // pass through to parent
-  return lh_tail_resume(r, localv, lh_value_null);
-}
-
-// Release of owner
-static lh_value _channel_async_owner_release(lh_resume r, lh_value localv, lh_value arg) {
-  async_owner_release(lh_ptr_value(arg));     // pass through to parent
-  return lh_tail_resume(r, localv, lh_value_null);
-}
-
 static const lh_operation _channel_async_ops[] = {
   { LH_OP_GENERAL, LH_OPTAG(async,req_await), &_channel_async_req_await },
   { LH_OP_FORWARD, LH_OPTAG(async,uv_loop), NULL },
