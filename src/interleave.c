@@ -126,7 +126,7 @@ lh_value async_interleave_dynamic(lh_actionfun action, lh_value arg) {
   lh_value res = lh_value_null;
   lh_exception* exn = NULL;
   volatile size_t* todo = nodec_alloc(size_t);
-  {using_free(todo){
+  {using_free((void*)(todo)){
     *todo = 1;
     {using_channel(channel) {
       spawn_action_args_t sargs = { { action, arg, &res, &exn, todo }, channel };
@@ -138,40 +138,31 @@ lh_value async_interleave_dynamic(lh_actionfun action, lh_value arg) {
 }
 
 
-static void  _interleave_n(size_t n, lh_actionfun** actions, lh_value* arg_results, lh_exception** exceptions) {
-  volatile size_t* todo = nodec_alloc(size_t);
-  {defer(nodec_freev, lh_value_ptr((void*)todo)){
-    *todo = n;
-    {using_channel(channel) {      
-      for (size_t i = 0; i < n; i++) {
-        isolate_args_t args = {
-          actions[i],
-          arg_results[i],
-          &arg_results[i],
-          &exceptions[i],
-          todo
-        };
-        _handle_interleave_strand(channel, &args);
-      }
-      while (*todo > 0) {
-        // a receive should never be canceled since it should wait until
-        // it children are canceled (and then continue). 
-        lh_value resumev;
-        lh_value arg;
-        int err = channel_receive_nocancel(channel, &resumev, &arg);
-        if (resumev != lh_value_null) { // can happen on cancel
-          lh_release_resume((lh_resume)lh_ptr_value(resumev), arg, lh_value_int(err));
-        }
-      }
-    }}
-  }}
+typedef struct _interleave_n_args_t{
+  size_t n;
+  lh_actionfun** actions;
+  lh_value* arg_results;
+  lh_exception** exceptions;
+} interleave_n_args_t;
+
+static lh_value interleave_n_action(lh_value argsv) {
+  interleave_n_args_t* args = (interleave_n_args_t*)lh_ptr_value(argsv);
+  for (size_t i = 0; i < args->n; i++) {
+    args->arg_results[i] = async_dynamic_spawn(args->actions[i], args->arg_results[i], &args->exceptions[i]);
+  }
+  return lh_value_null;
+}
+
+static void  _async_interleave_n(size_t n, lh_actionfun** actions, lh_value* arg_results, lh_exception** exceptions) {
+  interleave_n_args_t args = { n, actions, arg_results, exceptions };
+  async_interleave_dynamic(&interleave_n_action, lh_value_any_ptr(&args));
 }
 
 static void nodec_free_if_notnull(lh_value pv) {
   if (pv!=lh_value_null) nodec_freev(pv);
 }
 
-void interleave_n(size_t n, lh_actionfun* actions[], lh_value arg_results[], lh_exception* exceptions[]) {
+void asyncx_interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[], lh_exception* exceptions[]) {
   if (n == 0 || actions == NULL) return;
 
   lh_exception* exn = NULL;
@@ -187,12 +178,12 @@ void interleave_n(size_t n, lh_actionfun* actions[], lh_value arg_results[], lh_
       exceptions = local_exns;
     }
     {defer(&nodec_free_if_notnull, lh_value_ptr(local_exns)) {
-      _interleave_n(n, actions, arg_results, exceptions);
+      _async_interleave_n(n, actions, arg_results, exceptions);
     }}
   }}
 }
 
-void interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]) {
+void async_interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]) {
   if (n == 0 || actions == NULL) return;
   if (n == 1) {
     lh_value res = (actions[0])(arg_results==NULL ? lh_value_null : arg_results[0]);
@@ -201,7 +192,7 @@ void interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]) {
   else {
     lh_exception* exn = NULL;
     {using_zero_alloc_n(n, lh_exception*, exceptions) {
-      interleave_n(n, actions, arg_results, exceptions);
+      asyncx_interleave(n, actions, arg_results, exceptions);
       // rethrow the first exception and release the others
       for (size_t i = 0; i < n; i++) {
         if (exceptions[i] != NULL) {
@@ -238,7 +229,7 @@ lh_value async_firstof_ex(lh_actionfun* action1, lh_value arg1, lh_actionfun* ac
   lh_value      arg_results[2] = { lh_value_any_ptr(&args[0]), lh_value_any_ptr(&args[1]) };
   lh_exception* exceptions[2]  = { NULL, NULL };
   {using_cancel_scope() {
-    interleave_n(2, actions, arg_results, exceptions);
+    asyncx_interleave(2, actions, arg_results, exceptions);
   }}
 
   // pick the winner

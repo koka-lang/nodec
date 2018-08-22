@@ -264,7 +264,7 @@ bool async_scoped_is_canceled();
 /// an exception is raised, it is rethrown from `interleave` once all
 /// its actions have finished. Interleave introduces a cancelation 
 /// scope.
-void interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]);
+void async_interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]);
 
 /// Dynamically spawn an interleaved action.
 /// Only works in the action given to async_interleave_dynamic()!

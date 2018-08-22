@@ -41,13 +41,13 @@ lh_value test_filereadx(lh_value arg) {
 lh_value test_filereads(lh_value arg) {
   printf("test filereads\n");
   lh_actionfun* actions[2] = { &test_filereadx, &test_statx };
-  interleave(2, actions, NULL);
+  async_interleave(2, actions, NULL);
   return lh_value_null;
 }
 
 static void test_interleave() {
   lh_actionfun* actions[3] = { &test_filereadx, &test_statx, &test_filereads };
-  interleave(3, actions, NULL);
+  async_interleave(3, actions, NULL);
 }
 
 
@@ -149,9 +149,9 @@ static void test_http_serve() {
   //check_uverr(UV_EADDRINUSE);
 
   http_static_config_t config = http_static_default_config();
-  config.use_last_modified = false;
-  config.use_etag = false;
-  config.gzip_min_size = SIZE_MAX;
+  //config.use_last_modified = false;
+  //config.use_etag = false;
+  //config.gzip_min_size = SIZE_MAX;
   //config.read_buf_size = 1024;
   http_serve_static( "../../../nodec-bench/web" 
                    , &config );
