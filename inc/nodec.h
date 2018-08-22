@@ -266,11 +266,16 @@ bool async_scoped_is_canceled();
 /// scope.
 void async_interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]);
 
-/// Dynamically spawn an interleaved action.
-/// Only works in the action given to async_interleave_dynamic()!
-lh_value async_dynamic_spawn(lh_actionfun* action, lh_value arg, lh_exception** exn);
 
-/// Interleave a dynamic number of actions.
+/// Dynamically create an interleaved strand.
+/// Only works in the `action` given to async_interleave_dynamic()!
+lh_value async_strand_create(lh_actionfun* action, lh_value arg, lh_exception** exn);
+
+
+/// Return the number of currently interleaved strands under the innermost interleaved handler.
+size_t nodec_current_strand_count();
+
+/// Interleave a dynamic number of strands.
 /// \param action The initial action. This can use async_dynamic_spawn() to dynamically interleave more actions.
 /// \param arg  Argument passed to action.
 /// \returns The result from `action`. Only returns once `action` and all dynamically spawned actions are done.
@@ -782,14 +787,14 @@ nodec_bstream_t* async_tcp_connect(const char* host);
 
 /// TCP Server configuration options.
 typedef struct _tcp_server_config_t {
-  int       backlog;           ///< maximal pending request queue length (default 8).
-  int       max_interleaving;  ///< maximal number concurrent requests (default 512).
-  uint64_t  timeout;           ///< ms between connection requests allowed; 0 = infinite
-  uint64_t  timeout_total;     ///< total allowed connection time in ms; 0 = infinite
+  int       backlog;           ///< maximal pending OS request queue length (default 64).
+  int       max_interleaving;  ///< maximal number concurrent requests (default 1000).
+  uint64_t  timeout;           ///< ms between connection requests allowed; 0 = infinite, default 5000.
+  uint64_t  timeout_total;     ///< total allowed connection time in ms; 0 = infinite, default 0.
 } tcp_server_config_t;
 
 /// Default TCP server configuration.
-#define tcp_server_config()    { 0, 0, 0, 0 }
+#define tcp_server_config()    { 64, 1000, 5000, 0 }
 
 /// The server callback when listening on a TCP connection.
 /// \param id       The identity of the current asynchronous strand.

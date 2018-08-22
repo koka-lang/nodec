@@ -55,23 +55,27 @@ static void _handle_interleave_strand(channel_t* channel, isolate_args_t* args) 
 }
 
 
-LH_DEFINE_EFFECT1(spawn,spawn)
+LH_DEFINE_EFFECT2(strand,create,count)
 
-lh_value async_dynamic_spawn(lh_actionfun* action, lh_value arg, lh_exception** exn) {
-  return lh_yieldN(LH_OPTAG(spawn, spawn), 3, lh_value_ptr(action), arg, lh_value_any_ptr(exn));
+lh_value async_strand_create(lh_actionfun* action, lh_value arg, lh_exception** exn) {
+  return lh_yieldN(LH_OPTAG(strand, create), 3, lh_value_ptr(action), arg, lh_value_any_ptr(exn));
 }
 
-typedef struct _spawn_local_t {
+size_t nodec_current_strand_count() {
+  return (size_t)(lh_long_value(lh_yield(LH_OPTAG(strand, count), lh_value_null)));
+}
+
+typedef struct _strand_local_t {
   channel_t*        channel;
   volatile ssize_t* todo;
-} spawn_local_t;
+} strand_local_t;
 
 
-static lh_value _spawn_spawn(lh_resume resume, lh_value localv, lh_value argsv) {
+static lh_value _strand_create(lh_resume resume, lh_value localv, lh_value argsv) {
   yieldargs* yargs = lh_yieldargs_value(resume, argsv);
   assert(yargs->argcount == 3);
-  // execute action in the context just outside of the spawn handler (and under the channel handler)
-  spawn_local_t* local = (spawn_local_t*)lh_ptr_value(localv);
+  // execute action in the context just outside of the strand handler (and under the channel handler)
+  strand_local_t* local = (strand_local_t*)lh_ptr_value(localv);
   lh_actionfun* action = (lh_actionfun*)lh_ptr_value(yargs->args[0]);
   lh_exception** exn = (lh_exception**)lh_ptr_value(yargs->args[2]);
   *local->todo = *local->todo + 1;
@@ -82,30 +86,36 @@ static lh_value _spawn_spawn(lh_resume resume, lh_value localv, lh_value argsv) 
   return lh_tail_resume(resume, localv, res);
 }
 
-static const lh_operation spawn_ops[] = {
-  { LH_OP_TAIL, LH_OPTAG(spawn,spawn), &_spawn_spawn},
+static lh_value _strand_count(lh_resume resume, lh_value localv, lh_value arg) {
+  strand_local_t* local = (strand_local_t*)lh_ptr_value(localv);
+  return lh_tail_resume(resume, localv, lh_value_long(local->todo));
+}
+
+static const lh_operation strand_ops[] = {
+  { LH_OP_TAIL, LH_OPTAG(strand,create), &_strand_create},
+  { LH_OP_TAIL_NOOP, LH_OPTAG(strand,count), &_strand_count },
   { LH_OP_NULL, lh_op_null, NULL }
 };
-static const lh_handlerdef spawn_def = { LH_EFFECT(spawn), NULL, NULL, NULL, spawn_ops };
+static const lh_handlerdef strand_def = { LH_EFFECT(strand), NULL, NULL, NULL, strand_ops };
 
-static lh_value handle_spawn(channel_t* channel, volatile ssize_t* todo, lh_actionfun action, lh_value arg) {
+static lh_value handle_strands(channel_t* channel, volatile ssize_t* todo, lh_actionfun action, lh_value arg) {
   lh_value res;
-  {using_zero_alloc(spawn_local_t, local) {
+  {using_zero_alloc(strand_local_t, local) {
     local->channel = channel;
     local->todo = todo;
-    res = lh_handle(&spawn_def, lh_value_ptr(local), action, arg);
+    res = lh_handle(&strand_def, lh_value_ptr(local), action, arg);
   }}
   return res;
 }
 
-typedef struct _spawn_action_args_t {
+typedef struct _strands_action_args_t {
   isolate_args_t iargs;
   channel_t*     channel;  
-} spawn_action_args_t;
+} strands_action_args_t;
 
-static lh_value spawn_action(lh_value argsv) {
+static lh_value strands_action(lh_value argsv) {
   // run the action inside interleave strand itself
-  spawn_action_args_t* args = (spawn_action_args_t*)lh_ptr_value(argsv);
+  strands_action_args_t* args = (strands_action_args_t*)lh_ptr_value(argsv);
   volatile ssize_t* todo = args->iargs.todo;
   channel_t* channel = args->channel;
   _handle_interleave_strand(channel, &args->iargs);
@@ -129,8 +139,8 @@ lh_value async_interleave_dynamic(lh_actionfun action, lh_value arg) {
   {using_free((void*)(todo)){
     *todo = 1;
     {using_channel(channel) {
-      spawn_action_args_t sargs = { { action, arg, &res, &exn, todo }, channel };
-      handle_spawn(channel,todo,&spawn_action, lh_value_any_ptr(&sargs));            
+      strands_action_args_t sargs = { { action, arg, &res, &exn, todo }, channel };
+      handle_strands(channel,todo,&strands_action, lh_value_any_ptr(&sargs));            
     }}
   }}
   if (exn != NULL) lh_throw(exn);
@@ -148,7 +158,7 @@ typedef struct _interleave_n_args_t{
 static lh_value interleave_n_action(lh_value argsv) {
   interleave_n_args_t* args = (interleave_n_args_t*)lh_ptr_value(argsv);
   for (size_t i = 0; i < args->n; i++) {
-    args->arg_results[i] = async_dynamic_spawn(args->actions[i], args->arg_results[i], &args->exceptions[i]);
+    args->arg_results[i] = async_strand_create(args->actions[i], args->arg_results[i], &args->exceptions[i]);
   }
   return lh_value_null;
 }
