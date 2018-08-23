@@ -88,7 +88,7 @@ static lh_value _strand_create(lh_resume resume, lh_value localv, lh_value argsv
 
 static lh_value _strand_count(lh_resume resume, lh_value localv, lh_value arg) {
   strand_local_t* local = (strand_local_t*)lh_ptr_value(localv);
-  return lh_tail_resume(resume, localv, lh_value_long(local->todo));
+  return lh_tail_resume(resume, localv, lh_value_long(*local->todo));
 }
 
 static const lh_operation strand_ops[] = {
