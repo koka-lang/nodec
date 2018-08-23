@@ -121,7 +121,7 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
       uv_buf_t buf = nodec_buf_alloc(config->read_buf_size);
       size_t nread = 0;
       {using_buf(&buf) {
-        while ((nread = async_fread_into(file, buf, -1)) > 0) {
+        while ((nread = async_fs_read_into(file, buf, -1)) > 0) {
           async_write_buf(stream, nodec_buf(buf.base, nread));
         };
       }}
@@ -142,7 +142,7 @@ static bool http_try_send(const http_static_config_t* config, const char* root, 
   if (strlen(fname) == 0) return false;
 
   uv_stat_t stat;
-  uv_errno_t err = asyncx_stat(fname, &stat);
+  uv_errno_t err = asyncx_fs_stat(fname, &stat);
   if (err == UV_ENOENT && ext == NULL && config->implicit_exts != NULL) {
     // not found, try implicit extensions
     bool res = false;
@@ -157,7 +157,7 @@ static bool http_try_send(const http_static_config_t* config, const char* root, 
   }
   else if ((stat.st_mode & S_IFREG) == S_IFREG) {
     // a regular file, send it
-    using_async_fopen(fname, O_RDONLY, 0, &http_try_send_file, lh_value_any_ptr(&stat));
+    using_async_fs_open(fname, O_RDONLY, 0, &http_try_send_file, lh_value_any_ptr(&stat));
     return true;
   }
   else if ((stat.st_mode & S_IFDIR) == S_IFDIR) {

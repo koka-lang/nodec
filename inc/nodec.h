@@ -258,12 +258,16 @@ bool async_scoped_is_canceled();
   Asynchronous combinators
 -----------------------------------------------------------------------------*/
 
-/// Interleave `n` actions.
+/// Interleave a fixed number of strands.
 /// Interleave with arguments `arg_results`. 
 /// The result of each action is stored again in `arg_results`; when
 /// an exception is raised, it is rethrown from `interleave` once all
 /// its actions have finished. Interleave introduces a cancelation 
 /// scope.
+/// \param n  Number of strands to create.
+/// \param actions Array of size `n` containing the action to execute for each strand.
+/// \param arg_results Array of size `n` containing the argument values passed to each 
+///                    action and also to store the result of each action.
 void async_interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[]);
 
 
@@ -289,18 +293,21 @@ lh_value async_interleave_dynamic(lh_actionfun action, lh_value arg);
 /// \returns The result of `action` or `lh_value_null` if it timed out.
 lh_value async_timeout(lh_actionfun* action, lh_value arg, uint64_t timeout, bool* timedout);
 
-// Return when the either action is done, canceling the other.
-// Return `true` if the first action was finished first.
+/// Type of actions with no arguments and no return value.
 typedef void (nodec_actionfun_t)();
+
+/// Return when the either action is done, canceling the other.
+/// \returns `true` if the first action was finished first.
 bool async_firstof(nodec_actionfun_t* action1, nodec_actionfun_t* action2);
 
-// Return the value of the first returning action, canceling the other.
+/// Return the value of the first returning action, canceling the other.
 lh_value async_firstof_ex(lh_actionfun* action1, lh_value arg1, lh_actionfun* action2, lh_value arg2, bool* first, bool ignore_exn);
 
-// Asynchronously wait for `timeout` milli-seconds.
+/// Asynchronously wait for `timeout` milli-seconds.
 void async_wait(uint64_t timeout);
 
-// Yield asynchronously to other strands.
+/// Yield asynchronously to other strands.
+/// Equivalent to async_wait() with a 0 timeout.
 void async_yield();
 
 /// \}
@@ -315,9 +322,21 @@ void async_yield();
 /// Asynchronous access to the file system.
 /// \{
 
-uv_errno_t  asyncx_stat(const char* path, uv_stat_t* stat);
-uv_stat_t   async_stat(const char* path);
-uv_stat_t   async_fstat(uv_file file);
+/// Stat a file without raising an exception on failure.
+/// \param path The file path.
+/// \param stat The result file information.
+/// \returns 0 on success, and otherwise an error code (usually when the file does not exist).
+uv_errno_t  asyncx_fs_stat(const char* path, uv_stat_t* stat);
+
+/// Stat a file.
+/// \param path The file path.
+/// \returns The file information.
+uv_stat_t   async_fs_stat(const char* path);
+
+/// Stat a file handle.
+/// \param file The opened file handle.
+/// \returns The file information.
+uv_stat_t   async_fs_fstat(uv_file file);
 
 
 /// Open a file.
@@ -325,7 +344,7 @@ uv_stat_t   async_fstat(uv_file file);
 /// \param flags The file open flags.
 /// \param mode The file permissions mode if it is created (using #UV_FS_O_CREAT).
 /// \returns The opened file handle on success.
-uv_file     async_fopen(const char* path, nodec_open_flags_t flags, int permissions);
+uv_file     async_fs_open(const char* path, nodec_open_flags_t flags, int permissions);
 
 /// Open a file.
 /// Returns an error code instead of throwing an exception.
@@ -334,12 +353,32 @@ uv_file     async_fopen(const char* path, nodec_open_flags_t flags, int permissi
 /// \param mode The file permissions mode if it is created (using #UV_FS_O_CREAT).
 /// \param[out] file Set to the file handle on success
 /// \returns A possible error code, or 0 on succes.
-uv_errno_t  asyncx_fopen(const char* path, nodec_open_flags_t flags, int permissions, uv_file* file );
-void        async_fclose(uv_file file);
+uv_errno_t  asyncx_fs_open(const char* path, nodec_open_flags_t flags, int permissions, uv_file* file );
 
-size_t      async_fread_into(uv_file file, uv_buf_t buf, int64_t file_offset);
-uv_buf_t    async_fread_buf(uv_file file, size_t max, int64_t file_offset);
-uv_buf_t    async_fread_buf_all(uv_file file, size_t max);
+/// Close a file.
+/// \param file The file handle to be closed.
+void        async_fs_close(uv_file file);
+
+/// Read a file into a buffer.
+/// \param file The file handle
+/// \param buf  The buffer to read into.
+/// \param file_offset The offset to read from in the file.
+/// \returns The number of bytes read.
+size_t      async_fs_read_into(uv_file file, uv_buf_t buf, int64_t file_offset);
+
+/// Read part of a file.
+/// Most efficient way to read files.
+/// \param file The file to read from.
+/// \param max  The maximum number of bytes to read.
+/// \param file_offset The offset to read from in the file.
+/// \returns a buffer contiaining the bytes read.
+uv_buf_t    async_fs_read_buf(uv_file file, size_t max, int64_t file_offset);
+
+/// Read an entire file (or up to `max` bytes)
+/// \param file The file to read from.
+/// \param max  The maximum number of bytes to read.
+/// \returns A buffer with the file contents.
+uv_buf_t    async_fs_read_buf_all(uv_file file, size_t max);
 
 /// Used to iterate over the contents of a directory.
 typedef uv_fs_t nodec_scandir_t;
@@ -351,11 +390,11 @@ void        nodec_scandir_freev(lh_value scanreqv);
 
 /// Use a #nodec_scandir_t in a scope.
 /// \param scandir A #nodec_scandir_t returned from async_scandir()
-#define using_scandir(scandir)  defer(nodec_scandir_freev,lh_value_ptr(scandir))
+#define using_fs_scandir(scandir)  defer(nodec_scandir_freev,lh_value_ptr(scandir))
 
 /// Initiate scanning a directory.
 /// \param path The directory path.
-nodec_scandir_t* async_scandir(const char* path);
+nodec_scandir_t* async_fs_scandir(const char* path);
 
 /// Iterate over the directory contents.
 /// \param[in,out] scanreq The iteration state.
@@ -371,13 +410,20 @@ nodec_scandir_t* async_scandir(const char* path);
 ///    }
 /// }}
 /// ```
-bool async_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
+bool async_fs_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent);
 
 // ----------------------------------
 // File system convenience functions
 
-char*       async_fread_from(const char* path);
-uv_buf_t    async_fread_buf_from(const char* path);
+/// Read full contents of a file as a string.
+/// \param path The file path.
+/// \returns The contents of the file as a string (assuming no 0 bytes)
+char*       async_fs_read_from(const char* path);
+
+/// Read full contents of a file as a buffer.
+/// \param path The file path
+/// \returns A heap allocated buffer containing the entire file contents.
+uv_buf_t    async_fs_read_buf_from(const char* path);
 
 /// Type of scoped file functions.
 typedef lh_value(nodec_file_fun)(uv_file file, const char* path, lh_value arg);
@@ -389,7 +435,7 @@ typedef lh_value(nodec_file_fun)(uv_file file, const char* path, lh_value arg);
 /// \param action The file open action: called with the opened file handle.
 /// \param arg Extra argument passed to `action`.
 /// \returns The return value of `action`.
-lh_value    using_async_fopen(const char* path, nodec_open_flags_t flags, int permissions, nodec_file_fun* action, lh_value arg);
+lh_value    using_async_fs_open(const char* path, nodec_open_flags_t flags, int permissions, nodec_file_fun* action, lh_value arg);
 
 /// Safely open a file, use it, and close it again.
 /// Does not throw an exception on a file open error but returns an `uv_errno_t` instead.
@@ -400,7 +446,7 @@ lh_value    using_async_fopen(const char* path, nodec_open_flags_t flags, int pe
 /// \param arg Extra argument passed to `action`.
 /// \param[out] result The return value of `action`.
 /// \returns A possible error code or 0 on success.
-uv_errno_t  using_asyncx_fopen(const char* path, nodec_open_flags_t flags, int permissions, nodec_file_fun* action, lh_value arg, lh_value* result);
+uv_errno_t  using_asyncx_fs_open(const char* path, nodec_open_flags_t flags, int permissions, nodec_file_fun* action, lh_value arg, lh_value* result);
 
 /// \}
 

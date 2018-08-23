@@ -72,6 +72,32 @@ typedef enum _nodec_open_flags_t {
 /// Permission mode for (user) execute.
 #define X_OK 1
 
+/// Portable structure to hold time stamps.
+typedef struct {
+  long tv_sec;      ///< Seconds since 1970-01-01UTC (Unix Epoch)
+  long tv_nsec;     ///< Nanoseconds
+} uv_timespec_t;
+
+/// Portable structure for file information.
+typedef struct {
+  uint64_t st_dev;            ///< Device id of the file.
+  uint64_t st_mode;           ///< File type and permission mode.
+  uint64_t st_nlink;          ///< Number of hard links that point to this file.
+  uint64_t st_uid;            ///< User ID associated with this file.             
+  uint64_t st_gid;            ///< Group ID associated with this file.
+  uint64_t st_rdev;
+  uint64_t st_ino;            ///< INODE number of the file.
+  uint64_t st_size;           ///< Size of the file in bytes.
+  uint64_t st_blksize;        ///< Block size used for I/O operations.
+  uint64_t st_blocks;         ///< Blocks allocated for this file.
+  uint64_t st_flags;      
+  uint64_t st_gen;
+  uv_timespec_t st_atim;         ///< Last access time.
+  uv_timespec_t st_mtim;         ///< Last modified time.
+  uv_timespec_t st_ctim;         ///< Last time the file status changed.
+  uv_timespec_t st_birthtim;     ///< Creation time.
+} uv_stat_t;
+
 /// Directory entry types.
 typedef enum {
   UV_DIRENT_UNKNOWN,  ///< Unknown type.
