@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['lh_5fop_5fforward',['LH_OP_FORWARD',['../group__effect__handlers.html#ggaa1b51c33da7448e42829ec71678631fca95b23feba31938ac3c29de4542342718',1,'libhandler.h']]],
   ['lh_5fop_5fgeneral',['LH_OP_GENERAL',['../group__effect__handlers.html#ggaa1b51c33da7448e42829ec71678631fca46b8f876817791c1ae49735d9cf2cc9b',1,'libhandler.h']]],
   ['lh_5fop_5fnoresume',['LH_OP_NORESUME',['../group__effect__handlers.html#ggaa1b51c33da7448e42829ec71678631fca22aca2bf964620d72e447d8bcd116d3d',1,'libhandler.h']]],
   ['lh_5fop_5fnoresumex',['LH_OP_NORESUMEX',['../group__effect__handlers.html#ggaa1b51c33da7448e42829ec71678631fca4aa95af9b879aeff29642da0c1fcf16e',1,'libhandler.h']]],

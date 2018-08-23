@@ -200,7 +200,14 @@ Read buffer chunk size, by default 64KB. </td></tr>
 <td class="fieldname">
 use_etag</td>
 <td class="fielddoc">
-Generate cluster-safe ETag's for efficient caching, By default true. <p>However, the server also generates <code>Last-Modified</code> headers and respects both <code>If-Not-Modified</code> and <code>If-None-Match</code> headers with efficient 304 responses. </p>
+Generate cluster-safe ETag's for efficient caching, By default true. <p>However, the server also generates <code>Last-Modified</code> headers and respects both <code>If-Modified-Since</code> and <code>If-None-Match</code> headers with efficient 304 responses. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a28d756b30046e7e7ee6b88d4dfe3dcce"></a>bool</td>
+<td class="fieldname">
+use_last_modified</td>
+<td class="fielddoc">
+Generate <code>Last-Modified</code> headers for efficient caching, By default true. <p>The server checks <code>If-Modified-Since</code> headers with efficient 304 responses. </p>
 </td></tr>
 </table>
 

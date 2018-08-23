@@ -8,5 +8,7 @@ var annotated_dup =
     [ "tcp_server_config_t", "group__tcp.html#structtcp__server__config__t", "group__tcp_structtcp__server__config__t" ],
     [ "uv_buf_t", "group__buffers.html#structuv__buf__t", "group__buffers_structuv__buf__t" ],
     [ "uv_dirent_t", "group__nodec__fs.html#structuv__dirent__t", "group__nodec__fs_structuv__dirent__t" ],
+    [ "uv_stat_t", "group__nodec__fs.html#structuv__stat__t", "group__nodec__fs_structuv__stat__t" ],
+    [ "uv_timespec_t", "group__nodec__fs.html#structuv__timespec__t", "group__nodec__fs_structuv__timespec__t" ],
     [ "yieldargs", "group__effect__handlers.html#structyieldargs", "group__effect__handlers_structyieldargs" ]
 ];

@@ -27,5 +27,6 @@ var searchData=
   ['lh_5fthrow',['lh_throw',['../group__effect__exn.html#ga1383c391fc3f472b7e80c5ab48036cd3',1,'libhandler.h']]],
   ['lh_5ftry',['lh_try',['../group__effect__exn.html#ga777f696b7d834b82d13aada6f35f4187',1,'libhandler.h']]],
   ['lh_5fyield',['lh_yield',['../group__effect__handlers.html#ga8ca9fef815d0ad701f17b8f499c47645',1,'libhandler.h']]],
+  ['lh_5fyield_5flocal',['lh_yield_local',['../group__effect__handlers.html#ga34234a90a032e52d31f6315ea31e715d',1,'libhandler.h']]],
   ['lh_5fyieldn',['lh_yieldN',['../group__effect__handlers.html#ga86b49751042776deb9582fefb843052a',1,'libhandler.h']]]
 ];

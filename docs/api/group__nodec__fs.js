@@ -1,11 +1,33 @@
 var group__nodec__fs =
 [
+    [ "uv_timespec_t", "group__nodec__fs.html#structuv__timespec__t", [
+      [ "tv_nsec", "group__nodec__fs.html#af1552c618f27286c9734be801d0ecf3f", null ],
+      [ "tv_sec", "group__nodec__fs.html#a6c1e6a2cd2d9f10dc4df27ab3a79bc9d", null ]
+    ] ],
+    [ "uv_stat_t", "group__nodec__fs.html#structuv__stat__t", [
+      [ "st_atim", "group__nodec__fs.html#a90374cf48291ecde29394d1982b9eec8", null ],
+      [ "st_birthtim", "group__nodec__fs.html#a324b6bb9a3dcb70259e0195379c5f9ef", null ],
+      [ "st_blksize", "group__nodec__fs.html#af549bc8ae4793b83fa25b97fc5518e67", null ],
+      [ "st_blocks", "group__nodec__fs.html#a7cb4ce091e3b7418f368451dd60e535e", null ],
+      [ "st_ctim", "group__nodec__fs.html#a7785fcfd6909d22b07f8461219ca2133", null ],
+      [ "st_dev", "group__nodec__fs.html#ac1f0764990fe34d0b21f7e3af9fef946", null ],
+      [ "st_flags", "group__nodec__fs.html#a14bc9565a316b65e422dde506d4c6428", null ],
+      [ "st_gen", "group__nodec__fs.html#ab5036343ef8adaabecc2362f5905b9cb", null ],
+      [ "st_gid", "group__nodec__fs.html#aa6d1907b84accf5662140cb0834e479d", null ],
+      [ "st_ino", "group__nodec__fs.html#a1442738c45923c0a23f7ee0c2837f584", null ],
+      [ "st_mode", "group__nodec__fs.html#a198c4352c514e9eff06e7363c3562a8f", null ],
+      [ "st_mtim", "group__nodec__fs.html#a89f339b980cacb16da47d7a7c04f7e8a", null ],
+      [ "st_nlink", "group__nodec__fs.html#a05b9207a1a204eae78b2c7dc0d3812ab", null ],
+      [ "st_rdev", "group__nodec__fs.html#af0cc8e07491b42cd8b82d797ec5af0b4", null ],
+      [ "st_size", "group__nodec__fs.html#a454ac6f7cef9a00d73baf2028fe3a7cb", null ],
+      [ "st_uid", "group__nodec__fs.html#ac56d6239041749e7bc4ccc472aa800b1", null ]
+    ] ],
     [ "uv_dirent_t", "group__nodec__fs.html#structuv__dirent__t", [
       [ "name", "group__nodec__fs.html#ac7ce6fb281bd218f7821f6c52a63a737", null ],
       [ "type", "group__nodec__fs.html#a7343234f6f445689c599b147eeac9658", null ]
     ] ],
     [ "R_OK", "group__nodec__fs.html#ga24a7a0ceb1e8f5f44cb1038bb829030d", null ],
-    [ "using_scandir", "group__nodec__fs.html#ga7bf547c1e12a2d084a0fbd9ba99749a9", null ],
+    [ "using_fs_scandir", "group__nodec__fs.html#ga6dd6912567933b893bc5d548f7c93b6e", null ],
     [ "W_OK", "group__nodec__fs.html#gae5acf4043c0903cda7436b108e29e8e6", null ],
     [ "X_OK", "group__nodec__fs.html#ga5e995ef7690698b62bf016b14fbc45ca", null ],
     [ "nodec_file_fun", "group__nodec__fs.html#ga340bba31d68b120ee5416378d133d4e3", null ],
@@ -44,10 +66,19 @@ var group__nodec__fs =
       [ "UV_DIRENT_CHAR", "group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335a3ab846891d83853555d15168a01d37c1", null ],
       [ "UV_DIRENT_BLOCK", "group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335aa070fc602168c3bf34807eba51cd48a2", null ]
     ] ],
-    [ "async_fopen", "group__nodec__fs.html#ga03795062662fab68d33cb2a545f2a216", null ],
-    [ "async_scandir", "group__nodec__fs.html#gad26564facd91dc0f198e54fb14460cfe", null ],
-    [ "async_scandir_next", "group__nodec__fs.html#gada696bec2c7dff6f40de926c1162c920", null ],
-    [ "asyncx_fopen", "group__nodec__fs.html#gae462f9dcfc8afab504f73898734e5493", null ],
-    [ "using_async_fopen", "group__nodec__fs.html#gad8d5ffb33528c583617c42caf1adf7b5", null ],
-    [ "using_asyncx_fopen", "group__nodec__fs.html#gaa4583cf7a1ed43130eff47ef9a95e16b", null ]
+    [ "async_fs_close", "group__nodec__fs.html#ga8d7a8b33060538966cd96341b3f50f7f", null ],
+    [ "async_fs_fstat", "group__nodec__fs.html#ga8c16a77ce261f6b8e012fe83cb15c58d", null ],
+    [ "async_fs_open", "group__nodec__fs.html#gac2bf74e83604a17f5cef879ec99cb4f6", null ],
+    [ "async_fs_read_buf", "group__nodec__fs.html#ga97387ae4fd2fddfcaf964ab3941bd184", null ],
+    [ "async_fs_read_buf_all", "group__nodec__fs.html#ga02e4f8c156fb631d167cd0488ae7d5cf", null ],
+    [ "async_fs_read_buf_from", "group__nodec__fs.html#gaa6fc903d284054a673cc931e276a848b", null ],
+    [ "async_fs_read_from", "group__nodec__fs.html#gae3b908d2c12c6bb8d2ed8493d69a0e6a", null ],
+    [ "async_fs_read_into", "group__nodec__fs.html#ga1e1887c16a425c58545788efb5b7cd9b", null ],
+    [ "async_fs_scandir", "group__nodec__fs.html#ga3cc87b8f36d127ef984319f00e76a40c", null ],
+    [ "async_fs_scandir_next", "group__nodec__fs.html#gafa78969b259943998622377b987cff5c", null ],
+    [ "async_fs_stat", "group__nodec__fs.html#ga3ebae44242383c0a5a16b42641e2230a", null ],
+    [ "asyncx_fs_open", "group__nodec__fs.html#ga3937ef3449947843429fdc056ed7031c", null ],
+    [ "asyncx_fs_stat", "group__nodec__fs.html#ga87628a7a27ae3ad2f0605e9cace40f9c", null ],
+    [ "using_async_fs_open", "group__nodec__fs.html#gac2c5469313c7fc23b4578d546ff5dde2", null ],
+    [ "using_asyncx_fs_open", "group__nodec__fs.html#ga2f19335f15eaf41304f16e195ae8eba2", null ]
 ];

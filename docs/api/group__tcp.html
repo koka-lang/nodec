@@ -174,25 +174,25 @@ Functions</h2></td></tr>
 <td class="fieldname">
 backlog</td>
 <td class="fielddoc">
-maximal pending request queue length (default 8). </td></tr>
+maximal pending OS request queue length (default 64). </td></tr>
 <tr><td class="fieldtype">
 <a id="ace7d6ad760cdb393909b6b4496929d4d"></a>int</td>
 <td class="fieldname">
 max_interleaving</td>
 <td class="fielddoc">
-maximal number concurrent requests (default 512). </td></tr>
+maximal number concurrent requests (default 1000). </td></tr>
 <tr><td class="fieldtype">
 <a id="aa1a3af7b0980e3c45cc618c2bf7f076f"></a>uint64_t</td>
 <td class="fieldname">
 timeout</td>
 <td class="fielddoc">
-ms between connection requests allowed; 0 = infinite </td></tr>
+ms between connection requests allowed; 0 = infinite, default 5000. </td></tr>
 <tr><td class="fieldtype">
 <a id="a4af6558b9d474340373020ccfef5026c"></a>uint64_t</td>
 <td class="fieldname">
 timeout_total</td>
 <td class="fielddoc">
-total allowed connection time in ms; 0 = infinite </td></tr>
+total allowed connection time in ms; 0 = infinite, default 0. </td></tr>
 </table>
 
 </div>
