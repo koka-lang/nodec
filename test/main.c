@@ -8,14 +8,14 @@
 static void test_stat() {
   const char* path = "cenv.h";
   printf("stat file %s\n", path);
-  uv_stat_t stat = async_stat(path);
+  uv_stat_t stat = async_fs_stat(path);
   printf("file %s last access time: %li\n", path, stat.st_atim.tv_sec);
 }
 
 static void test_fileread() {
   const char* path = "cenv.h";
   printf("opening file: %s\n", path);
-  char* contents = async_fread_from(path);
+  char* contents = async_fs_read_from(path);
   {using_free(contents) {
     printf("read %Ii bytes from %s:\n...\n", strlen(contents), path);    
   }}
@@ -41,13 +41,13 @@ lh_value test_filereadx(lh_value arg) {
 lh_value test_filereads(lh_value arg) {
   printf("test filereads\n");
   lh_actionfun* actions[2] = { &test_filereadx, &test_statx };
-  interleave(2, actions, NULL);
+  async_interleave(2, actions, NULL);
   return lh_value_null;
 }
 
 static void test_interleave() {
   lh_actionfun* actions[3] = { &test_filereadx, &test_statx, &test_filereads };
-  interleave(3, actions, NULL);
+  async_interleave(3, actions, NULL);
 }
 
 
@@ -147,11 +147,11 @@ static void test_http_serve() {
   //printf("waiting %i secs...\n", 2); 
   //async_wait(1000);
   //check_uverr(UV_EADDRINUSE);
-
+  
   http_static_config_t config = http_static_default_config();
-  config.use_last_modified = false;
-  config.use_etag = false;
-  config.gzip_min_size = SIZE_MAX;
+  //config.use_last_modified = false;
+  //config.use_etag = false;
+  //config.gzip_min_size = SIZE_MAX;
   //config.read_buf_size = 1024;
   http_serve_static( "../../../nodec-bench/web" 
                    , &config );
@@ -220,10 +220,10 @@ Test scandir
 -----------------------------------------------------------------*/
 
 void test_scandir() {
-  nodec_scandir_t* scan = async_scandir(".");
-  {using_scandir(scan) {
+  nodec_scandir_t* scan = async_fs_scandir(".");
+  {using_fs_scandir(scan) {
     uv_dirent_t dirent;
-    while (async_scandir_next(scan, &dirent)) {
+    while (async_fs_scandir_next(scan, &dirent)) {
       printf("entry %i: %s\n", dirent.type, dirent.name);
     }
   }}

@@ -32,6 +32,7 @@ var group__effect__handlers =
     [ "lh_resume", "group__effect__handlers.html#gace940505f4ef9f09e2aeeca789c5fdea", null ],
     [ "lh_opkind", "group__effect__handlers.html#gaa1b51c33da7448e42829ec71678631fc", [
       [ "LH_OP_NULL", "group__effect__handlers.html#ggaa1b51c33da7448e42829ec71678631fca2cdd41fc10e2c645450aac1310941b06", null ],
+      [ "LH_OP_FORWARD", "group__effect__handlers.html#ggaa1b51c33da7448e42829ec71678631fca95b23feba31938ac3c29de4542342718", null ],
       [ "LH_OP_NORESUMEX", "group__effect__handlers.html#ggaa1b51c33da7448e42829ec71678631fca4aa95af9b879aeff29642da0c1fcf16e", null ],
       [ "LH_OP_NORESUME", "group__effect__handlers.html#ggaa1b51c33da7448e42829ec71678631fca22aca2bf964620d72e447d8bcd116d3d", null ],
       [ "LH_OP_TAIL_NOOP", "group__effect__handlers.html#ggaa1b51c33da7448e42829ec71678631fcab8ab449e5f433cd8a4bc77e2269ebb00", null ],
@@ -49,5 +50,6 @@ var group__effect__handlers =
     [ "lh_scoped_resume", "group__effect__handlers.html#gab351a98efa1a6078343a93bec2eed9f4", null ],
     [ "lh_tail_resume", "group__effect__handlers.html#ga5eec69ac638f5046561917fd11edd9ec", null ],
     [ "lh_yield", "group__effect__handlers.html#ga8ca9fef815d0ad701f17b8f499c47645", null ],
+    [ "lh_yield_local", "group__effect__handlers.html#ga34234a90a032e52d31f6315ea31e715d", null ],
     [ "lh_yieldN", "group__effect__handlers.html#ga86b49751042776deb9582fefb843052a", null ]
 ];

@@ -19,6 +19,7 @@ var searchData=
   ['nodec_5fbufref_5ffree',['nodec_bufref_free',['../group__buffers.html#gaa6ccecc9f6261de344980239606f436f',1,'nodec.h']]],
   ['nodec_5fbufref_5ffreev',['nodec_bufref_freev',['../group__buffers.html#ga91c4241a67c3eee14fd4f9ee8d94def0',1,'nodec.h']]],
   ['nodec_5fbufref_5fnofreev',['nodec_bufref_nofreev',['../group__buffers.html#ga5f1b0e1ca03687d24bd982c34f8b4bd4',1,'nodec.h']]],
+  ['nodec_5fcurrent_5fstrand_5fcount',['nodec_current_strand_count',['../group__nodec__async.html#gaf6699450ad5b09e545266361c2ea353f',1,'nodec.h']]],
   ['nodec_5fends_5fwith',['nodec_ends_with',['../group__nodec__various.html#gab48824ff3f0fab32ddef8ac00155ab10',1,'nodec.h']]],
   ['nodec_5fends_5fwithi',['nodec_ends_withi',['../group__nodec__various.html#ga5fd5694004902170bbff8bff8b92ad88',1,'nodec.h']]],
   ['nodec_5fext_5ffrom_5fmime',['nodec_ext_from_mime',['../group__nodec__mime.html#gaa4dc59d468820d27e2001dfc66b018fa',1,'nodec.h']]],

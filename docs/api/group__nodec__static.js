@@ -8,7 +8,8 @@ var group__nodec__static =
       [ "implicit_exts", "group__nodec__static.html#a35e38162a485696d0259c3789b690f1d", null ],
       [ "implicit_index", "group__nodec__static.html#a6b2390b3780a8912fb6d571aa7a08ba6", null ],
       [ "read_buf_size", "group__nodec__static.html#a31d97bb6440fc5992cb56fc84d0725fa", null ],
-      [ "use_etag", "group__nodec__static.html#ab77a0887c2beea113ae3a647bd5051ed", null ]
+      [ "use_etag", "group__nodec__static.html#ab77a0887c2beea113ae3a647bd5051ed", null ],
+      [ "use_last_modified", "group__nodec__static.html#a28d756b30046e7e7ee6b88d4dfe3dcce", null ]
     ] ],
     [ "http_static_default_config", "group__nodec__static.html#gafee4501f26dcb4de2253ee690fcc9cfa", null ],
     [ "http_serve_static", "group__nodec__static.html#gaaa8f361e185522a1dea817d83c8d784b", null ],
