@@ -792,7 +792,7 @@ WARN_LOGFILE           =
 
 INPUT                  = inc\nodec.h \
                          inc\nodec-extra-doc.h \
-                         ..\libhandler\inc\libhandler.h
+                         deps\libhandler\inc\libhandler.h
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
