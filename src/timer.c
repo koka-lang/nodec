@@ -123,7 +123,7 @@ int nodec_localtime(struct tm* _tm, const time_t* const t) {
 #endif
 
 
-#ifdef HAS__MKGMTIME_
+#ifdef HAS__MKGMTIME
 static time_t nodec_mkgmtime(struct tm* _tm) {
   return _mkgmtime(_tm);
 }
@@ -138,8 +138,8 @@ static time_t nodec_mkgmtime(struct tm * _tm) {
 
   struct tm gt;
   struct tm lt;
-  nodec_gmtime(&gt,t);
-  nodec_localtime(&lt,t); // normalize
+  nodec_gmtime(&gt,&t);
+  nodec_localtime(&lt,&t); // normalize
   
   // adjust with the difference
   lt.tm_year -= gt.tm_year - lt.tm_year;
@@ -199,7 +199,7 @@ bool nodec_parse_inet_date(const char* date, time_t* t) {
 #endif
   if (res == EOF) return false;
   
-  month[3] = 0;
+  month[3] = 0; // paranoia
   for (int i = 0; i < 12; i++) {
     if (strncmp(month, months[i], 3) == 0) {
       g.tm_mon = i;
