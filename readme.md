@@ -16,7 +16,9 @@ code {
 
   \
 Warning: this library is still under heavy active development and experimental.
-It is not yet ready for general use. Current development is mostly for Windows x64 using Visual Studio 2017.
+It is not yet ready for general use. Current development is mostly for Windows x64 
+using Visual Studio 2017, but the library has also been tested on Ubuntu Linux (AMDx64) 
+and a Raspberry Pi (ARMv7).
 
 NodeC is a _lean and mean_ version of [Node.js] which aims to provide
 similar functionality as Node.js but using C directly. The main goal is improved
@@ -153,6 +155,34 @@ once for a checkout).
 
 After it builds successfully, you can use the Microsoft Visual Studio solution at 
 `ide\msvc\nodec.sln` to play with examples.
+
+
+## Building on Unix's
+
+This has been tested on Ubuntu Linux (amd64), and on a Raspberry PI (Raspbian, ARMv7 in 32-bit).
+
+1. Ensure you have `automake` and `libtool`  installed to build the [libuv] dependency.
+   Usually, you can install this as:
+   ```
+   sudo apt-get install automake libtool
+   ```
+
+2. Run `make-deps.sh` to configure and make all dependent 
+   projects:
+   ```
+   > ./make-deps.sh
+   ```
+
+3. Run `configure` and `make` to build the `nodec` 
+   library:
+   ```
+   > ./configure
+   > make
+   ```
+   This will build the `libnodecx.a` library in the `out/nodecx/lib` directory
+   which includes all the dependent projects into one static library.
+
+4. Run `make tests` to run the test program.
 
 
 [libuv]: https://github.com/libuv/libuv
