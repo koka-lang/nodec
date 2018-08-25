@@ -75,7 +75,7 @@ static void _listen_cb(uv_stream_t* server, int status) {
     err = UV_ENOSPC; // stop accepting connections if the queue is full
   }
   else {
-    client = (uv_tcp_t*)calloc(1,sizeof(uv_tcp_t));
+    client = (uv_tcp_t*)nodecx_calloc(1,sizeof(uv_tcp_t));
     if (client == NULL) {
       err = UV_ENOMEM;
     }

@@ -24,7 +24,7 @@ static const mime_type_t* mime_from_fname(const char* fname) {
   int lo = 0;                    
   while (lo <= hi) {
     int i = lo + ((hi - lo) / 2);
-    int cmp = _stricmp(ext, mime_extensions[i].extension);
+    int cmp = nodec_stricmp(ext, mime_extensions[i].extension);
     if (cmp == 0) { 
       lo = hi = i;  
       break;
@@ -48,7 +48,7 @@ static const mime_type_t* mime_from_name(const char* name) {
   int lo = 0;
   while (lo <= hi) {
     int i = lo + ((hi - lo) / 2);
-    int cmp = _stricmp(name, mime_types[i].name);
+    int cmp = nodec_stricmp(name, mime_types[i].name);
     if (cmp == 0) {
       lo = hi = i;
       break;

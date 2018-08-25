@@ -4,6 +4,7 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 -----------------------------------------------------------------------------*/
+#include "cenv.h"
 #include "nodec.h"
 #include "nodec-primitive.h"
 #include "nodec-internal.h"
@@ -99,6 +100,59 @@ uv_errno_t _uv_set_timeout(uv_loop_t* loop, uv_timeoutfun* cb, void* arg, uint64
   Sun, 06 Nov 1994 08:49:37 GMT
 -----------------------------------------------------------------------------*/
 
+#ifdef HAS_GMTIME_S
+int nodec_gmtime(struct tm* _tm, const time_t* const t) {
+  return gmtime_s(_tm, t);
+}
+#else
+int nodec_gmtime(struct tm* _tm, const time_t* const t) {
+  *_tm = *(gmtime(t));
+  return 0;
+}
+#endif
+
+#ifdef HAS_LOCALTIME_S
+int nodec_localtime(struct tm* _tm, const time_t* const t) {
+  return localtime_s(_tm, t);
+}
+#else
+int nodec_localtime(struct tm* _tm, const time_t* const t) {
+  *_tm = *(localtime(t));
+  return 0;
+}
+#endif
+
+
+#ifdef HAS__MKGMTIME_
+static time_t nodec_mkgmtime(struct tm* _tm) {
+  return _mkgmtime(_tm);
+}
+#elif defined(HAS_TIMEGM) 
+static time_t nodec_mkgmtime(struct tm* _tm) {
+  return timegm(_tm);
+}
+#else
+static time_t nodec_mkgmtime(struct tm * _tm) {
+  // TODO: needs testing
+  time_t t = mktime(_tm);
+
+  struct tm gt;
+  struct tm lt;
+  nodec_gmtime(&gt,t);
+  nodec_localtime(&lt,t); // normalize
+  
+  // adjust with the difference
+  lt.tm_year -= gt.tm_year - lt.tm_year;
+  lt.tm_mon  -= gt.tm_mon - lt.tm_mon;
+  lt.tm_mday -= gt.tm_mday - lt.tm_mday;
+  lt.tm_hour -= gt.tm_hour - lt.tm_hour;
+  lt.tm_min  -= gt.tm_min - lt.tm_min;
+  lt.tm_sec  -= gt.tm_sec - lt.tm_sec;
+
+  // and convert again
+  return mktime(&lt);
+}
+#endif
 
 #define INET_DATE_LEN 29
 
@@ -115,7 +169,7 @@ const char* nodec_inet_date( time_t now )
 
   if (now == inet_time) return inet_date;
   struct tm tm;
-  gmtime_s(&tm, &now);
+  nodec_gmtime(&tm, &now);
   strftime(inet_date, INET_DATE_LEN + 1, "---, %d --- %Y %H:%M:%S GMT", &tm);
   if (tm.tm_wday >= 0 && tm.tm_wday < 7) memcpy(inet_date, days[tm.tm_wday], 3);
   if (tm.tm_mon >= 0 && tm.tm_mon < 12) memcpy(inet_date + 8, months[tm.tm_mon], 3);
@@ -134,10 +188,15 @@ bool nodec_parse_inet_date(const char* date, time_t* t) {
   char month[4];
   *t = 0;
   if (date == NULL || strlen(date) != INET_DATE_LEN) return false;
-
+#ifdef HAS_SSCANF_S
   int res = sscanf_s(date, "%*3s, %2d %3s %4d %2d:%2d:%2d GMT",
                       &g.tm_mday, month, 4, &g.tm_year,
                       &g.tm_hour, &g.tm_min, &g.tm_sec);
+#else
+  int res = sscanf(date, "%*3s, %2d %3s %4d %2d:%2d:%2d GMT",
+    &g.tm_mday, month, &g.tm_year,
+    &g.tm_hour, &g.tm_min, &g.tm_sec);
+#endif
   if (res == EOF) return false;
   
   month[3] = 0;
@@ -148,6 +207,6 @@ bool nodec_parse_inet_date(const char* date, time_t* t) {
     }
   }
   g.tm_year -= 1900;
-  *t = _mkgmtime(&g);  // or 'timegm' ? 
+  *t = nodec_mkgmtime(&g);  // or 'timegm' ? 
   return true;
 }

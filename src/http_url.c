@@ -9,11 +9,11 @@ found in the file "license.txt" at the root of this distribution.
 #include "nodec-internal.h"
 #include <assert.h>
 
-typedef struct _nodec_url_t {
+struct _nodec_url_t {
   struct http_parser_url parts;
   uv_buf_t    urlmem;
   const char* original;
-} nodec_url_t;
+};
 
 void nodec_url_free(nodec_url_t* url) {
   nodec_bufref_free(&url->urlmem);
@@ -90,7 +90,7 @@ nodec_url_t*  nodec_parse_host(const char* host) {
   return nodec_parse_urlx(host,true);
 }
 
-static const char* nodec_url_field(const nodec_url_t* url, enum http_parser_url_field f) {
+static const char* nodec_url_field(const nodec_url_t* url, enum http_parser_url_fields f) {
   if (((1 << f) & url->parts.field_set) == 0) {
     return NULL;
   }

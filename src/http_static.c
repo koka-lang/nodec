@@ -9,6 +9,9 @@ found in the file "license.txt" at the root of this distribution.
 #include "nodec-internal.h"
 #include <assert.h>
 
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
 
 /*-----------------------------------------------------------------
 Static web server

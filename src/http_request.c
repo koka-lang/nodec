@@ -8,6 +8,7 @@ found in the file "license.txt" at the root of this distribution.
 #include "nodec-primitive.h"
 #include "nodec-internal.h"
 #include <assert.h>
+#include <string.h>
 
 #define HTTP_MAX_HEADERS (8*1024)
 
@@ -76,7 +77,7 @@ static const char* http_headers_lookup_from(http_headers_t* headers, const char*
   for (size_t i = from; i < headers->count; i++) {
     http_header_t* h = &headers->elems[i];
     if (h->name == NULL || h->value == NULL) continue;
-    if (_stricmp(name, h->name) == 0) {
+    if (nodec_stricmp(name, h->name) == 0) {
       if (found == NULL) {
         // found first entry
         found = h;
@@ -132,7 +133,7 @@ static const char* http_headers_next(http_headers_t* headers, const char** value
 Requests
 -----------------------------------------------------------------*/
 
-typedef struct _http_in_t
+struct _http_in_t
 {
   nodec_bstream_t* stream; // the input stream
   http_parser      parser; // the request parser on the stream
@@ -153,7 +154,7 @@ typedef struct _http_in_t
   bool            complete;          // true if the whole message has been parsed
 
   nodec_bstream_t* body_stream;
-} http_in_t;
+};
 
 // Terminate header fields and values by modifying the read buffer in place. (in `prefix`)
 static void terminate(http_in_t* req, const char* at, size_t len) {
@@ -195,10 +196,22 @@ static int on_url(http_parser* parser, const char* at, size_t len) {
 }
 
 
+// atoi is not in the C standard so we parse ourselves
+static size_t parse_status(const char* s) {
+  if (s == NULL) return 0;
+  while (*s == ' ') s++;
+  size_t status = 0;
+  while (*s >= '0' && *s <= '9') {
+    status = 10 * status + (*s - '0');
+    s++;
+  }
+  return status;
+}
+
 static int on_status(http_parser* parser, const char* at, size_t len) {
   http_in_t* req = (http_in_t*)parser->data;
   terminate(req, at, len);
-  long status = atol(at);
+  size_t status = parse_status(at);
   if (status >= 100 && status < 600) {
     req->status = (http_status_t)status;
   }
@@ -230,7 +243,7 @@ static int on_message_complete(http_parser* parser) {
 }
 
 // Clear and free all members of a request
-static void http_in_clear(http_in_t* req) {
+void http_in_clear(http_in_t* req) {
   http_headers_clear(&req->headers);
   if (req->body_stream != NULL) {
     nodec_stream_free(as_stream(req->body_stream));
@@ -393,7 +406,8 @@ static uv_buf_t http_in_read_body_bufx(http_in_stream_t* hs, bool* owned)
   uv_buf_t body = hs->req->current_body;
   hs->req->current_body = nodec_buf_null();
 #ifndef NDEBUG
-  fprintf(stderr,"read body part: len: %i\n", body.len);
+  size_t len = (size_t)body.len;
+  fprintf(stderr,"read body part: len: %zi\n", len);
 #endif
   return body;  // a view into our current buffer, valid until the next read
 }
@@ -558,12 +572,12 @@ const char* http_header_next_field(const char* header, size_t* len, const char**
 /*-----------------------------------------------------------------
    HTTP response
 -----------------------------------------------------------------*/
-typedef struct _http_out_t {
+struct _http_out_t {
   nodec_stream_t* stream;
   uv_buf_t         head;
   size_t           head_offset;
   bool             status_sent;
-} http_out_t;
+};
 
 void http_out_init(http_out_t* out, nodec_stream_t* stream) {
   memset(out, 0, sizeof(http_out_t));
@@ -597,14 +611,15 @@ void http_out_add_header(http_out_t* out, const char* field, const char* value) 
   out->head = nodec_buf_ensure(out->head, out->head_offset + extra);
   char* p = out->head.base + out->head_offset;
   size_t available = out->head.len - out->head_offset;
-  strncpy_s(p, available, field, n);
+  nodec_strncpy(p, available, field, n);
   p[n] = ':';
   p[n + 1] = ' ';
-  strncpy_s(p + n + 2, available - n - 2, value, m);
-  strncpy_s(p + n + m + 2, available - n - m - 2, "\r\n", 2);
+  nodec_strncpy(p + n + 2, available - n - 2, value, m);
+  nodec_strncpy(p + n + m + 2, available - n - m - 2, "\r\n", 2);
   out->head_offset += extra;
 }
 
+/*
 static void http_out_add_header_buf(http_out_t* out, uv_buf_t buf) {
   if (nodec_buf_is_null(buf)) return;
   out->head = nodec_buf_ensure(out->head, out->head_offset + buf.len);
@@ -616,7 +631,7 @@ static void http_out_add_header_buf(http_out_t* out, uv_buf_t buf) {
 static void http_out_send_raw_str(http_out_t* out, const char* s) {
   async_write(out->stream, s);
 }
-
+*/
 
 static void http_out_send_raw_headers(http_out_t* out, uv_buf_t prefix, uv_buf_t postfix) {
   uv_buf_t buf = nodec_buf(out->head.base, out->head_offset);
@@ -774,13 +789,13 @@ nodec_stream_t* http_out_send_request_body(http_out_t* out, http_method_t method
   HTTP server function
 -----------------------------------------------------------------*/
 
-implicit_define(http_current_req);
-implicit_define(http_current_resp);
-implicit_define(http_current_strand_id);
-implicit_define(http_current_url);
+implicit_define(http_current_req)
+implicit_define(http_current_resp)
+implicit_define(http_current_strand_id)
+implicit_define(http_current_url)
 
 static void http_serve(int id, nodec_bstream_t* client, lh_value servefunv) {
-  nodec_http_servefun* servefun = (nodec_http_servefun*)lh_ptr_value(servefunv);
+  nodec_http_servefun* servefun = ((nodec_http_servefun*)lh_fun_ptr_value(servefunv));
   {using_implicit(lh_value_int(id), http_current_strand_id) {
     http_in_t http_in;
     http_in_init(&http_in, client, true);
@@ -822,7 +837,7 @@ void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_h
     }
   }}
   async_tcp_server_at(addr, config, http_serve,
-    &async_write_http_exnv, lh_value_ptr(servefun));
+    &async_write_http_exnv, lh_value_fun_ptr(servefun));   // by address to prevent conversion between object and function pointer
 }
 
 lh_value async_http_connect(const char* host, http_connect_fun* connectfun, lh_value arg) {

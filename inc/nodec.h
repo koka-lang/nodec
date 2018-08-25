@@ -4,7 +4,7 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 -----------------------------------------------------------------------------*/
-
+ 
 #pragma once
 #ifndef __nodec_h 
 #define __nodec_h
@@ -12,6 +12,7 @@
 #include <libhandler/inc/libhandler.h>
 #include <libuv/include/uv.h>
 #include <http-parser/http_parser.h>
+#include <string.h>
 #include <fcntl.h>
 #include <time.h>
 
@@ -1261,6 +1262,9 @@ void  nodec_freev(lh_value p);
 char* nodec_strdup(const char* s);
 char* nodec_strndup(const char* s, size_t max);
 const void* nodec_memmem(const void* src, size_t src_len, const void* pat, size_t pat_len);
+int nodec_strnicmp(const char* s, const char* t, size_t n);
+int nodec_stricmp(const char* s, const char* t);
+uv_errno_t nodec_strncpy(char* dest, size_t destsz, const char* src, size_t count);
 
 #define nodecx_alloc(tp)          ((tp*)(nodecx_malloc(sizeof(tp))))
 #define nodecx_zero_alloc(tp)     ((tp*)(nodecx_calloc(1,sizeof(tp))))

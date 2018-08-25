@@ -17,7 +17,7 @@ static void test_fileread() {
   printf("opening file: %s\n", path);
   char* contents = async_fs_read_from(path);
   {using_free(contents) {
-    printf("read %Ii bytes from %s:\n...\n", strlen(contents), path);    
+    printf("read %zi bytes from %s:\n...\n", strlen(contents), path);    
   }}
 }
 
@@ -132,7 +132,7 @@ void http_req_print() {
 
 
 static void http_in_status_print(http_in_t* in) {
-  printf("status: %li\n headers: \n", http_in_status(in));
+  printf("status: %ui\n headers: \n", http_in_status(in));
   http_in_headers_print(in);
 }
 
@@ -140,7 +140,7 @@ static void test_http_serve() {
   int strand_id = http_strand_id();
   // input
 #ifndef NDEBUG
-  fprintf(stderr,"strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), http_req_content_length());
+  fprintf(stderr,"strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), (unsigned long long)http_req_content_length());
   http_req_print();
 #endif
   // work
@@ -153,7 +153,7 @@ static void test_http_serve() {
   //config.use_etag = false;
   //config.gzip_min_size = SIZE_MAX;
   //config.read_buf_size = 1024;
-  http_serve_static( "../../../nodec-bench/web" 
+  http_serve_static( "../nodec-bench/web" 
                    , &config );
   
   // response
@@ -262,7 +262,7 @@ lh_value test_connection(http_in_t* in, http_out_t* out, lh_value arg) {
   http_out_add_header(out, "Accept-Encoding", "gzip");
   http_out_send_request(out, HTTP_GET, "/");
   async_http_in_read_headers(in); // wait for response
-  printf("received, status: %i, content length: %llu\n", http_in_status(in), http_in_content_length(in));
+  printf("received, status: %i, content length: %llu\n", http_in_status(in), (unsigned long long)http_in_content_length(in));
   http_in_status_print(in);
   return lh_value_null;
 }

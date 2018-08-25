@@ -145,7 +145,6 @@ case "$target_os" in
     target_os="windows";;
 esac
 
-
 # Determine ABI
 if test -z "$target_abi"; then
   if test -z "$target_arch"; then 
@@ -211,7 +210,8 @@ ccflagdebug="-g"
 ccflag99=""
 ccdepend="$cc -MM "
 
-if test "$target_os"="windows"; then
+if test "$target_os" = "windows"; then
+  echo "target to windows: $target_os"
   exe=".exe"
   lib=".lib"
 fi
@@ -265,7 +265,7 @@ case "$ccname" in
     asm=".asm";;
   gcc*)   
     ccflags="-Wall $ccflags"
-    ccflag99="-std=c99 -pedantic"
+    ccflag99="-std=gnu99 -pedantic"
     cxxflags="-std=c++11 $ccflags"
     asmflags="-Wall $asmflags";;
   clang*)
@@ -362,6 +362,18 @@ function has_function {
   fi
 };
 
+has_function HAS_GMTIME_S gmtime_s -i time.h
+has_function HAS__MKGMTIME _mkgmtime -i time.h
+has_function HAS_TIMEGM timegm -i time.h
+
+if sh ./hasgot -i stdio.h "sscanf_s"; then
+  echo "Function sscanf_s: found"
+  echo "#define HAS_SSCANF_S" >> cenv.h;
+else
+  echo "Function sscanf_s: not found"
+  echo "// #define HAS_SSCANF_S" >> cenv.h;
+fi
+
 if sh ./hasgot -i alloca.h "alloca(10)"; then
   echo "Function alloca: found"
   echo "#define HAS_ALLOCA_H" >> cenv.h;
@@ -402,8 +414,8 @@ echo >> makefile.inc
 
 echo "CC=$cc" >> makefile.inc
 echo "CCNAME=$ccname" >> makefile.inc
-echo "CCFLAGSOPT=$ccflags $ccflagopt" >> makefile.inc
-echo "CCFLAGSDEBUG=$ccflags $ccflagdebug" >> makefile.inc
+echo "CCFLAGSOPT=$ccflags $ccflag99 $ccflagopt" >> makefile.inc
+echo "CCFLAGSDEBUG=$ccflags $ccflag99 $ccflagdebug" >> makefile.inc
 echo "CCFLAGOUT=$ccflagout" >> makefile.inc
 echo "CCFLAG99=$ccflag99"   >> makefile.inc
 echo "CCDEPEND=$ccdepend" >> makefile.inc

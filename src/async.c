@@ -2,6 +2,7 @@
 #include "nodec-primitive.h"
 #include "nodec-internal.h"
 #include <assert.h> 
+#include <string.h>
 
 /* todos:
 - default handling operations (so cancel_async becomes more efficient)
@@ -32,12 +33,12 @@ typedef const cancel_scope_t* cancel_scope_ptr;
 #define lh_cancel_scope_ptr_value(v)    ((const cancel_scope_t*)lh_ptr_value(v))
 #define lh_value_cancel_scope_ptr(r)    lh_value_ptr(r)
 
-LH_DEFINE_EFFECT5(async, req_await, uv_loop, req_register, uv_cancel, owner_release);
-LH_DEFINE_OP0(async, uv_loop, uv_loop_ptr);
-LH_DEFINE_OP1(async, req_await, int, async_request_ptr);
-LH_DEFINE_VOIDOP1(async, req_register, async_request_ptr);
-LH_DEFINE_VOIDOP1(async, uv_cancel, cancel_scope_ptr);
-LH_DEFINE_VOIDOP1(async, owner_release, lh_voidptr);
+LH_DEFINE_EFFECT5(async, req_await, uv_loop, req_register, uv_cancel, owner_release)
+LH_DEFINE_OP0(async, uv_loop, uv_loop_ptr)
+LH_DEFINE_OP1(async, req_await, int, async_request_ptr)
+LH_DEFINE_VOIDOP1(async, req_register, async_request_ptr)
+LH_DEFINE_VOIDOP1(async, uv_cancel, cancel_scope_ptr)
+LH_DEFINE_VOIDOP1(async, owner_release, lh_voidptr)
 
 
 // Wrappers around the primitive operations for async.
@@ -108,7 +109,7 @@ void nodec_throw_data(int err, void* data) {
   }
   else {
     char msg[256];
-    strerror_s(msg, 255, err); msg[255] = 0;
+    lh_strerror(msg, 256, err); 
     exn = lh_exception_alloc_strdup(err, msg);
   }
   exn->data = data;
@@ -132,7 +133,7 @@ void nodec_throw_msg_data(int err, const char* msg, void* data) {
     }
   }
   else {
-    strerror_s(buf, 255, err); buf[255] = 0;
+    lh_strerror(buf, 256, err); 
     size_t n = strlen(buf);
     snprintf(buf + n, 255 - n, ": %s", msg); buf[255] = 0;
     exn = lh_exception_alloc_strdup(err, buf);
@@ -181,11 +182,10 @@ void nodec_check_msg_data(uverr_t err, const char* msg, void* data) {
   Scopes
 -----------------------------------------------------------------*/
 
-typedef struct _cancel_scope_t {
+struct _cancel_scope_t {
   const struct _cancel_scope_t* parent;
   bool canceled;
-} cancel_scope_t;
-
+};
 
 implicit_define(_cancel_scope)
 
@@ -231,7 +231,7 @@ bool async_scoped_is_canceled() {
 /*-----------------------------------------------------------------
    Free requests
 -----------------------------------------------------------------*/
-static void nodec_req_force_free(uv_req_t* uvreq) {
+void nodec_req_force_free(uv_req_t* uvreq) {
   if (uvreq != NULL) {
     if (uvreq->type == UV_FS) {
       uv_fs_req_cleanup((uv_fs_t*)uvreq);
@@ -291,7 +291,7 @@ struct _async_request_t {
 };
 
 
-static async_request_t* async_request_alloc(uv_req_t* uvreq, bool nocancel, uint64_t timeout, void* owner) {
+async_request_t* async_request_alloc(uv_req_t* uvreq, bool nocancel, uint64_t timeout, void* owner) {
   async_request_t* req = nodec_zero_alloc(async_request_t);
   uvreq->data = req;
   req->uvreq = uvreq;
@@ -397,7 +397,7 @@ void async_req_resume(uv_req_t* uvreq, int err) {
   Main Async Handler
 -----------------------------------------------------------------*/
 
-typedef struct _async_local_t {
+struct _async_local_t {
   uv_loop_t*      loop;      // current event loop
   async_request_t requests;  // empty request to be the head of the queue of outstanding requests
                              // these can include canceled request that are deallocated when
@@ -405,8 +405,7 @@ typedef struct _async_local_t {
   uv_timer_t*     periodic;  // interval timer. currently only used for timing out requests
                              // on a slow interval but in the future could be used for light
                              // weight timers sharing a single handle.
-} async_local_t;
-
+};
 
 /*-----------------------------------------------------------------
   Timeouts and cancelation
@@ -513,8 +512,8 @@ static bool uvreq_is_pending(uv_req_t* uvreq) {
   if (uvreq == NULL) return false;
   switch (uvreq->type) {
   case UV_WRITE: {
-    uv_stream_t* s = ((uv_write_t*)uvreq)->handle;
 #ifdef _WIN32
+    uv_stream_t* s = ((uv_write_t*)uvreq)->handle;
     bool pending = s->reqs_pending > 0;
 #else
     // TODO: do the right check for unix
@@ -576,7 +575,7 @@ static void _async_release(lh_value localv) {
     async_request_free(req);  // will unlink properly
     req = next;
   }
-  free(local);
+  nodec_free(local);
 }
 
 
@@ -646,7 +645,7 @@ lh_value _channel_async_handler(channel_t* channel, lh_actionfun* action, lh_val
 Main wrapper
 -----------------------------------------------------------------*/
 static lh_value uv_main_action(lh_value ventry) {
-  nodec_main_fun_t* entry = (nodec_main_fun_t*)lh_ptr_value(ventry);
+  nodec_main_fun_t* entry = (nodec_main_fun_t*)lh_fun_ptr_value(ventry);
   entry();
   return lh_value_null;
 }
@@ -664,12 +663,12 @@ static lh_value uv_main_try_action(lh_value entry) {
 }
 
 static void uv_main_cb(uv_timer_t* t_start) {
-  async_handler(t_start->loop, &uv_main_try_action, lh_value_ptr(t_start->data));
+  async_handler(t_start->loop, &uv_main_try_action, lh_value_fun_ptr(*((nodec_main_fun_t**)t_start->data)));
   nodec_timer_free(t_start,false);
 }
 
 uv_errno_t async_main( nodec_main_fun_t* entry  ) {
-  uv_replace_allocator(_nodecx_malloc, _nodecx_realloc, _nodecx_calloc, _nodec_free);
+  uv_replace_allocator(&_nodecx_malloc, &_nodecx_realloc, &_nodecx_calloc, (void(*)(void*))(&_nodec_free));
   uv_loop_t* loop = nodecx_zero_alloc(uv_loop_t);
   if (loop == NULL) return UV_ENOMEM;
   uv_errno_t err = uv_loop_init(loop);
@@ -679,7 +678,7 @@ uv_errno_t async_main( nodec_main_fun_t* entry  ) {
     if (err == 0) {
       err = uv_timer_init(loop, t_start);
       if (err == 0) {
-        t_start->data = entry;
+        t_start->data = &entry;  
         err = uv_timer_start(t_start, &uv_main_cb, 0, 0);
         if (err == 0) {
           // printf("starting event loop\n");

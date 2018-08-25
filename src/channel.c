@@ -24,7 +24,7 @@ typedef struct _channel_listener {
   lh_value              arg;
 } channel_listener;
 
-typedef struct _channel_t {
+struct _channel_t {
   // listeners are a stack, so the last listeners
   // gets to handle first
   channel_listener* listeners;
@@ -42,7 +42,7 @@ typedef struct _channel_t {
   lh_releasefun* release_fun;
   lh_value       release_arg;
   channel_release_elem_fun* release_elem;
-} channel_t;
+};
 
 channel_t* channel_alloc(ssize_t queue_max) {
   return channel_alloc_ex(queue_max, NULL, lh_value_null, NULL);
@@ -121,8 +121,8 @@ uv_errno_t channel_emit(channel_t* channel, lh_value data, lh_value arg, int err
     // otherwise queue it (FIFO buffer)
     if (channel->qcount >= channel->qsize) {
       ssize_t newsize = (channel->qsize > 0 ? 2 * channel->qsize : 2);
-      channel_elem* newqueue = (channel_elem*)(channel->queue == NULL ? malloc(newsize * sizeof(channel_elem))
-        : realloc(channel->queue, newsize * sizeof(channel_elem)));
+      channel_elem* newqueue = (channel_elem*)(channel->queue == NULL ? nodecx_malloc(newsize * sizeof(channel_elem))
+        : nodecx_realloc(channel->queue, newsize * sizeof(channel_elem)));
       if (newqueue == NULL) return UV_ENOMEM;
       channel->queue = newqueue;
       channel->qsize = newsize;

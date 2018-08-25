@@ -12,7 +12,7 @@ endif
 
 CONFIGDIR  = out/$(CONFIG)
 OUTDIR 		 = $(CONFIGDIR)/$(VARIANT)
-INCLUDES   = -Iinc -I$(CONFIGDIR)
+INCLUDES   = -Iinc -I$(CONFIGDIR) -Ideps -Ideps/libuv/include
 
 ifeq ($(VARIANT),release)
 CCFLAGS    = $(CCFLAGSOPT) -DNDEBUG $(INCLUDES)
@@ -47,8 +47,10 @@ endif
 # Sources
 # -------------------------------------
 
-SRCFILES = async.c channel.c dns.c fs.c http.c http_request.c http_url.c  \
-           interleave.c memory.c stream.c tcp.c timer.c tty.c
+SRCFILES = async.c channel.c dns.c fs.c http.c http_request.c \
+           http_static.c http_url.c  \
+           interleave.c memory.c mime.c \
+           stream.c tcp.c timer.c tty.c            
 
 CTESTS   =  
 
@@ -57,9 +59,11 @@ TESTFILES= main.c	$(CTESTS)
 BENCHFILES=
 
 
-SRCS     = $(patsubst %,src/%,$(SRCFILES)) $(patsubst %,src/%,$(ASMFILES))
-OBJS  	 = $(patsubst %.c,$(OUTDIR)/%$(OBJ), $(SRCFILES)) $(patsubst %$(ASM),$(OUTDIR)/%$(OBJ),$(ASMFILES))
+SRCS     = $(patsubst %,src/%,$(SRCFILES)) $(patsubst %,src/%,$(ASMFILES)) deps/http-parser/http_parser.c
+OBJS  	 = $(patsubst %.c,$(OUTDIR)/%$(OBJ), $(SRCFILES)) $(patsubst %$(ASM),$(OUTDIR)/%$(OBJ),$(ASMFILES)) $(OUTDIR)/http_parser$(OBJ)
 HLIB     = $(OUTDIR)/nodec$(LIB)
+
+LIBS     =  $(HLIB) -Ldeps/libhandler/$(OUTDIR) -Ldeps/libuv/.libs -deps/libz  -lhandler -luv -lz
 
 TESTSRCS = $(patsubst %,test/%,$(TESTFILES)) 
 TESTMAIN = $(OUTDIR)/nodec-tests$(EXE)
@@ -111,7 +115,7 @@ testsxx: initxx staticlibxx testmainxx
 testmain: $(TESTMAIN)
 
 $(TESTMAIN): $(TESTSRCS) $(HLIB)
-	$(CC) $(CCFLAGS)  $(LINKFLAGOUT)$@ $(TESTSRCS) $(HLIB)
+	$(CC) $(CCFLAGS)  $(LINKFLAGOUT)$@ $(TESTSRCS) $(LIBS) -lrt -lpthread -lnsl -ldl
 
 
 testmainxx: $(TESTMAINXX)
@@ -150,6 +154,9 @@ $(OUTDIR)/%$(OBJ): src/%.c
 
 $(OUTDIR)/%$(OBJ): src/%$(ASM)
 	$(CC) $(ASMFLAGS)  $(ASMFLAGOUT)$@ -c $< 
+
+$(OUTDIR)/http_parser$(OBJ): deps/http-parser/http_parser.c
+	$(CC) $(CCFLAGS) $(CCFLAG99) $(CCFLAGOUT)$@ -c $< $(SHOWASM)
 
 
 staticlibxx: $(HLIBXX)

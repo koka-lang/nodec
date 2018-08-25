@@ -17,7 +17,7 @@
 -----------------------------------------------------------------*/
 
 // Await a file system request
-static uv_errno_t asyncx_await_fs(uv_fs_t* req) {
+uv_errno_t asyncx_await_fs(uv_fs_t* req) {
   return asyncx_await((uv_req_t*)req,0,NULL);
 }
 
@@ -26,7 +26,7 @@ static void async_await_fs(uv_fs_t* req) {
 }
 
 // The entry point for filesystem callbacks
-static void async_fs_resume(uv_fs_t* uvreq) {
+void async_fs_resume(uv_fs_t* uvreq) {
   if (uvreq == NULL) return;
   uv_errno_t err = (uvreq->result >= 0 ? 0 : (uv_errno_t)uvreq->result);
   async_req_resume((uv_req_t*)uvreq, err);
@@ -208,7 +208,7 @@ uv_buf_t async_fs_read_buf(uv_file file, size_t max, int64_t file_offset) {
 
 uv_buf_t async_fs_read_buf_all(uv_file file, size_t max ) {
   uv_stat_t stat = async_fs_fstat(file);
-  if (stat.st_size >= MAXSIZE_T) nodec_check(UV_E2BIG);
+  if (stat.st_size >= SIZE_MAX) nodec_check(UV_E2BIG);
   size_t size = (size_t)stat.st_size;
   return async_fs_read_buf(file, (max > 0 && size > max ? max : size), -1);
 }
@@ -221,7 +221,7 @@ static lh_value async_fs_read_allv(uv_file file, const char* path, lh_value bufv
 
 uv_buf_t async_fs_read_buf_from(const char* path) {
   uv_buf_t buf = nodec_buf_null();
-  lh_value result = using_async_fs_open(path, O_RDONLY, 0, &async_fs_read_allv, lh_value_any_ptr(&buf));
+  using_async_fs_open(path, O_RDONLY, 0, &async_fs_read_allv, lh_value_any_ptr(&buf));
   return buf;
 }
 
@@ -417,6 +417,6 @@ bool async_fs_scandir_next(nodec_scandir_t* scanreq, uv_dirent_t* dirent) {
     return true; \
   } \
 
-NODEC_STACK_DECLARE(dirent, uv_dirent_t, 64);
-NODEC_STACK_DEFINE(dirent, uv_dirent_t, 64);
+NODEC_STACK_DECLARE(dirent, uv_dirent_t, 64)
+NODEC_STACK_DEFINE(dirent, uv_dirent_t, 64)
 

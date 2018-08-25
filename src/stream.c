@@ -513,9 +513,11 @@ static void async_shutdown_resume(uv_shutdown_t* req, uverr_t status) {
 Await write requests
 -----------------------------------------------------------------------------*/
 
+/*
 static void async_await_write(uv_write_t* req, uv_stream_t* owner) {
   async_await_owned((uv_req_t*)req, owner);
 }
+*/
 
 static uv_errno_t asyncx_await_write(uv_write_t* req, uv_stream_t* owner) {
   return asyncx_await_owned((uv_req_t*)req, owner);
@@ -560,7 +562,7 @@ void async_uv_stream_shutdown(uv_stream_t* stream) {
 }
 
 
-typedef struct _nodec_uv_stream_t {
+struct _nodec_uv_stream_t {
   nodec_bstream_t bstream_t;     // a buffered stream; with source=NULL
   uv_stream_t*    stream;        // backlink, when reading stream->data == this
   size_t          alloc_size;    // current chunk allocation size (<= alloc_max), doubled on every new read
@@ -570,7 +572,7 @@ typedef struct _nodec_uv_stream_t {
   volatile size_t     read_total;    // total bytes read until now (available <= total)
   volatile bool       eof;           // true if end-of-file reached
   volatile uv_errno_t err;           // !=0 on error
-} nodec_uv_stream_t;
+};
 
 
 nodec_bstream_t* as_bstream(nodec_uv_stream_t* stream) {
@@ -599,10 +601,11 @@ static void nodec_uv_stream_try_resume(nodec_uv_stream_t* rs) {
   async_req_resume(req, rs->err);
 }
 
+/*
 static void nodec_uv_stream_try_resumev(void* rsv) {
   nodec_uv_stream_try_resume((nodec_uv_stream_t*)rsv);
 }
-
+*/
 
 static void nodec_uv_stream_freereq(nodec_uv_stream_t* rs) {
   if (rs != NULL && rs->req != NULL) {
@@ -889,14 +892,14 @@ static bool async_zstream_read_chunks(nodec_zstream_t* zs)
   if (nodec_buf_is_null(src)) return true;  // eof
   {using_buf_owned(owned, &src) {
     zs->read_strm.avail_in = src.len;
-    zs->read_strm.next_in = src.base;
+    zs->read_strm.next_in = (void*)src.base;
     zs->nread += src.len;
     // decompress while data available into chunks
     int res = 0;
     do {
       uv_buf_t dest = nodec_buf_alloc(zs->chunk_size);
       zs->read_strm.avail_out = dest.len;
-      zs->read_strm.next_out = dest.base;
+      zs->read_strm.next_out = (void*)dest.base;
       res = inflate(&zs->read_strm, Z_NO_FLUSH);
       if (res >= Z_OK) {
         size_t nwritten = dest.len - zs->read_strm.avail_out;
@@ -939,11 +942,11 @@ static void async_zstream_write_buf(nodec_zstream_t* zs, uv_buf_t src, int flush
   nodec_zstream_init_write(zs);
   zs->nwritten += src.len;
   zs->write_strm.avail_in = src.len;
-  zs->write_strm.next_in = src.base;
+  zs->write_strm.next_in = (void*)src.base;
   int res = 0;
   do {
     zs->write_strm.avail_out = zs->write_buf.len;
-    zs->write_strm.next_out = zs->write_buf.base;
+    zs->write_strm.next_out = (void*)zs->write_buf.base;
     res = deflate(&zs->write_strm, flush);
     if (res >= Z_OK) {  // Z_OK || Z_STREAM_END
       size_t nwritten = zs->write_buf.len - zs->write_strm.avail_out;

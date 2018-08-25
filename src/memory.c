@@ -2,6 +2,7 @@
 #include "nodec-primitive.h"
 #include "nodec-internal.h"
 #include <assert.h> 
+#include <malloc.h>
 
 /*-----------------------------------------------------------------
   string/memory utility functions
@@ -18,7 +19,7 @@ bool nodec_starts_withi(const char* s, const char* prefix) {
   if (s == NULL || prefix == NULL) return false;
   size_t m = strlen(prefix);
   if (m == 0) return true;
-  return (_strnicmp(s, prefix, m) == 0);
+  return (nodec_strnicmp(s, prefix, m) == 0);
 }
 
 
@@ -37,9 +38,47 @@ bool nodec_ends_withi(const char* s, const char* pat) {
   if (m == 0) return true;
   size_t n = strlen(s);
   if (n < m) return false;
-  return (_strnicmp(s + (n - m), pat, m) == 0);
+  return (nodec_strnicmp(s + (n - m), pat, m) == 0);
 }
 
+uv_errno_t nodec_strncpy(char* dest, size_t destsz, const char* src, size_t count) {
+  if (dest == NULL || destsz == 0) return UV_EINVAL;
+  *dest = 0;
+  if (count == 0) return 0;
+  if (src == NULL) return UV_EINVAL;
+  if (destsz < count - 1) return UV_E2BIG;
+  while (*src != 0 && count > 0) {
+    *dest = *src;
+    dest++;
+    src++;
+    count--;
+  }
+  *dest = 0;
+  return (count > 0 ? UV_E2BIG : 0);
+}
+
+int nodec_strnicmp(const char* s, const char* t, size_t n) {
+  if (s == NULL) return (t == NULL ? 0 : -1);
+  if (t == NULL) return 1;
+  if (n == 0) return 0;
+  char c;
+  char d;
+  do {
+    c = *s; s++;
+    d = *t; t++;
+    n--;
+    if (c != d) {
+      if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
+      if (d >= 'A' && d <= 'Z') d = d - 'A' + 'a';
+      if (c != d) return (c - d);
+    }
+  } while (c != 0 && d != 0 && n > 0);
+  return 0;
+}
+
+int nodec_stricmp(const char* s, const char* t) {
+  return nodec_strnicmp(s, t, SIZE_MAX);
+}
 
 // Search for byte pattern in byte source array.
 const void* nodec_memmem(const void* src, size_t src_len, const void* pat, size_t pat_len)
@@ -194,9 +233,9 @@ void* _nodecx_realloc(void* p, size_t newsize) {
   return (custom_realloc == NULL ? realloc(p,newsize) : custom_realloc(p,newsize));
 }
 
-void  _nodec_free(void* p) {
+void  _nodec_free(const void* p) {
   if (p != NULL) {
-    if (custom_free == NULL) free(p); else custom_free(p);
+    if (custom_free == NULL) free((void*)p); else custom_free(p);
   }
 }
 

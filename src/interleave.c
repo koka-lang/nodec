@@ -14,7 +14,7 @@
 -----------------------------------------------------------------*/
 
 
-static void isolate(lh_actionfun* action, lh_value arg, lh_value* xres, lh_exception** xexn, volatile ssize_t* todo) {
+static void isolate(lh_actionfun* action, lh_value arg, lh_value* xres, lh_exception** xexn, volatile size_t* todo) {
   lh_exception* exn = NULL;
   lh_value      res = lh_value_null;
   if (async_scoped_is_canceled()) {
@@ -40,7 +40,7 @@ typedef struct _isolate_args_t {
   lh_value       arg;
   lh_value*      res;
   lh_exception** exception;
-  volatile ssize_t* todo;
+  volatile size_t* todo;
 } isolate_args_t;
 
 static lh_value isolate_action(lh_value vargs) {
@@ -58,7 +58,7 @@ static void _handle_interleave_strand(channel_t* channel, isolate_args_t* args) 
 LH_DEFINE_EFFECT2(strand,create,count)
 
 lh_value async_strand_create(lh_actionfun* action, lh_value arg, lh_exception** exn) {
-  return lh_yieldN(LH_OPTAG(strand, create), 3, lh_value_ptr(action), arg, lh_value_any_ptr(exn));
+  return lh_yieldN(LH_OPTAG(strand, create), 3, lh_value_fun_ptr(action), arg, lh_value_any_ptr(exn));
 }
 
 size_t nodec_current_strand_count() {
@@ -66,8 +66,8 @@ size_t nodec_current_strand_count() {
 }
 
 typedef struct _strand_local_t {
-  channel_t*        channel;
-  volatile ssize_t* todo;
+  channel_t*       channel;
+  volatile size_t* todo;
 } strand_local_t;
 
 
@@ -76,7 +76,7 @@ static lh_value _strand_create(lh_resume resume, lh_value localv, lh_value argsv
   assert(yargs->argcount == 3);
   // execute action in the context just outside of the strand handler (and under the channel handler)
   strand_local_t* local = (strand_local_t*)lh_ptr_value(localv);
-  lh_actionfun* action = (lh_actionfun*)lh_ptr_value(yargs->args[0]);
+  lh_actionfun* action = (lh_actionfun*)lh_fun_ptr_value(yargs->args[0]);
   lh_exception** exn = (lh_exception**)lh_ptr_value(yargs->args[2]);
   *local->todo = *local->todo + 1;
   lh_value res = lh_value_null;
@@ -98,7 +98,7 @@ static const lh_operation strand_ops[] = {
 };
 static const lh_handlerdef strand_def = { LH_EFFECT(strand), NULL, NULL, NULL, strand_ops };
 
-static lh_value handle_strands(channel_t* channel, volatile ssize_t* todo, lh_actionfun action, lh_value arg) {
+static lh_value handle_strands(channel_t* channel, volatile size_t* todo, lh_actionfun action, lh_value arg) {
   lh_value res;
   {using_zero_alloc(strand_local_t, local) {
     local->channel = channel;
@@ -116,7 +116,7 @@ typedef struct _strands_action_args_t {
 static lh_value strands_action(lh_value argsv) {
   // run the action inside interleave strand itself
   strands_action_args_t* args = (strands_action_args_t*)lh_ptr_value(argsv);
-  volatile ssize_t* todo = args->iargs.todo;
+  volatile size_t* todo = args->iargs.todo;
   channel_t* channel = args->channel;
   _handle_interleave_strand(channel, &args->iargs);
   while (*todo > 0) {
@@ -175,7 +175,7 @@ static void nodec_free_if_notnull(lh_value pv) {
 void asyncx_interleave(size_t n, lh_actionfun* actions[], lh_value arg_results[], lh_exception* exceptions[]) {
   if (n == 0 || actions == NULL) return;
 
-  lh_exception* exn = NULL;
+  //lh_exception* exn = NULL;
   lh_value* local_args = NULL;
   lh_exception** local_exns = NULL;
   if (arg_results==NULL) {
@@ -271,14 +271,14 @@ lh_value async_firstof_ex(lh_actionfun* action1, lh_value arg1, lh_actionfun* ac
 }
 
 lh_value _firstof_action(lh_value actionv) {
-  nodec_actionfun_t* action = (nodec_actionfun_t*)lh_ptr_value(actionv);
+  nodec_actionfun_t* action = (nodec_actionfun_t*)lh_fun_ptr_value(actionv);
   action();
   return lh_value_null;
 }
 
 bool async_firstof(nodec_actionfun_t* action1, nodec_actionfun_t* action2) {
   bool first = false;
-  async_firstof_ex(&_firstof_action, lh_value_ptr(action1), &_firstof_action, lh_value_ptr(action2), &first, false);
+  async_firstof_ex(&_firstof_action, lh_value_fun_ptr(action1), &_firstof_action, lh_value_fun_ptr(action2), &first, false);
   return first;
 }
 
