@@ -164,7 +164,7 @@ This has been tested on Ubuntu Linux (amd64), and on a Raspberry PI (Raspbian, A
 1. Ensure you have `automake` and `libtool`  installed to build the [libuv] dependency.
    Usually, you can install this as:
    ```
-   sudo apt-get install automake libtool
+   > sudo apt-get install automake libtool
    ```
 
 2. Run `make-deps.sh` to configure and make all dependent 
@@ -179,8 +179,12 @@ This has been tested on Ubuntu Linux (amd64), and on a Raspberry PI (Raspbian, A
    > ./configure
    > make
    ```
-   This will build the `libnodecx.a` library in the `out/nodecx/lib` directory
+   This will build the `libnodecx.a` library in the `out/nodecx/debug/lib` directory
    which includes all the dependent projects into one static library.
+   Build a release version using `VARIANT=release` as:
+   ```
+   > make VARIANT=release
+   ```
 
 4. Run `make tests` to run the test program.
 
