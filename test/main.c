@@ -149,11 +149,11 @@ static void test_http_serve() {
   //check_uverr(UV_EADDRINUSE);
   
   http_static_config_t config = http_static_default_config();
-  //config.use_last_modified = false;
-  //config.use_etag = false;
+  config.use_last_modified = true;
+  config.use_etag = false;
   //config.gzip_min_size = SIZE_MAX;
   //config.read_buf_size = 1024;
-  http_serve_static( "../nodec-bench/web" 
+  http_serve_static( "../../../nodec-bench/web" 
                    , &config );
   
   // response
