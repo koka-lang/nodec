@@ -153,7 +153,7 @@ static void test_http_serve() {
   config.use_etag = false;
   //config.gzip_min_size = SIZE_MAX;
   //config.read_buf_size = 1024;
-  http_serve_static( "../../../nodec-bench/web" 
+  http_serve_static( "../nodec-bench/web" 
                    , &config );
   
   // response

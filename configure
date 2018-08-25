@@ -452,12 +452,12 @@ echo "MKDIR=mkdir -p" >> makefile.inc
 cd ..
 
 # initialize out directory
-rm -rf "out/$config"
-mkdir -p "out/$config"
-echo "# run 'make depend' to generate dependencies" > out/$config/makefile.depend
-mv config/cenv.h out/$config/cenv.h
-mv config/makefile.inc out/$config/makefile.inc
-echo "include out/$config/makefile.inc" > out/makefile.config
+rm -rf "out"
+mkdir -p "out"
+echo "# run 'make depend' to generate dependencies" > out/makefile.depend
+mv config/cenv.h out/cenv.h
+mv config/makefile.inc out/makefile.inc
+echo "include out/makefile.inc" > out/makefile.config
 
 
 # Print a summary

@@ -10,19 +10,28 @@ ifndef $(VARIANT)
 VARIANT=debug
 endif
 
-CONFIGDIR  = out/$(CONFIG)
-OUTDIR 		 = $(CONFIGDIR)/$(VARIANT)
+# NodeC library
+MAIN       = nodec
+CONFIGDIR  = out
+OUTDIR 		 = $(CONFIGDIR)/$(MAIN)/$(VARIANT)
 INCLUDES   = -Iinc -I$(CONFIGDIR) -Ideps -Ideps/libuv/include
+
+# nodecx library: The ..X variants are for clients
+# nodecx includes all needed static libraries (libuv,libz etc) and uses
+# a single include path. All under "out/nodecx/$(VARIANT)"
+MAINX      = $(MAIN)x
+OUTDIRX    = $(CONFIGDIR)/$(MAINX)/$(VARIANT)
+INCLUDESX  = -I$(OUTDIRX)/include
 
 ifeq ($(VARIANT),release)
 CCFLAGS    = $(CCFLAGSOPT) -DNDEBUG $(INCLUDES)
-CXXFLAGS   = $(CXXFLAGSOPT) -DNDEBUG $(INCLUDES)
+CCFLAGSX   = $(CCFLAGSOPT) -DNDEBUG $(INCLUDESX)
 else ifeq ($(VARIANT),testopt)
 CCFLAGS    = $(CCFLAGSOPT) $(INCLUDES)
-CXXFLAGS   = $(CXXFLAGSOPT) $(INCLUDES)
+CCFLAGSX   = $(CCFLAGSOPT) $(INCLUDESX)
 else ifeq ($(VARIANT),debug)
 CCFLAGS    = $(CCFLAGSDEBUG) $(INCLUDES)
-CXXFLAGS   = $(CXXFLAGSDEBUG) $(INCLUDES)
+CCFLAGSX   = $(CCFLAGSDEBUG) $(INCLUDESX)
 else
 VARIANTUNKNOWN=1
 endif
@@ -61,9 +70,14 @@ BENCHFILES=
 
 SRCS     = $(patsubst %,src/%,$(SRCFILES)) $(patsubst %,src/%,$(ASMFILES)) deps/http-parser/http_parser.c
 OBJS  	 = $(patsubst %.c,$(OUTDIR)/%$(OBJ), $(SRCFILES)) $(patsubst %$(ASM),$(OUTDIR)/%$(OBJ),$(ASMFILES)) $(OUTDIR)/http_parser$(OBJ)
-HLIB     = $(OUTDIR)/nodec$(LIB)
+NLIB     = $(OUTDIR)/lib$(MAIN)$(LIB)
+NLIBX    = $(OUTDIRX)/lib/lib$(MAINX)$(LIB)
 
-LIBS     =  $(HLIB) -Ldeps/libhandler/$(OUTDIR) -Ldeps/libuv/.libs -deps/libz  -lhandler -luv -lz
+# link statically
+LIBS     =  $(NLIBX)
+
+# for libuv
+EXTRA-LIBS= -lrt -lpthread -lnsl -ldl
 
 TESTSRCS = $(patsubst %,test/%,$(TESTFILES)) 
 TESTMAIN = $(OUTDIR)/nodec-tests$(EXE)
@@ -72,16 +86,6 @@ BENCHSRCS= $(patsubst %,test/%,$(BENCHFILES))
 BENCHMAIN= $(OUTDIR)/nodec-bench$(EXE)
 
 
-
-TESTFILESXX=main.cpp
-
-OUTDIRXX = $(OUTDIR)xx
-SRCSXX   = $(patsubst %,src/%,$(SRCFILES)) $(patsubst %,src/%,$(ASMFILES))
-OBJSXX	 = $(patsubst %.c,$(OUTDIRXX)/%$(OBJ), $(SRCFILES)) $(patsubst %$(ASM),$(OUTDIRXX)/%$(OBJ),$(ASMFILES))
-HLIBXX   =$(OUTDIRXX)/nodec++$(LIB)
-
-TESTSRCSXX = $(patsubst %,test/%,$(TESTFILESXX)) 
-TESTMAINXX = $(OUTDIRXX)/nodec-tests++$(EXE)
 
 # -------------------------------------
 # Main targets
@@ -101,12 +105,6 @@ bench: init staticlib benchmain
 
 
 
-mainxx: initxx staticlibxx
-
-testsxx: initxx staticlibxx testmainxx
-	@echo ""
-	@echo "run tests++"
-	$(VALGRINDX) $(TESTMAINXX)
 
 # -------------------------------------
 # build tests
@@ -114,14 +112,10 @@ testsxx: initxx staticlibxx testmainxx
 
 testmain: $(TESTMAIN)
 
-$(TESTMAIN): $(TESTSRCS) $(HLIB)
-	$(CC) $(CCFLAGS)  $(LINKFLAGOUT)$@ $(TESTSRCS) $(LIBS) -lrt -lpthread -lnsl -ldl
+$(TESTMAIN): $(TESTSRCS) $(NLIBX)
+	$(CC) $(CCFLAGSX)  $(LINKFLAGOUT)$@ $(TESTSRCS) $(LIBS) $(EXTRA-LIBS)
 
 
-testmainxx: $(TESTMAINXX)
-
-$(TESTMAINXX): $(TESTSRCSXX) $(HLIBXX)
-	$(CXX) $(CXXFLAGS)  $(LINKFLAGOUT)$@ $(TESTSRCSXX) $(HLIBXX)
 
 
 # -------------------------------------
@@ -130,23 +124,32 @@ $(TESTMAINXX): $(TESTSRCSXX) $(HLIBXX)
 
 benchmain: $(BENCHMAIN)
 
-$(BENCHMAIN): $(BENCHSRCS) $(HLIB)
-	$(CC) $(CCFLAGS) $(LINKFLAGOUT)$@  $(BENCHSRCS) $(HLIB) -lm
+$(BENCHMAIN): $(BENCHSRCS) $(NLIB)
+	$(CC) $(CCFLAGSX) $(LINKFLAGOUT)$@  $(BENCHSRCS) $(LIBS) -lm $(EXTRA-LIBS)
 
-
-benchmainxx: $(BENCHMAINXX)
-
-$(BENCHMAINXX): $(BENCHSRCSXX) $(HLIBXX)
-	$(CXX) $(CXXFLAGS) $(LINKFLAGOUT)$@  $(BENCHSRCSXX) $(HLIBXX)
 
 
 # -------------------------------------
 # build the static library
 # -------------------------------------
 
-staticlib: initxx $(HLIB)
+staticlib: init $(NLIBX)
 
-$(HLIB): $(OBJS)
+$(NLIBX): $(NLIB)
+	@if test -d "$(OUTDIRX)/lib"; then :; else $(MKDIR) "$(OUTDIRX)/lib"; fi	
+	./libmerge.sh $(OUTDIRX)/lib lib$(MAINX).a $(NLIB) deps/libhandler/out/$(CONFIG)/$(VARIANT)/libhandler.a deps/libuv/out/lib/libuv.a deps/zlib/out/lib/libz.a
+	@if test -d "$(OUTDIRX)/include/libhandler/inc"; then :; else $(MKDIR) "$(OUTDIRX)/include/libhandler/inc"; fi	
+	@if test -d "$(OUTDIRX)/include/libuv/include"; then :; else $(MKDIR) "$(OUTDIRX)/include/libuv/include"; fi	
+	@if test -d "$(OUTDIRX)/include/uv"; then :; else $(MKDIR) "$(OUTDIRX)/include/uv"; fi	
+	@if test -d "$(OUTDIRX)/include/http-parser"; then :; else $(MKDIR) "$(OUTDIRX)/include/http-parser"; fi	
+	$(CP) -f deps/libhandler/inc/libhandler.h    $(OUTDIRX)/include/libhandler/inc
+	$(CP) -f deps/http-parser/http_parser.h $(OUTDIRX)/include/http-parser
+	$(CP) -f deps/libuv/out/include/uv.h $(OUTDIRX)/include/libuv/include/uv.h
+	$(CP) -fa deps/libuv/out/include/uv/* $(OUTDIRX)/include/uv
+	$(CP) -f inc/nodec.h $(OUTDIRX)/include
+	$(CP) -f inc/nodec-primitive.h $(OUTDIRX)/include
+	
+$(NLIB): $(OBJS)
 	$(AR) $(ARFLAGS)  $(ARFLAGOUT)$@ $(OBJS) 
 
 $(OUTDIR)/%$(OBJ): src/%.c
@@ -158,20 +161,6 @@ $(OUTDIR)/%$(OBJ): src/%$(ASM)
 $(OUTDIR)/http_parser$(OBJ): deps/http-parser/http_parser.c
 	$(CC) $(CCFLAGS) $(CCFLAG99) $(CCFLAGOUT)$@ -c $< $(SHOWASM)
 
-
-staticlibxx: $(HLIBXX)
-
-$(HLIBXX): $(OBJSXX)
-	$(AR) $(ARFLAGS)  $(ARFLAGOUT)$@ $(OBJSXX) 
-
-$(OUTDIRXX)/%$(OBJ): src/%.cpp
-	$(CXX) $(CXXFLAGS) $(CCFLAGOUT)$@ -c $< 
-
-$(OUTDIRXX)/%$(OBJ): src/%.c
-	$(CXX) $(CXXFLAGS) $(CCFLAGOUT)$@ -c $< $(SHOWASM)  
-
-$(OUTDIRXX)/%$(OBJ): src/%$(ASM)
-	$(CXX) $(ASMFLAGS)  $(ASMFLAGOUT)$@ -c $< 
 
 
 # -------------------------------------
@@ -189,9 +178,8 @@ init:
 	@echo "build variant: $(VARIANT), configuration: $(CONFIG)"
 	@if test "$(VARIANTUNKNOWN)" = "1"; then echo ""; echo "Error: unknown build variant: $(VARIANT)"; echo "Use one of 'debug', 'release', or 'testopt'"; false; fi
 	@if test -d "$(OUTDIR)/asm"; then :; else $(MKDIR) "$(OUTDIR)/asm"; fi
+	@if test -d "$(OUTDIRX)"; then :; else $(MKDIR) "$(OUTDIRX)"; $(MKDIR) "$(OUTDIRX)/lib"; $(MKDIR) "$(OUTDIRX)/include"; fi
 
-initxx: init	
-	@if test -d "$(OUTDIRXX)/asm"; then :; else $(MKDIR) "$(OUTDIRXX)/asm"; fi
 
 help:
 	@echo "Usage: make <target>"
