@@ -74,7 +74,7 @@ static void hello_serve() {
   async_wait(2000);
   
   // send response (adds content-type and content-length headers)
-  http_resp_send_body_str(out,hello_body,"text/html");
+  http_resp_send_body_str(HTTP_STATUS_OK,hello_body,"text/html");
 }
 
 static void hello() {
