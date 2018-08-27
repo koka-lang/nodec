@@ -104,8 +104,8 @@ int uv_fs_close(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb);
 The `loop` parameter identifies the outer 
 event loop and must be explicitly passed around everywhere. We also need to pass a fresh request 
 object `req` and can then pass in the actualy file to close, `file`. After that we need
-a top-level continuation function `cb` -- if there are any locals you need in that
-callback you need to explicitly allocate them and store them into the request object
+a top-level continuation function `cb` -- if there are any locals needed in that
+callback, you need to explicitly allocate them and store them into the request object
 to pass them to the callback. Finally, an `int` is returned in case an error happens.
 
 In NodeC, using algebraic effects provided by `libhandler`, we can wrap that 
@@ -118,8 +118,6 @@ The call is still asynchronous but will continue at that exact point in the
 program when the file is closed (just like async/await). Furthermore, we provide
 exceptions and thus there is no need to check any return value, and through
 the use implicit parameters there is no need to explicitly pass around a `loop` parameter.
-
-
 
 
 # Building
@@ -159,7 +157,7 @@ After it builds successfully, you can use the Microsoft Visual Studio solution a
 
 ## Building on Unix's
 
-This has been tested on Ubuntu Linux (amd64), and on a Raspberry PI (Raspbian, ARMv7 in 32-bit).
+This has been tested on Ubuntu Linux (amd64), and on a Raspberry PI (Raspbian, ARMv7).
 
 1. Ensure you have `automake` and `libtool`  installed to build the [libuv] dependency.
    Usually, you can install this as:
@@ -177,16 +175,20 @@ This has been tested on Ubuntu Linux (amd64), and on a Raspberry PI (Raspbian, A
    library:
    ```
    > ./configure
+   > make depend
    > make
    ```
    This will build the `libnodecx.a` library in the `out/nodecx/debug/lib` directory
    which includes all the dependent projects into one static library.
-   Build a release version using `VARIANT=release` as:
+   Build a release version using:
    ```
    > make VARIANT=release
    ```
 
-4. Run `make tests` to run the test program.
+4. Make and run the test program:
+   ```
+   > make tests
+   ```
 
 
 [libuv]: https://github.com/libuv/libuv
