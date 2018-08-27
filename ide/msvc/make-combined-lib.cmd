@@ -48,17 +48,17 @@ IF NOT EXIST %NODEC% (
   GOTO ERROR
 )
 
-SET COMBINED_DIR=.\..\..\out\msvc-%PLATFORM%\nodecx\%CONFIG%
-IF NOT EXIST %COMBINED_DIR% (
-  ECHO Creating %COMBINED_DIR%
-  MKDIR %COMBINED_DIR%
+SET NODECX_LIBDIR=.\..\..\out\msvc-%PLATFORM%\nodecx\%CONFIG%\lib
+IF NOT EXIST %NODECX_LIBDIR% (
+  ECHO Creating %NODECX_LIBDIR%
+  MKDIR %NODECX_LIBDIR%
 )
 
 REM Create combined library as nodecx
 SET LIBS=%LIBUV% %ZLIB% %LIBHANDLER% %MBEDTLS% %NODEC%
-SET COMBINED=%COMBINED_DIR%\nodecx.lib
-@ECHO Creating %COMBINED% from %LIBS%
-lib /OUT:%COMBINED% %LIBS%
+SET NODECX_LIB=%NODECX_LIBDIR%\nodecx.lib
+@ECHO Creating %NODECX_LIB% from %LIBS%
+lib /OUT:%NODECX_LIB% %LIBS%
 IF NOT ERRORLEVEL 0 GOTO ERROR
 
 REM Copy pdb files for debugging
@@ -68,34 +68,34 @@ IF "%CONFIG%"=="Debug" (
       @ECHO copy /Y %%~dpA..\libuv.pdb %%~dpAlibuv.pdb
       COPY /Y %%~dpA..\libuv.pdb %%~dpAlibuv.pdb
     )
-    @ECHO copy /Y %%~dpnA.pdb %COMBINED_DIR%
-    @COPY /Y %%~dpnA.pdb %COMBINED_DIR%
+    @ECHO copy /Y %%~dpnA.pdb %NODECX_LIBDIR%
+    @COPY /Y %%~dpnA.pdb %NODECX_LIBDIR%
   )
 )
 
 
-SET INCDIR=.\..\..\out\msvc-%PLATFORM%\nodecx\inc
-IF NOT EXIST %INCDIR% (
-  ECHO Creating %INCDIR%
-  MKDIR %INCDIR%
-  ECHO Creating %INCDIR%\libuv\include\uv
-  MKDIR %INCDIR%\libuv\include\uv
-  ECHO Creating %INCDIR%\http-parser
-  MKDIR %INCDIR%\http-parser
-  ECHO Creating %INCDIR%\libhandler\inc
-  MKDIR %INCDIR%\libhandler\inc
-  ECHO Creating %INCDIR%\mbedtls
-  MKDIR %INCDIR%\mbedtls
+SET NODECX_INCDIR=.\..\..\out\msvc-%PLATFORM%\nodecx\%CONFIG%\include
+IF NOT EXIST %NODECX_INCDIR% (
+  ECHO Creating %NODECX_INCDIR%
+  MKDIR %NODECX_INCDIR%
+  ECHO Creating %NODECX_INCDIR%\libuv\include\uv
+  MKDIR %NODECX_INCDIR%\libuv\include\uv
+  ECHO Creating %NODECX_INCDIR%\http-parser
+  MKDIR %NODECX_INCDIR%\http-parser
+  ECHO Creating %NODECX_INCDIR%\libhandler\inc
+  MKDIR %NODECX_INCDIR%\libhandler\inc
+  ECHO Creating %NODECX_INCDIR%\mbedtls
+  MKDIR %NODECX_INCDIR%\mbedtls
 )
 
-@ECHO Collecting include files to %INCDIR%
-COPY /Y %ROOT%\libuv\include\*.h  %INCDIR%\libuv\include
-COPY /Y %ROOT%\libuv\include\uv\*.h  %INCDIR%\libuv\include\uv
+@ECHO Collecting include files to %NODECX_INCDIR%
+COPY /Y %ROOT%\libuv\include\*.h  %NODECX_INCDIR%\libuv\include
+COPY /Y %ROOT%\libuv\include\uv\*.h  %NODECX_INCDIR%\libuv\include\uv
 REM COPY %ROOT%\mbedtls\include\mbedtls\*.h %INCDIR%\mbedtls
-COPY /Y %ROOT%\http-parser\http_parser.h %INCDIR%\http-parser
-COPY /Y %ROOT%\libhandler\inc\libhandler.h %INCDIR%\libhandler\inc
-COPY /Y .\..\..\inc\nodec.h %INCDIR%
-COPY /Y .\..\..\inc\nodec-primitive.h %INCDIR%
+COPY /Y %ROOT%\http-parser\http_parser.h %NODECX_INCDIR%\http-parser
+COPY /Y %ROOT%\libhandler\inc\libhandler.h %NODECX_INCDIR%\libhandler\inc
+COPY /Y .\..\..\inc\nodec.h %NODECX_INCDIR%
+COPY /Y .\..\..\inc\nodec-primitive.h %NODECX_INCDIR%
 
 
 ENDLOCAL
