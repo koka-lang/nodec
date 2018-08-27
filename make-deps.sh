@@ -2,7 +2,10 @@
 # Copyright 2018, Microsoft Research, Daan Leijen
 echo "--- Building NodeC dependencies ---"
 curdir=`pwd`
+ 
+export curdir
 
+echo $curdir
 build_libhandler="yes"
 build_libuv="yes"
 build_libz="yes"
@@ -79,7 +82,7 @@ if test "$build_libuv" = "yes"; then
       ./autogen.sh
     fi
     echo "--- LibUV: configure..."
-    config_cmd='./configure --prefix="$curdir/deps/libuv/out" --enable-static --config-cache'
+    config_cmd="./configure --prefix=$curdir/deps/libuv/out --enable-static --config-cache"
     echo "$config_cmd"
     $config_cmd    
   fi
@@ -98,7 +101,7 @@ if test "$build_libz" = "yes"; then
     echo "found previous configure.log; skip configure"
   else
     echo "--- ZLib: configure..."
-    config_cmd='./configure --prefix="$curdir/deps/zlib/out" --static'
+    config_cmd="./configure --prefix=$curdir/deps/zlib/out --static"
     echo "$config_cmd"
     $config_cmd
   fi
