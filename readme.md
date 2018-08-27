@@ -10,7 +10,7 @@ code {
 
 
 
-<img align="left" width="100" height="100" src="doc/logo-bluex.svg"/>
+<img align="left" width="100" height="100" src="doc/logo-blue-100.png"/>
 
 # NodeC
 
