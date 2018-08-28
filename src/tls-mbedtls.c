@@ -193,13 +193,19 @@ static int tls_stream_net_recv(void* sv, unsigned char* buf, size_t len) {
   return nread;
 }
 
+typedef struct _nodec_ssl_config_t nodec_ssl_config_t;
 
-nodec_tls_stream_t* nodec_mbedtls_stream_alloc(nodec_bstream_t* stream, const mbedtls_ssl_config* config ) {
+struct _nodec_ssl_config_t {
+  mbedtls_ssl_config mbedtls_config;
+};
+
+
+nodec_tls_stream_t* nodec_mbedtls_stream_alloc(nodec_bstream_t* stream, const nodec_ssl_config_t* config ) {
   int res = 0;
   nodec_tls_stream_t* ts = nodecx_zero_alloc(nodec_tls_stream_t);
   if (ts == NULL) { res = UV_ENOMEM; goto err; }
   mbedtls_ssl_init(&ts->ssl);
-  if (mbedtls_ssl_setup(&ts->ssl, config) != 0) { res = UV_ENOMEM;  goto err; }
+  if (mbedtls_ssl_setup(&ts->ssl, &config->mbedtls_config) != 0) { res = UV_ENOMEM;  goto err; }
   mbedtls_ssl_set_bio(&ts->ssl, stream, tls_stream_net_send, tls_stream_net_recv, NULL);
   nodec_bstream_init(&ts->bstream,
     &async_tls_stream_read_chunk, &nodec_chunks_pushback_buf,
@@ -214,16 +220,45 @@ err:
   return NULL;
 }
 
-static mbedtls_ssl_config* nodec_server_tls_config() {
-  mbedtls_ssl_config* config = nodec_alloc(mbedtls_ssl_config);
-  {on_abort(nodec_freev, lh_value_any_ptr(config)) {
-    mbedtls_ssl_config_init(config);
+
+void nodec_ssl_config_free(nodec_ssl_config_t* config) {
+  if (config == NULL) return;
+  mbedtls_ssl_config_free(&config->mbedtls_config);
+  nodec_free(config);
+}
+
+void nodec_ssl_config_freev(lh_value configv) {
+  nodec_ssl_config_t* config = (nodec_ssl_config_t*)lh_ptr_value(configv);
+  nodec_ssl_config_free(config);
+}
+
+nodec_ssl_config_t* nodec_tls_config_server(uv_buf_t cert, uv_buf_t key, const char* password ) {
+  nodec_ssl_config_t* config = nodec_alloc(nodec_ssl_config_t);
+  {on_abort(nodec_ssl_config_freev, lh_value_any_ptr(config)) {
+    mbedtls_ssl_config_init(&config->mbedtls_config);
     const int endpt = MBEDTLS_SSL_IS_SERVER;
     const int tport = MBEDTLS_SSL_TRANSPORT_STREAM;
     const int present = MBEDTLS_SSL_PRESET_DEFAULT;
-    int res = mbedtls_ssl_config_defaults(&config, endpt, tport, present);
+    int res = mbedtls_ssl_config_defaults(&config->mbedtls_config, endpt, tport, present);
     if (res != 0) nodec_throw_tls(res, "cannot configure TLS" );
+
+    // set our own certificate
+    // TODO: free intermediates on error; check if free_config frees the chain and key
+    mbedtls_x509_crt* chain = nodec_alloc(mbedtls_x509_crt);
+    mbedtls_x509_crt_init(chain);
+    res = mbedtls_x509_crt_parse(chain, (const unsigned char*)cert.base, (size_t)cert.len);
+    if (res != 0) nodec_throw_tls(res, "cannot parse x509 certificate");
+    mbedtls_pk_context* pk = nodec_alloc(mbedtls_pk_context);
+    mbedtls_pk_init(pk);
+    res = mbedtls_pk_parse_key(pk, (const unsigned char*)key.base, (size_t)key.len, (const unsigned char*)password, strlen(password));
+    if (res != 0) nodec_throw_tls(res, "invalid password");
+    res = mbedtls_ssl_conf_own_cert(&config->mbedtls_config, chain, pk);
+    if (res != 0) nodec_throw_tls(res, "cannot set server certificate");
   }}
+  return config;
 }
+
+
+
 
 #endif // NO_MBEDTLS
