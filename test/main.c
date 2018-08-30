@@ -1,5 +1,5 @@
-#include <stdio.h>
 
+#include <stdio.h>
 #include <nodec.h>
 
 /*-----------------------------------------------------------------
@@ -17,7 +17,7 @@ static void test_fileread() {
   printf("opening file: %s\n", path);
   char* contents = async_fs_read_from(path);
   {using_free(contents) {
-    printf("read %zi bytes from %s:\n...\n", strlen(contents), path);    
+    printf("read %zi bytes from %s:\n...\n", strlen(contents), path);
   }}
 }
 
@@ -109,7 +109,7 @@ void http_in_headers_print(http_in_t* in) {
   while ((name = http_in_header_next(in, &value, &iter)) != NULL) {
     printf(" %s: %s\n", name, value);
   }
-  uv_buf_t buf = async_http_in_read_body(in, 4*NODEC_MB);
+  uv_buf_t buf = async_http_in_read_body(in, 4 * NODEC_MB);
   {using_buf(&buf) {
     if (buf.base != NULL) {
       buf.base[buf.len] = 0;
@@ -140,22 +140,22 @@ static void test_http_serve() {
   int strand_id = http_strand_id();
   // input
 #ifndef NDEBUG
-  fprintf(stderr,"strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), (unsigned long long)http_req_content_length());
+  fprintf(stderr, "strand %i request, url: %s, content length: %llu\n", strand_id, http_req_url(), (unsigned long long)http_req_content_length());
   http_req_print();
 #endif
   // work
   //printf("waiting %i secs...\n", 2); 
   //async_wait(1000);
   //check_uverr(UV_EADDRINUSE);
-  
+
   http_static_config_t config = http_static_default_config();
   config.use_last_modified = true;
   config.use_etag = false;
   //config.gzip_min_size = SIZE_MAX;
   //config.read_buf_size = 1024;
-  http_serve_static( "../../../nodec-bench/web" 
-                   , &config );
-  
+  http_serve_static("../../../nodec-bench/web"
+    , &config);
+
   // response
   /*
   const char* accept = http_req_header("Accept");
@@ -174,7 +174,7 @@ static void test_tcp() {
   //config.max_interleaving = 500;
   const char* host = "127.0.0.1:8080";
   printf("serving at: %s\n", host);
-  async_http_server_at( host, NULL, &test_http_serve);
+  async_http_server_at(host, NULL, &test_http_serve);
 }
 
 static void test_https() {
@@ -182,8 +182,8 @@ static void test_https() {
   //config.max_interleaving = 500;
   const char* host = "127.0.0.1:443";
   printf("serving at: %s\n", host);
-  nodec_ssl_config_t* ssl_config = nodec_ssl_config_server_from("../../../nodec-bench/nodec.crt", 
-                                          "../../../nodec-bench/nodec.key", "NodeC");
+  nodec_ssl_config_t* ssl_config = nodec_ssl_config_server_from("../../../nodec-bench/nodec.crt",
+    "../../../nodec-bench/nodec.key", "NodeC");
   {using_ssl_config(ssl_config) {
     async_https_server_at(host, NULL, ssl_config, &test_http_serve);
   }}
@@ -223,7 +223,7 @@ static void test_tty() {
     s = async_tty_readline();
     {using_free(s) {
       printf("Now I got: %s\n", s);
-    }}   
+    }}
   }}
 }
 
@@ -254,7 +254,7 @@ void test_dns() {
       char* host = NULL;
       async_getnameinfo(current->ai_addr, 0, &host, NULL);
       {using_free(host) {
-        printf("info: protocol %i at %s, reverse host: %s\n", current->ai_protocol, sockname, host);        
+        printf("info: protocol %i at %s, reverse host: %s\n", current->ai_protocol, sockname, host);
       }}
     }
   }}
@@ -264,10 +264,10 @@ void test_dns() {
   Test connect
 -----------------------------------------------------------------*/
 const char* http_request =
-  "GET / HTTP/1.1\r\n"
-  "Host: www.bing.com\r\n"
-  "Connection: close\r\n"
-  "\r\n";
+"GET / HTTP/1.1\r\n"
+"Host: www.bing.com\r\n"
+"Connection: close\r\n"
+"\r\n";
 
 lh_value test_connection(http_in_t* in, http_out_t* out, lh_value arg) {
   http_out_add_header(out, "Connection", "close");
@@ -300,11 +300,11 @@ void test_as_client() {
     const char* s;
     for (size_t i = 0; (s = http_request_parts[i]) != NULL; i++) {
       printf("write: %s\n", s);
-      async_write( as_stream(conn), s);
+      async_write(as_stream(conn), s);
       async_wait(250);
     }
     printf("await response...\n");
-    char* body = async_read_all(conn, 32*NODEC_MB);
+    char* body = async_read_all(conn, 32 * NODEC_MB);
     {using_free(body) {
       printf("received:\n%s", body);
     }}
@@ -320,7 +320,7 @@ static void url_print(const char* urlstr) {
   {using_url(url) {
     printf("url: %s\n schema: %s\n userinfo: %s\n host: %s\n port: %u\n path: %s\n query: %s\n fragment: %s\n\n",
       urlstr,
-      nodec_url_schema(url), nodec_url_userinfo(url), nodec_url_host(url), 
+      nodec_url_schema(url), nodec_url_userinfo(url), nodec_url_host(url),
       nodec_url_port(url),
       nodec_url_path(url), nodec_url_query(url), nodec_url_fragment(url)
     );
@@ -343,7 +343,7 @@ static void test_url() {
   host_url_print("localhost:8080");
   host_url_print("my.server.com:80");
   host_url_print("127.0.0.1:80");
-  host_url_print("[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443"); 
+  host_url_print("[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443");
   //host_url_print("http://127.0.0.1"); // invalid
   //host_url_print("127.0.0.1");        // invalid
 }

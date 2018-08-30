@@ -953,3 +953,40 @@ uv_buf_t async_req_read_body(size_t read_max) {
 const char* async_req_read_body_str(size_t read_max) {
   return async_req_read_body(read_max).base;
 }
+
+
+
+static void http_in_headers_print(http_in_t* in) {
+  size_t iter = 0;
+  const char* value;
+  const char* name;
+  while ((name = http_in_header_next(in, &value, &iter)) != NULL) {
+    printf(" %s: %s\n", name, value);
+  }
+  uv_buf_t buf = async_http_in_read_body(in, 4 * NODEC_MB);
+  {using_buf(&buf) {
+    if (buf.base != NULL) {
+      buf.base[buf.len] = 0;
+      if (buf.len <= 80) {
+        printf("body: %s\n", buf.base);
+      }
+      else {
+        buf.base[30] = 0;
+        printf("body: %s ... %s\n", buf.base, buf.base + buf.len - 30);
+      }
+    }
+  }}
+}
+
+
+void http_req_print() {
+  http_in_t* in = http_req();
+  printf("%s %s\n headers: \n", http_method_str(http_in_method(in)), http_in_url(in));
+  http_in_headers_print(in);
+}
+
+
+static void http_in_status_print(http_in_t* in) {
+  printf("status: %ui\n headers: \n", http_in_status(in));
+  http_in_headers_print(in);
+}

@@ -958,6 +958,10 @@ nodec_bstream_t* http_in_body(http_in_t* in);
 /// Uses `Content-Length` when possible to read into a pre-allocated buffer of the right size.
 uv_buf_t async_http_in_read_body(http_in_t* in, size_t read_max);
 
+
+/// Print a response for debugging purposes;
+void http_in_status_print(http_in_t* in);
+
 /*-----------------------------------------------------------------
   HTTP outgoing
 -----------------------------------------------------------------*/
@@ -1101,6 +1105,10 @@ uv_buf_t      async_req_read_body(size_t read_max);
 /// if the request body had a Content-Encoding of `gzip`.
 const char*   async_req_read_body_str(size_t read_max);
 
+/// Print a request for debugging purposes.
+void http_req_print();
+
+
 /// \}
 
 
@@ -1210,6 +1218,12 @@ void  async_tty_write(const char* s);
 /// ```
 #define using_tty()  \
     using_implicit_defer_exit(async_tty_shutdown(),_nodec_tty_freev,_nodec_tty_allocv(),tty)
+
+
+/// Run an action until "enter" is pressed.
+/// \param action The action to run.
+void async_stop_on_enter(nodec_actionfun_t* action);
+
 
 /// \}
 

@@ -74,3 +74,16 @@ void async_tty_shutdown() {
   if (tty->_stdout == NULL) async_uv_stream_shutdown(stream_of_tty(tty->_stdout));
   if (tty->_stderr == NULL) async_uv_stream_shutdown(stream_of_tty(tty->_stderr));
 }
+
+static void wait_for_enter() {
+  {using_tty() {
+    async_tty_write("press enter to quit...");
+    const char* s = async_tty_readline();
+    nodec_free(s);
+    async_tty_write("canceling...");
+  }}
+}
+
+void async_stop_on_enter(nodec_actionfun_t* action) {
+  async_firstof(action, &wait_for_enter);
+}
