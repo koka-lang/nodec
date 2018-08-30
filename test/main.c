@@ -153,7 +153,7 @@ static void test_http_serve() {
   config.use_etag = false;
   //config.gzip_min_size = SIZE_MAX;
   //config.read_buf_size = 1024;
-  http_serve_static( "../nodec-bench/web" 
+  http_serve_static( "../../../nodec-bench/web" 
                    , &config );
   
   // response
@@ -175,6 +175,18 @@ static void test_tcp() {
   const char* host = "127.0.0.1:8080";
   printf("serving at: %s\n", host);
   async_http_server_at( host, NULL, &test_http_serve);
+}
+
+static void test_https() {
+  //tcp_server_config_t config = tcp_server_config();
+  //config.max_interleaving = 500;
+  const char* host = "127.0.0.1:443";
+  printf("serving at: %s\n", host);
+  nodec_ssl_config_t* ssl_config = nodec_ssl_config_server_from("../../../nodec-bench/nodec.crt", 
+                                          "../../../nodec-bench/nodec.key", "NodeC");
+  {using_ssl_config(ssl_config) {
+    async_https_server_at(host, NULL, ssl_config, &test_http_serve);
+  }}
 }
 
 
@@ -353,8 +365,9 @@ static void entry() {
   //test_http();
   //test_as_client();
   //test_connect();
-  test_tcp_tty();
+  //test_tcp_tty();
   //test_url();
+  test_https();
 }
 
 int main() {

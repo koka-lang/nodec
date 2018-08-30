@@ -751,6 +751,9 @@ const char* nodec_url_port_str(const nodec_url_t* url);
 uint16_t    nodec_url_port(const nodec_url_t* url);
 bool        nodec_url_is_ip6(const nodec_url_t* url);
 
+#define using_sockaddr(sa)    defer(nodec_freev, lh_value_ptr(sa))
+struct sockaddr* nodec_parse_sockaddr(const char* host);
+
 /// \}
 
 
@@ -1138,6 +1141,34 @@ extern const char* http_static_implicit_exts[];
 void http_serve_static(const char* root, const http_static_config_t* config);
 
 /// \}
+
+
+/* ----------------------------------------------------------------------------
+  HTTPS
+-----------------------------------------------------------------------------*/
+
+/// \defgroup nodec_https HTTPS secure connections
+/// Secure connections over HTTPS
+/// \{
+
+typedef struct _nodec_ssl_config_t nodec_ssl_config_t;
+
+void nodec_ssl_config_free(nodec_ssl_config_t* config);
+void nodec_ssl_config_freev(lh_value configv);
+
+#define using_ssl_config(cfg)     defer(nodec_ssl_config_freev,lh_value_ptr(cfg))
+
+nodec_ssl_config_t* nodec_ssl_config_server_from(const char* cert_path, const char* key_path, const char* password);
+nodec_ssl_config_t* nodec_ssl_config_server(uv_buf_t cert, uv_buf_t key, const char* password);
+
+typedef struct _nodec_tls_stream_t nodec_tls_stream_t;
+
+nodec_bstream_t* nodec_tls_stream_alloc(nodec_bstream_t* stream, const nodec_ssl_config_t* config);
+
+void async_https_server_at(const char* host, tcp_server_config_t* tcp_config, nodec_ssl_config_t* ssl_config, nodec_http_servefun* servefun);
+  
+/// \} HTTPS
+
 
 /// \}  HTTP Connections
 

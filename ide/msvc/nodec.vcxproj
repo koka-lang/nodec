@@ -36,6 +36,7 @@
     <ClCompile Include="..\..\src\dns.c" />
     <ClCompile Include="..\..\src\fs.c" />
     <ClCompile Include="..\..\src\http.c" />
+    <ClCompile Include="..\..\src\https.c\https.c" />
     <ClCompile Include="..\..\src\http_request.c" />
     <ClCompile Include="..\..\src\http_static.c" />
     <ClCompile Include="..\..\src\http_url.c" />
@@ -45,6 +46,7 @@
     <ClCompile Include="..\..\src\stream.c" />
     <ClCompile Include="..\..\src\tcp.c" />
     <ClCompile Include="..\..\src\timer.c" />
+    <ClCompile Include="..\..\src\tls-mbedtls.c" />
     <ClCompile Include="..\..\src\tty.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

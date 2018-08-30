@@ -13,7 +13,9 @@ found in the file "license.txt" at the root of this distribution.
 
 #include <mbedtls/include/mbedtls/ssl.h>
 #include <mbedtls/include/mbedtls/net.h>
-
+#include <mbedtls/include/mbedtls/error.h>
+#include <mbedtls/include/mbedtls/entropy.h>
+#include <mbedtls/include/mbedtls/ctr_drbg.h>
 
 typedef struct _write_buf_args_t {
   nodec_stream_t* s;  
@@ -60,32 +62,32 @@ uv_errno_t asyncx_read_into(nodec_bstream_t* s, uv_buf_t buf, size_t* nread) {
 -----------------------------------------------------------------------------*/
 
 static void nodec_throw_tls(int err, const char* msg) {
+  char tls_err[256];
+  mbedtls_strerror(err, tls_err, 256); tls_err[255] = 0;
   char s[256];
-  snprintf(s, 256, "%s: tls code: %i", msg, err); s[255] = 0;
+  snprintf(s, 256, "%s: %s (%i)", msg, tls_err, err); s[255] = 0;
   nodec_throw_msg(UV_EINVAL, s);
 }
 
-typedef struct _nodec_tls_stream_t {
+static void debug_callback(void* ctx, int level, const char* file, int line, const char* str) {
+  FILE* stream = (FILE*)ctx;
+  fprintf(stream, "%s:%04d: %s", file, line, str);
+  fflush(stream);
+}
+
+struct _nodec_tls_stream_t {
   nodec_bstream_t     bstream;
   mbedtls_ssl_context ssl;
   nodec_bstream_t*    source;
   bool                handshaked;
   size_t              read_chunk_size;
-} nodec_tls_stream_t;
+};
 
 static void nodec_tls_stream_handshake(nodec_tls_stream_t* ts) {
   if (ts->handshaked) return;
   int res = mbedtls_ssl_handshake(&ts->ssl);
   if (res != 0) nodec_throw_tls(res, "unable to perform SSL handshake");
   ts->handshaked = true;
-}
-
-static void nodec_tls_stream_init_read(nodec_tls_stream_t* ts) {
-  nodec_tls_stream_handshake(ts);
-}
-
-static void nodec_tls_stream_init_write(nodec_tls_stream_t* ts) {
-  nodec_tls_stream_handshake(ts);
 }
 
 static bool async_tls_stream_read_chunks(nodec_tls_stream_t* ts)
@@ -108,7 +110,7 @@ static bool async_tls_stream_read_chunks(nodec_tls_stream_t* ts)
     buf = nodec_buf_fit(buf, res); // TODO: should we do this?
     nodec_chunks_push(&ts->bstream, buf);
   }
-  return (res < (size_t)buf.len);
+  return (res == 0 || res < (size_t)buf.len);
 }
 
 static uv_buf_t async_tls_stream_read_bufx(nodec_stream_t* stream, bool* owned) {
@@ -137,7 +139,6 @@ static bool async_tls_stream_read_chunk(nodec_bstream_t* s, nodec_chunk_read_t r
 }
 
 static void async_tls_stream_write_buf(nodec_tls_stream_t* ts, uv_buf_t src) {
-  nodec_tls_stream_init_write(ts);  
   size_t nwritten = 0;
   while (nwritten < (size_t)src.len) {
     int res = mbedtls_ssl_write(&ts->ssl, (const unsigned char*)src.base + nwritten, (size_t)src.len - nwritten);
@@ -167,13 +168,13 @@ static void async_tls_stream_write_bufs(nodec_stream_t* s, uv_buf_t bufs[], size
 static void async_tls_stream_shutdown(nodec_stream_t* stream) {
   nodec_tls_stream_t* ts = (nodec_tls_stream_t*)stream;
   // mbedtls_ssl_session_reset(&ts->ssl);
-  async_shutdown(ts->source);
+  async_shutdown(as_stream(ts->source));
 }
 
 static void nodec_tls_stream_free(nodec_stream_t* stream) {
   nodec_tls_stream_t* ts = (nodec_tls_stream_t*)stream;
   mbedtls_ssl_free(&ts->ssl);
-  nodec_stream_free(ts->source);
+  //nodec_stream_free(as_stream(ts->source));
   nodec_free(ts);
 }
 
@@ -181,7 +182,7 @@ static int tls_stream_net_send(void* sv, const unsigned char* buf, size_t len) {
   nodec_bstream_t* s = (nodec_bstream_t*)sv;
   uv_errno_t err = asyncx_write_buf(as_stream(s), nodec_buf(buf, len));
   if (err != 0) return (err < 0 ? err : UV_EINVAL);
-  return len;
+  return (int)len;
 }
 
 
@@ -190,7 +191,7 @@ static int tls_stream_net_recv(void* sv, unsigned char* buf, size_t len) {
   size_t nread = 0;
   uv_errno_t err = asyncx_read_into(s, nodec_buf(buf, len), &nread);
   if (err != 0) return (err < 0 ? err : UV_EINVAL);
-  return nread;
+  return (int)nread;
 }
 
 typedef struct _nodec_ssl_config_t nodec_ssl_config_t;
@@ -200,10 +201,11 @@ struct _nodec_ssl_config_t {
 };
 
 
-nodec_tls_stream_t* nodec_mbedtls_stream_alloc(nodec_bstream_t* stream, const nodec_ssl_config_t* config ) {
+nodec_bstream_t* nodec_tls_stream_alloc(nodec_bstream_t* stream, const nodec_ssl_config_t* config ) {
   int res = 0;
   nodec_tls_stream_t* ts = nodecx_zero_alloc(nodec_tls_stream_t);
   if (ts == NULL) { res = UV_ENOMEM; goto err; }
+  ts->read_chunk_size = 14 * NODEC_KB;
   mbedtls_ssl_init(&ts->ssl);
   if (mbedtls_ssl_setup(&ts->ssl, &config->mbedtls_config) != 0) { res = UV_ENOMEM;  goto err; }
   mbedtls_ssl_set_bio(&ts->ssl, stream, tls_stream_net_send, tls_stream_net_recv, NULL);
@@ -212,10 +214,11 @@ nodec_tls_stream_t* nodec_mbedtls_stream_alloc(nodec_bstream_t* stream, const no
     &async_tls_stream_read_bufx, &async_tls_stream_write_bufs,
     &async_tls_stream_shutdown, &nodec_tls_stream_free);
   ts->source = stream;
-  return ts;
+  nodec_tls_stream_handshake(ts);
+  return &ts->bstream;
 err:
   if (ts != NULL) nodec_free(ts);
-  if (stream != NULL) nodec_stream_free(stream);
+  if (stream != NULL) nodec_stream_free(as_stream(stream));
   nodec_check(res);
   return NULL;
 }
@@ -232,7 +235,7 @@ void nodec_ssl_config_freev(lh_value configv) {
   nodec_ssl_config_free(config);
 }
 
-nodec_ssl_config_t* nodec_tls_config_server(uv_buf_t cert, uv_buf_t key, const char* password ) {
+nodec_ssl_config_t* nodec_ssl_config_server(uv_buf_t cert, uv_buf_t key, const char* password ) {
   nodec_ssl_config_t* config = nodec_alloc(nodec_ssl_config_t);
   {on_abort(nodec_ssl_config_freev, lh_value_any_ptr(config)) {
     mbedtls_ssl_config_init(&config->mbedtls_config);
@@ -241,16 +244,26 @@ nodec_ssl_config_t* nodec_tls_config_server(uv_buf_t cert, uv_buf_t key, const c
     const int present = MBEDTLS_SSL_PRESET_DEFAULT;
     int res = mbedtls_ssl_config_defaults(&config->mbedtls_config, endpt, tport, present);
     if (res != 0) nodec_throw_tls(res, "cannot configure TLS" );
+    mbedtls_ssl_conf_dbg(&config->mbedtls_config, debug_callback, stderr);
+
+    // init random numbers
+    mbedtls_ctr_drbg_context* drbg = nodec_alloc(mbedtls_ctr_drbg_context);
+    mbedtls_ctr_drbg_init(drbg);
+    mbedtls_entropy_context* entropy = nodec_alloc(mbedtls_entropy_context);
+    mbedtls_entropy_init(entropy);
+    res = mbedtls_ctr_drbg_seed(drbg, &mbedtls_entropy_func, entropy, "", 0);
+    if (res != 0) nodec_throw_tls(res, "cannot initialize random number generator");
+    mbedtls_ssl_conf_rng(&config->mbedtls_config, mbedtls_ctr_drbg_random, drbg);
 
     // set our own certificate
     // TODO: free intermediates on error; check if free_config frees the chain and key
     mbedtls_x509_crt* chain = nodec_alloc(mbedtls_x509_crt);
     mbedtls_x509_crt_init(chain);
-    res = mbedtls_x509_crt_parse(chain, (const unsigned char*)cert.base, (size_t)cert.len);
+    res = mbedtls_x509_crt_parse(chain, (const unsigned char*)cert.base, (size_t)cert.len + 1); // include zero byte at end
     if (res != 0) nodec_throw_tls(res, "cannot parse x509 certificate");
     mbedtls_pk_context* pk = nodec_alloc(mbedtls_pk_context);
     mbedtls_pk_init(pk);
-    res = mbedtls_pk_parse_key(pk, (const unsigned char*)key.base, (size_t)key.len, (const unsigned char*)password, strlen(password));
+    res = mbedtls_pk_parse_key(pk, (const unsigned char*)key.base, (size_t)key.len + 1, (const unsigned char*)password, strlen(password));
     if (res != 0) nodec_throw_tls(res, "invalid password");
     res = mbedtls_ssl_conf_own_cert(&config->mbedtls_config, chain, pk);
     if (res != 0) nodec_throw_tls(res, "cannot set server certificate");
@@ -258,7 +271,17 @@ nodec_ssl_config_t* nodec_tls_config_server(uv_buf_t cert, uv_buf_t key, const c
   return config;
 }
 
-
+nodec_ssl_config_t* nodec_ssl_config_server_from(const char* cert_path, const char* key_path, const char* password) {
+  nodec_ssl_config_t* config = NULL;
+  uv_buf_t cert = async_fs_read_buf_from(cert_path);
+  {using_buf(&cert) {
+    uv_buf_t key = async_fs_read_buf_from(key_path);
+    {using_buf(&key) {
+      config = nodec_ssl_config_server(cert, key, password);
+    }}
+  }}
+  return config;       
+}
 
 
 #endif // NO_MBEDTLS

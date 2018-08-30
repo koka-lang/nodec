@@ -78,4 +78,7 @@ void async_uv_stream_shutdown(uv_stream_t* stream);
 void nodec_uv_stream_free(uv_stream_t* stream);
 
 
+
+void _nodec_http_serve(int id, nodec_bstream_t* client, lh_value servefunv);
+
 #endif

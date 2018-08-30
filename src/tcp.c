@@ -149,6 +149,25 @@ tcp_channel_t* nodec_tcp_listen_at(const struct sockaddr* addr, int backlog) {
   return ch;
 }
 
+struct sockaddr* nodec_parse_sockaddr(const char* host) {
+  struct sockaddr*    addr = NULL;
+  nodec_url_t* url = nodec_parse_host(host);
+  {using_url(url) {
+    if (nodec_url_is_ip6(url)) {
+      struct sockaddr_in6* addr6 = nodec_zero_alloc(struct sockaddr_in6);
+      nodec_ip6_addr(nodec_url_host(url), nodec_url_port(url), addr6);
+      addr = (struct sockaddr*)addr6;
+    }
+    else {
+      struct sockaddr_in* addr4 = nodec_zero_alloc(struct sockaddr_in);
+      nodec_ip4_addr(nodec_url_host(url), nodec_url_port(url), addr4);
+      addr = (struct sockaddr*)addr4;
+    }
+  }}
+  return addr;
+}
+
+
 uv_stream_t* async_tcp_channel_receive(tcp_channel_t* ch) {
   lh_value data = lh_value_null;
   channel_receive(ch, &data, NULL);

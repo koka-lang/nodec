@@ -286,6 +286,7 @@ size_t async_http_in_read_headers(http_in_t* in )
     if (!nodec_buf_is_null(buf)) nodec_buf_free(buf);
     if (headers_len == 0) {
       // eof; means client closed the stream; no problem
+      fprintf(stderr, "stream closed while reading headers");
       return 0;
     }
     throw_http_err((headers_len > HTTP_MAX_HEADERS ? HTTP_STATUS_PAYLOAD_TOO_LARGE : HTTP_STATUS_BAD_REQUEST));
@@ -794,7 +795,7 @@ implicit_define(http_current_resp)
 implicit_define(http_current_strand_id)
 implicit_define(http_current_url)
 
-static void http_serve(int id, nodec_bstream_t* client, lh_value servefunv) {
+void _nodec_http_serve(int id, nodec_bstream_t* client, lh_value servefunv) {
   nodec_http_servefun* servefun = ((nodec_http_servefun*)lh_fun_ptr_value(servefunv));
   {using_implicit(lh_value_int(id), http_current_strand_id) {
     http_in_t http_in;
@@ -803,7 +804,7 @@ static void http_serve(int id, nodec_bstream_t* client, lh_value servefunv) {
       http_out_t http_out;
       http_out_init_server(&http_out, as_stream(client), "NodeC/0.1");
       {using_implicit_defer(http_out_clearv, lh_value_any_ptr(&http_out), http_current_resp) {
-        //printf("strand %i, read headers\n", id);
+        fprintf(stderr,"strand %i, read headers\n", id);
         if (async_http_in_read_headers(&http_in) > 0) { // if not closed by client
           char urlpath[1024];
           snprintf(urlpath, 1024, "http://%s%s", http_in_header(&http_in, "Host"), http_in_url(&http_in));
@@ -822,22 +823,11 @@ void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_h
 {
   tcp_server_config_t default_config = tcp_server_config();
   if (config == NULL) config = &default_config;
-  struct sockaddr_in  addr4;
-  struct sockaddr_in6 addr6;
-  struct sockaddr*    addr = NULL;
-  nodec_url_t* url = nodec_parse_host(host);
-  {using_url(url) {
-    if (nodec_url_is_ip6(url)) {
-      nodec_ip6_addr(nodec_url_host(url), nodec_url_port(url), &addr6);
-      addr = (struct sockaddr*)&addr6;
-    }
-    else {
-      nodec_ip4_addr(nodec_url_host(url), nodec_url_port(url), &addr4);
-      addr = (struct sockaddr*)&addr4;
-    }
+  struct sockaddr* addr = nodec_parse_sockaddr(host);
+  {using_sockaddr(addr) {
+    async_tcp_server_at(addr, config, &_nodec_http_serve,
+      &async_write_http_exnv, lh_value_fun_ptr(servefun));   // by address to prevent conversion between object and function pointer
   }}
-  async_tcp_server_at(addr, config, http_serve,
-    &async_write_http_exnv, lh_value_fun_ptr(servefun));   // by address to prevent conversion between object and function pointer
 }
 
 lh_value async_http_connect(const char* host, http_connect_fun* connectfun, lh_value arg) {
