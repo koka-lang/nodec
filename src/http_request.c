@@ -286,7 +286,7 @@ size_t async_http_in_read_headers(http_in_t* in )
     if (!nodec_buf_is_null(buf)) nodec_buf_free(buf);
     if (headers_len == 0) {
       // eof; means client closed the stream; no problem
-      fprintf(stderr, "stream closed while reading headers");
+      fprintf(stderr, "stream closed while reading headers\n");
       return 0;
     }
     throw_http_err((headers_len > HTTP_MAX_HEADERS ? HTTP_STATUS_PAYLOAD_TOO_LARGE : HTTP_STATUS_BAD_REQUEST));

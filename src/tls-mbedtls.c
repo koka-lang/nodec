@@ -167,7 +167,7 @@ static void async_tls_stream_write_bufs(nodec_stream_t* s, uv_buf_t bufs[], size
 
 static void async_tls_stream_shutdown(nodec_stream_t* stream) {
   nodec_tls_stream_t* ts = (nodec_tls_stream_t*)stream;
-  // mbedtls_ssl_session_reset(&ts->ssl);
+  //mbedtls_ssl_session_reset(&ts->ssl);
   async_shutdown(as_stream(ts->source));
 }
 
@@ -205,15 +205,15 @@ nodec_bstream_t* nodec_tls_stream_alloc(nodec_bstream_t* stream, const nodec_ssl
   int res = 0;
   nodec_tls_stream_t* ts = nodecx_zero_alloc(nodec_tls_stream_t);
   if (ts == NULL) { res = UV_ENOMEM; goto err; }
-  ts->read_chunk_size = 14 * NODEC_KB;
-  mbedtls_ssl_init(&ts->ssl);
-  if (mbedtls_ssl_setup(&ts->ssl, &config->mbedtls_config) != 0) { res = UV_ENOMEM;  goto err; }
-  mbedtls_ssl_set_bio(&ts->ssl, stream, tls_stream_net_send, tls_stream_net_recv, NULL);
   nodec_bstream_init(&ts->bstream,
     &async_tls_stream_read_chunk, &nodec_chunks_pushback_buf,
     &async_tls_stream_read_bufx, &async_tls_stream_write_bufs,
     &async_tls_stream_shutdown, &nodec_tls_stream_free);
   ts->source = stream;
+  ts->read_chunk_size = 14 * NODEC_KB;
+  mbedtls_ssl_init(&ts->ssl);
+  if (mbedtls_ssl_setup(&ts->ssl, &config->mbedtls_config) != 0) { res = UV_ENOMEM;  goto err; }
+  mbedtls_ssl_set_bio(&ts->ssl, stream, tls_stream_net_send, tls_stream_net_recv, NULL);
   nodec_tls_stream_handshake(ts);
   return &ts->bstream;
 err:
