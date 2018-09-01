@@ -804,7 +804,7 @@ void nodec_http_serve(int id, nodec_bstream_t* client, lh_value servefunv) {
       http_out_t http_out;
       http_out_init_server(&http_out, as_stream(client), "NodeC/0.1");
       {using_implicit_defer(http_out_clearv, lh_value_any_ptr(&http_out), http_current_resp) {
-        fprintf(stderr,"strand %i, read headers\n", id);
+        fprintf(stderr,"\n------------------------------\nstrand %i, read headers\n", id);
         if (async_http_in_read_headers(&http_in) > 0) { // if not closed by client
           char urlpath[1024];
           snprintf(urlpath, 1024, "http://%s%s", http_in_header(&http_in, "Host"), http_in_url(&http_in));
