@@ -11,8 +11,8 @@
   Example of a static http server
 -----------------------------------------------------------------*/
 static void http_serve() {
-#ifdef NDEBUG
-  fprintf(stderr,"request url: %s, content length: %llu\n", http_req_url(), (unsigned long long)http_req_content_length());
+#ifndef NDEBUG
+  fprintf(stderr,"\nrequest url: %s, content length: %llu\n", http_req_url(), (unsigned long long)http_req_content_length());
   http_req_print();
 #endif
   http_serve_static( "./examples/web", NULL );

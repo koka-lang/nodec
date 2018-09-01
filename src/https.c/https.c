@@ -9,30 +9,33 @@ found in the file "license.txt" at the root of this distribution.
 #include "nodec-internal.h"
 #include <assert.h>
 
-typedef struct _https_server_args_t {
-  nodec_http_servefun*  servefun;
-  uint64_t              timeout_total;
-  nodec_ssl_config_t*   ssl_config;
-} https_server_args_t;
+static void nodec_https_serve(int id, nodec_bstream_t* client, lh_value servefunv) {
+  nodec_tls_stream_t* ts = (nodec_tls_stream_t*)client;
+  nodec_tls_stream_handshake(ts);
+  nodec_http_serve(id, client, servefunv);
+}
 
-
-static void _nodec_https_serve(int id, nodec_bstream_t* encrypted_client, lh_value argsv) {
-  https_server_args_t* args = (https_server_args_t*)lh_ptr_value(argsv);
-  nodec_bstream_t* client = nodec_tls_stream_alloc(encrypted_client, args->ssl_config);
+static void https_connection_wrap(const tcp_connection_args* args, lh_value sslv) {
+  nodec_ssl_config_t* ssl_config = (nodec_ssl_config_t*)lh_ptr_value(sslv);
+  nodec_bstream_t* client = nodec_tls_stream_alloc(args->client, ssl_config);
   {using_bstream(client) {
-    // TODO: install exception handler and timeout functions
-    _nodec_http_serve(id, client, lh_value_ptr(args->servefun));
+    tcp_connection_args targs = *args;
+    targs.client = client; // overwrite encrypted client 
+    nodec_tcp_connection_wrap(&targs, lh_value_null);
   }}
 }
 
 void async_https_server_at(const char* host, tcp_server_config_t* tcp_config, nodec_ssl_config_t* ssl_config, nodec_http_servefun* servefun) {
   tcp_server_config_t default_config = tcp_server_config();
   if (tcp_config == NULL) tcp_config = &default_config;
-  https_server_args_t args = { servefun, tcp_config->timeout_total, ssl_config };
   tcp_config->timeout_total = 0;
   struct sockaddr* addr = nodec_parse_sockaddr(host);
   {using_sockaddr(addr) {
-    async_tcp_server_at(addr, tcp_config, &_nodec_https_serve,
-      &async_write_http_exnv, lh_value_any_ptr(&args)); 
+    async_tcp_server_at_ex(addr, tcp_config,
+      &nodec_https_serve,
+      &https_connection_wrap,
+      &async_write_http_exnv,
+      lh_value_ptr(servefun),
+      lh_value_any_ptr(ssl_config));
   }}
 }

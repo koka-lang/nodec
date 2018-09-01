@@ -224,84 +224,92 @@ static lh_value async_log_tcp_exn(lh_value exnv) {
 }
 
 
+
+
 typedef struct _tcp_serve_args {
+  nodec_tcp_connection_wrap_t* connection_wrap;
+  nodec_tcp_connection_fun_t* serve;
+  lh_value            serve_arg;
+  lh_value            wrap_arg;
   tcp_channel_t*      ch;
-  uint64_t            timeout_total;
-  uint64_t            timeoutx;
-  nodec_tcp_servefun* serve;
-  lh_actionfun*       on_exn;
-  lh_value            arg;
-  uv_stream_t*        uvclient;
   size_t              max_interleaving;
+  uint64_t            timeout_total;
+  uint64_t            timeout_keepalive;
+  lh_actionfun*       on_exn;
+  uv_stream_t*        uvclient;
 } tcp_serve_args;
 
-typedef struct _tcp_client_args {
-  int                 id;
-  uint64_t            timeout_total;
-  uint64_t            timeoutx;
-  nodec_uv_stream_t*  client;
-  nodec_tcp_servefun* serve;
-  lh_value            arg;
-} tcp_client_args;
 
-static lh_value tcp_serve_client(lh_value argsv) {
-  tcp_client_args* args = (tcp_client_args*)lh_ptr_value(argsv);
-  args->serve(args->id, as_bstream(args->client), args->arg);
+static lh_value tcp_connection(lh_value argsv) {
+  tcp_connection_args* args = (tcp_connection_args*)lh_ptr_value(argsv);
+  args->connection_fun(args->id, args->client, args->arg);
   return lh_value_null;
 }
 
-static lh_value tcp_serve_timeout(lh_value argsv) {
-  tcp_client_args* args = (tcp_client_args*)lh_ptr_value(argsv);
+static lh_value tcp_connection_timeout(lh_value argsv) {
+  tcp_connection_args* args = (tcp_connection_args*)lh_ptr_value(argsv);
   if (args->timeout_total == 0) {
-    return tcp_serve_client(argsv);
+    return tcp_connection(argsv);
   }
   else {
     bool timedout = false;
-    lh_value result = async_timeout(&tcp_serve_client, argsv, args->timeout_total, &timedout);
+    lh_value result = async_timeout(&tcp_connection, argsv, args->timeout_total, &timedout);
     if (timedout) throw_http_err(408);
     return result;
   }
 }
 
-static lh_value tcp_serve_keepalive(lh_value argsv) {
-  tcp_client_args* args = (tcp_client_args*)lh_ptr_value(argsv);
-  nodec_uv_stream_read_start(args->client, 8 * 1024, 0); // initial allocation at 8kb (for the header)
-  if (args->timeoutx == 0) {
-    return tcp_serve_timeout(argsv);
+static lh_value tcp_connection_keepalive(lh_value argsv) {
+  tcp_connection_args* args = (tcp_connection_args*)lh_ptr_value(argsv);
+  // TODO: is this too late? SSL handshake already occurred..
+  //nodec_uv_stream_read_start(args->uvclient, 8*1024, 0); // initial allocation at 8kb (for the header)
+  if (args->timeout_keepalive == 0) {
+    return tcp_connection_timeout(argsv);
   }
   else {
     lh_value result = lh_value_null;
     uverr_t err = 0;
     //nodec_check(uv_tcp_keepalive((uv_tcp_t*)args->client, 1, (unsigned)args->keepalive));
+    fprintf(stderr, "use keep alive connection %i.\n", args->id);
     do {
-      result = tcp_serve_timeout(argsv);
-      err = asyncx_uv_stream_await_available(args->client, args->timeoutx);
+      result = tcp_connection_timeout(argsv);
+      err = asyncx_uv_stream_await_available(args->uvclient, args->timeout_keepalive);
     } while (err == 0);
+    fprintf(stderr, "closed keep alive connection %i.\n", args->id);
     return result;
   }
 }
 
-static lh_value tcp_serve_clientv(lh_value argsv) {
+void nodec_tcp_connection_wrap(const tcp_connection_args* args, lh_value ignored_arg) {
+  lh_exception* exn;
+  lh_try(&exn, &tcp_connection_keepalive, lh_value_any_ptr(args));
+  if (exn != NULL) {
+    // ignore closed client connections..
+    if (!(exn->data == args->uvclient && exn->code == UV_ECANCELED)) {
+      // send an exception response
+      // wrap in try itself in case writing gives an error too!
+      lh_exception* wrap = lh_exception_alloc(exn->code, exn->msg);
+      wrap->data = args->client;
+      lh_exception* ignore_exn = NULL;
+      lh_try(&ignore_exn, args->on_exn, lh_value_any_ptr(wrap));
+      lh_exception_free(wrap);
+      lh_exception_free(ignore_exn);
+    }
+    lh_exception_free(exn);
+  }
+}
+
+
+static lh_value tcp_serve_connection(lh_value argsv) {
+  static int id = 0;
   tcp_serve_args args = *((tcp_serve_args*)lh_ptr_value(argsv)); // copy by value
   nodec_uv_stream_t* client = nodec_uv_stream_alloc(args.uvclient);    
   {using_uv_stream(client) {
-    lh_exception* exn;
-    tcp_client_args cargs = { 0, args.timeout_total, args.timeoutx, client, args.serve, args.arg };
-    lh_try(&exn, &tcp_serve_keepalive, lh_value_any_ptr(&cargs));
-    if (exn != NULL) {
-      // ignore closed client connections..
-      if (!(exn->data == args.uvclient && exn->code == UV_ECANCELED)) {
-        // send an exception response
-        // wrap in try itself in case writing gives an error too!
-        lh_exception* wrap = lh_exception_alloc(exn->code, exn->msg);
-        wrap->data = client;
-        lh_exception* ignore_exn = NULL;
-        lh_try(&ignore_exn, args.on_exn, lh_value_any_ptr(wrap));
-        lh_exception_free(wrap);
-        lh_exception_free(ignore_exn);
-      }
-      lh_exception_free(exn);
-    }
+    // TODO: what if an exception happens here?
+    // TODO: make initial read allocation a parameter? Maybe needs to be enlarged for https?
+    nodec_uv_stream_read_start(client, 8 * 1024, 0); // initial allocation at 8kb (for the header)
+    tcp_connection_args cargs = { args.serve, id++, as_bstream(client), args.serve_arg, args.timeout_total, args.timeout_keepalive, args.on_exn, client };
+    (*args.connection_wrap)(&cargs, args.wrap_arg);
   }}
   return lh_value_null;
 }
@@ -315,32 +323,47 @@ static lh_value tcp_servev(lh_value argsv) {
       nodec_uv_stream_free(uvclient);
     }
     else {
-      tcp_serve_args sargs = args;
+      tcp_serve_args sargs = args; // copy
       sargs.uvclient = uvclient;
-      async_strand_create(&tcp_serve_clientv, lh_value_any_ptr(&sargs), NULL);
+      async_strand_create(&tcp_serve_connection, lh_value_any_ptr(&sargs), NULL);
     }
   } while (true);  // should be until termination
   return lh_value_null;
 }
 
-void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config,
-  nodec_tcp_servefun* servefun, lh_actionfun* on_exn,
-  lh_value arg)
+void async_tcp_server_at_ex(const struct sockaddr* addr, 
+  tcp_server_config_t* config,
+  nodec_tcp_connection_fun_t* servefun, 
+  nodec_tcp_connection_wrap_t* wrapfun,
+  lh_actionfun* on_exn,
+  lh_value serve_arg,
+  lh_value wrap_arg)
 {
   tcp_server_config_t default_config = tcp_server_config();
   if (config == NULL) config = &default_config;
   tcp_channel_t* ch = nodec_tcp_listen_at(addr, config->backlog);
   {using_tcp_channel(ch) {
     {using_zero_alloc(tcp_serve_args, sargs) {
-      sargs->ch = ch;
-      sargs->timeout_total = config->timeout_total;
-      sargs->timeoutx = config->timeout;
+      sargs->connection_wrap = wrapfun;
+      sargs->wrap_arg = wrap_arg;
       sargs->serve = servefun;
-      sargs->arg = arg;
-      sargs->on_exn = (on_exn == NULL ? &async_log_tcp_exn : on_exn);
+      sargs->serve_arg = serve_arg;
+      sargs->ch = ch;
       sargs->max_interleaving = config->max_interleaving;
+      sargs->timeout_total = config->timeout_total;
+      sargs->timeout_keepalive = config->timeout;
+      sargs->on_exn = (on_exn == NULL ? &async_log_tcp_exn : on_exn);
       async_interleave_dynamic(&tcp_servev, lh_value_ptr(sargs));
     }}
   }}
 }
 
+void async_tcp_server_at(const struct sockaddr* addr,
+  tcp_server_config_t* config,
+  nodec_tcp_connection_fun_t* servefun,
+  lh_actionfun* on_exn,
+  lh_value arg)
+{
+  async_tcp_server_at_ex(addr, config, servefun, 
+    &nodec_tcp_connection_wrap, on_exn, arg, lh_value_null);
+}

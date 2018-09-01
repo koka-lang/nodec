@@ -13,7 +13,7 @@
 
 static void https_serve() {
 #ifndef NDEBUG
-  fprintf(stderr, "secure request url: %s, content length: %llu\n", http_req_url(), (unsigned long long)http_req_content_length());
+  fprintf(stderr, "\nsecure request url: %s, content length: %llu\n", http_req_url(), (unsigned long long)http_req_content_length());
   http_req_print();
 #endif
   http_serve_static("./examples/web", NULL);

@@ -795,7 +795,7 @@ implicit_define(http_current_resp)
 implicit_define(http_current_strand_id)
 implicit_define(http_current_url)
 
-void _nodec_http_serve(int id, nodec_bstream_t* client, lh_value servefunv) {
+void nodec_http_serve(int id, nodec_bstream_t* client, lh_value servefunv) {
   nodec_http_servefun* servefun = ((nodec_http_servefun*)lh_fun_ptr_value(servefunv));
   {using_implicit(lh_value_int(id), http_current_strand_id) {
     http_in_t http_in;
@@ -825,7 +825,7 @@ void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_h
   if (config == NULL) config = &default_config;
   struct sockaddr* addr = nodec_parse_sockaddr(host);
   {using_sockaddr(addr) {
-    async_tcp_server_at(addr, config, &_nodec_http_serve,
+    async_tcp_server_at(addr, config, &nodec_http_serve,
       &async_write_http_exnv, lh_value_fun_ptr(servefun));   // by address to prevent conversion between object and function pointer
   }}
 }

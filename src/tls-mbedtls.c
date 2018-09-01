@@ -66,6 +66,9 @@ static void nodec_throw_tls(int err, const char* msg) {
   mbedtls_strerror(err, tls_err, 256); tls_err[255] = 0;
   char s[256];
   snprintf(s, 256, "%s: %s (%i)", msg, tls_err, err); s[255] = 0;
+#ifndef NDEBUG
+  fprintf(stderr,"throw tls error: %s\n", s);
+#endif
   nodec_throw_msg(UV_EINVAL, s);
 }
 
@@ -83,7 +86,7 @@ struct _nodec_tls_stream_t {
   size_t              read_chunk_size;
 };
 
-static void nodec_tls_stream_handshake(nodec_tls_stream_t* ts) {
+void nodec_tls_stream_handshake(nodec_tls_stream_t* ts) {
   if (ts->handshaked) return;
   int res = mbedtls_ssl_handshake(&ts->ssl);
   if (res != 0) nodec_throw_tls(res, "unable to perform SSL handshake");
@@ -191,7 +194,7 @@ static int tls_stream_net_recv(void* sv, unsigned char* buf, size_t len) {
   size_t nread = 0;
   uv_errno_t err = asyncx_read_into(s, nodec_buf(buf, len), &nread);
   if (err != 0) return (err < 0 ? err : UV_EINVAL);
-  return (int)nread;
+    return (int)nread;
 }
 
 typedef struct _nodec_ssl_config_t nodec_ssl_config_t;
@@ -214,7 +217,6 @@ nodec_bstream_t* nodec_tls_stream_alloc(nodec_bstream_t* stream, const nodec_ssl
   mbedtls_ssl_init(&ts->ssl);
   if (mbedtls_ssl_setup(&ts->ssl, &config->mbedtls_config) != 0) { res = UV_ENOMEM;  goto err; }
   mbedtls_ssl_set_bio(&ts->ssl, stream, tls_stream_net_send, tls_stream_net_recv, NULL);
-  nodec_tls_stream_handshake(ts);
   return &ts->bstream;
 err:
   if (ts != NULL) nodec_free(ts);
@@ -244,7 +246,8 @@ nodec_ssl_config_t* nodec_ssl_config_server(uv_buf_t cert, uv_buf_t key, const c
     const int present = MBEDTLS_SSL_PRESET_DEFAULT;
     int res = mbedtls_ssl_config_defaults(&config->mbedtls_config, endpt, tport, present);
     if (res != 0) nodec_throw_tls(res, "cannot configure TLS" );
-    mbedtls_ssl_conf_dbg(&config->mbedtls_config, debug_callback, stderr);
+    mbedtls_ssl_conf_dbg(&config->mbedtls_config, &debug_callback, stderr);
+    mbedtls_debug_set_threshold(1);
 
     // init random numbers
     mbedtls_ctr_drbg_context* drbg = nodec_alloc(mbedtls_ctr_drbg_context);

@@ -687,7 +687,9 @@ static void _nodec_uv_stream_cb(uv_stream_t* stream, ssize_t nread, const uv_buf
       // done reading (error or UV_EOF)
       if (nread == UV_ECANCELED) nread = UV_EOF;
       rs->err = (uv_errno_t)(nread == UV_EOF ? 0 : nread);
-      if (nread == UV_EOF) rs->eof = true;
+      if (nread == UV_EOF) {
+        rs->eof = true;
+      }
       uv_read_stop(stream);       // no more reading
       nodec_uv_stream_try_resume(rs);
     }

@@ -163,5 +163,29 @@ void nodec_uv_stream_read_stop(nodec_uv_stream_t* rs);
 uv_errno_t asyncx_uv_stream_await_available(nodec_uv_stream_t* stream, int64_t timeout);
 
 
+typedef struct _tcp_connection_args {
+  nodec_tcp_connection_fun_t* connection_fun;
+  int                 id;
+  nodec_bstream_t*    client;
+  lh_value            arg;
+  uint64_t            timeout_total;
+  uint64_t            timeout_keepalive;
+  lh_actionfun*       on_exn;
+  nodec_uv_stream_t*  uvclient;
+} tcp_connection_args;
+
+typedef void (nodec_tcp_connection_wrap_t)(const tcp_connection_args* args, lh_value arg );
+
+void nodec_tcp_connection_wrap(const tcp_connection_args* args, lh_value ignored_arg);
+
+void async_tcp_server_at_ex(const struct sockaddr* addr,
+  tcp_server_config_t* config,
+  nodec_tcp_connection_fun_t* servefun,
+  nodec_tcp_connection_wrap_t* wrapfun,
+  lh_actionfun* on_exn,
+  lh_value serve_arg,
+  lh_value wrap_arg);
+
+void nodec_http_serve(int id, nodec_bstream_t* client, lh_value servefunv);
 
 #endif

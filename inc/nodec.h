@@ -850,7 +850,7 @@ typedef struct _tcp_server_config_t {
 /// \param id       The identity of the current asynchronous strand.
 /// \param client   The connecting client data stream.
 /// \param arg      The `lh_value` passed from async_tcp_server_at().
-typedef void    (nodec_tcp_servefun)(int id, nodec_bstream_t* client, lh_value arg);
+typedef void    (nodec_tcp_connection_fun_t)(int id, nodec_bstream_t* client, lh_value arg);
 
 /// Create a TCP server.
 ///
@@ -859,7 +859,7 @@ typedef void    (nodec_tcp_servefun)(int id, nodec_bstream_t* client, lh_value a
 /// \param servefun   The callback called when a client connects.
 /// \param on_exn     Optional function that is called when an exception happens in `servefun`.
 /// \param arg        Optional argument to pass on to `servefun`, can be `lh_value_null`.
-void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config, nodec_tcp_servefun* servefun, lh_actionfun* on_exn, lh_value arg);
+void async_tcp_server_at(const struct sockaddr* addr, tcp_server_config_t* config, nodec_tcp_connection_fun_t* servefun, lh_actionfun* on_exn, lh_value arg);
 
 /// \}
 

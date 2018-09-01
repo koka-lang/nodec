@@ -77,8 +77,6 @@ void async_uv_write_buf(uv_stream_t* stream, uv_buf_t buf);
 void async_uv_stream_shutdown(uv_stream_t* stream);
 void nodec_uv_stream_free(uv_stream_t* stream);
 
-
-
-void _nodec_http_serve(int id, nodec_bstream_t* client, lh_value servefunv);
+void nodec_tls_stream_handshake(nodec_tls_stream_t* ts);
 
 #endif
