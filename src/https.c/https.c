@@ -39,3 +39,20 @@ void async_https_server_at(const char* host, tcp_server_config_t* tcp_config, no
       lh_value_any_ptr(ssl_config));
   }}
 }
+
+
+lh_value async_https_connect(nodec_ssl_config_t* ssl_config, const char* url, http_connect_fun* connectfun, lh_value arg) {
+  lh_value result = lh_value_null;
+  nodec_bstream_t* connx = async_tcp_connect(url);
+  {using_bstream(connx) {
+    nodec_bstream_t* conn = nodec_tls_stream_alloc(connx, ssl_config);
+    {using_bstream(conn) {
+      const nodec_url_t* u = nodec_parse_url(url);
+      {using_url(u) {
+        const char* host = nodec_url_host(u);
+        result = async_http_connect_on(host, conn, connectfun, arg);
+      }}
+    }}
+  }}
+  return result;
+}

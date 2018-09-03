@@ -9,64 +9,34 @@ found in the file "license.txt" at the root of this distribution.
 #include "nodec-primitive.h"
 #include <assert.h>
 
-#ifndef NO_MBEDTLS
+#ifdef USE_MBEDTLS
 
 #include <mbedtls/include/mbedtls/ssl.h>
 #include <mbedtls/include/mbedtls/net.h>
 #include <mbedtls/include/mbedtls/error.h>
 #include <mbedtls/include/mbedtls/entropy.h>
 #include <mbedtls/include/mbedtls/ctr_drbg.h>
-
-typedef struct _write_buf_args_t {
-  nodec_stream_t* s;  
-  uv_buf_t        buf;
-} write_buf_args_t;
-
-static lh_value _asyncx_write_buf(lh_value argsv) {
-  write_buf_args_t* args = (write_buf_args_t*)lh_ptr_value(argsv);
-  async_write_buf(args->s, args->buf);
-  return lh_value_null;
-}
-
-uv_errno_t asyncx_write_buf(nodec_stream_t* s, uv_buf_t buf) {
-  lh_exception* exn = NULL;
-  write_buf_args_t args = { s, buf };
-  lh_try(&exn, &_asyncx_write_buf, lh_value_any_ptr(&args));
-  return (exn != NULL ? exn->code : 0);
-}
+#include <mbedtls/include/mbedtls/debug.h>
 
 
-typedef struct _read_buf_args_t {
-  nodec_bstream_t* s;
-  uv_buf_t         buf;
-} read_buf_args_t;
 
-static lh_value _asyncx_read_into(lh_value argsv) {
-  read_buf_args_t* args = (read_buf_args_t*)lh_ptr_value(argsv);
-  return lh_value_long((long)(async_read_into(args->s, args->buf)));
-}
-
-uv_errno_t asyncx_read_into(nodec_bstream_t* s, uv_buf_t buf, size_t* nread) {
-  if (nread != NULL) *nread = 0;
-  lh_exception* exn = NULL;
-  read_buf_args_t args = { s, buf };
-  lh_value nreadv = lh_try(&exn, &_asyncx_read_into, lh_value_any_ptr(&args));
-  if (exn != NULL) return exn->code;
-  if (nread != NULL) *nread = (size_t)lh_long_value(nreadv);
-  return 0;
-}
+struct _nodec_ssl_config_t {
+  mbedtls_ssl_config        mbedtls_config;
+  // the rest of the fields are just there to free automatically 
+  // with the configuration
+  mbedtls_ctr_drbg_context* drbg;
+  mbedtls_entropy_context*  entropy;
+  mbedtls_x509_crt*         chain;
+  mbedtls_pk_context*       private_key;
+};
 
 
 /* ----------------------------------------------------------------------------
-  TLS streams
+  TLS utility
 -----------------------------------------------------------------------------*/
 
-static void nodec_throw_tls(int err, const char* msg) {
-  char tls_err[256];
-  mbedtls_strerror(err, tls_err, 256); tls_err[255] = 0;
-  char s[256];
-  snprintf(s, 256, "%s: %s (%i)", msg, tls_err, err); s[255] = 0;
-  nodec_throw_msg(UV_EINVAL, s);
+static void nodec_throw_tls(int mbedtls_err, const char* msg) {
+  nodec_throw_msg( nodec_error_from(mbedtls_err,ERRKIND_MBEDTLS), msg);
 }
 
 static void debug_callback(void* ctx, int level, const char* file, int line, const char* str) {
@@ -74,6 +44,11 @@ static void debug_callback(void* ctx, int level, const char* file, int line, con
   fprintf(stream, "%s:%04d: %s", file, line, str);
   fflush(stream);
 }
+
+
+/* ----------------------------------------------------------------------------
+  TLS streams
+-----------------------------------------------------------------------------*/
 
 struct _nodec_tls_stream_t {
   nodec_bstream_t     bstream;
@@ -179,6 +154,10 @@ static void nodec_tls_stream_free(nodec_stream_t* stream) {
   nodec_free(ts);
 }
 
+/* ----------------------------------------------------------------------------
+   Basic reading and writing for the TLS library
+-----------------------------------------------------------------------------*/
+
 static int tls_stream_net_send(void* sv, const unsigned char* buf, size_t len) {
   nodec_bstream_t* s = (nodec_bstream_t*)sv;
   uv_errno_t err = asyncx_write_buf(as_stream(s), nodec_buf(buf, len));
@@ -195,20 +174,7 @@ static int tls_stream_net_recv(void* sv, unsigned char* buf, size_t len) {
     return (int)nread;
 }
 
-typedef struct _nodec_ssl_config_t nodec_ssl_config_t;
-
-struct _nodec_ssl_config_t {
-  mbedtls_ssl_config        mbedtls_config;  
-  // the rest of the fields are just there to free automatically 
-  // with the configuration
-  mbedtls_ctr_drbg_context* drbg;
-  mbedtls_entropy_context*  entropy;
-  mbedtls_x509_crt*         chain;
-  mbedtls_pk_context*       private_key;
-};
-
-
-nodec_bstream_t* nodec_tls_stream_alloc(nodec_bstream_t* stream, const nodec_ssl_config_t* config ) {
+nodec_bstream_t* nodec_tls_stream_alloc(nodec_bstream_t* stream, const nodec_ssl_config_t* config) {
   int res = 0;
   nodec_tls_stream_t* ts = nodecx_zero_alloc(nodec_tls_stream_t);
   if (ts == NULL) { res = UV_ENOMEM; goto err; }
@@ -229,6 +195,9 @@ err:
   return NULL;
 }
 
+/* ----------------------------------------------------------------------------
+  TLS configurations
+-----------------------------------------------------------------------------*/
 
 void nodec_ssl_config_free(nodec_ssl_config_t* config) {
   if (config == NULL) return;
@@ -306,4 +275,63 @@ nodec_ssl_config_t* nodec_ssl_config_server_from(const char* cert_path, const ch
 }
 
 
-#endif // NO_MBEDTLS
+nodec_ssl_config_t* nodec_ssl_config_client() {
+  nodec_ssl_config_t* config = nodec_zero_alloc(nodec_ssl_config_t);
+  {on_abort(nodec_ssl_config_freev, lh_value_any_ptr(config)) {
+    mbedtls_ssl_config_init(&config->mbedtls_config);
+    int res = mbedtls_ssl_config_defaults(&config->mbedtls_config,
+      MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
+    if (res != 0) nodec_throw_tls(res, "cannot configure client TLS");
+    mbedtls_ssl_conf_dbg(&config->mbedtls_config, &debug_callback, stderr);
+    mbedtls_debug_set_threshold(1);
+
+    // init random numbers
+    config->drbg = nodec_alloc(mbedtls_ctr_drbg_context);
+    mbedtls_ctr_drbg_init(config->drbg);
+    config->entropy = nodec_alloc(mbedtls_entropy_context);
+    mbedtls_entropy_init(config->entropy);
+    static const char* client_seed = "nodec_client";
+    res = mbedtls_ctr_drbg_seed(config->drbg, &mbedtls_entropy_func, config->entropy, client_seed, strlen(client_seed));
+    if (res != 0) nodec_throw_tls(res, "cannot initialize random number generator");
+    mbedtls_ssl_conf_rng(&config->mbedtls_config, mbedtls_ctr_drbg_random, config->drbg);
+
+    // initialize certificate chain
+    config->chain = nodec_alloc(mbedtls_x509_crt);
+    mbedtls_x509_crt_init(config->chain);
+    mbedtls_ssl_conf_ca_chain(&config->mbedtls_config, config->chain, NULL);
+    
+    // TODO: enable session tickets? rfc5070
+  }}
+  return config;
+}
+
+
+nodec_errno_t nodecx_ssl_config_add_ca(nodec_ssl_config_t* config, uv_buf_t cert) {
+  int res = mbedtls_x509_crt_parse(config->chain, (const unsigned char*)cert.base, (size_t)cert.len);
+  return (res == 0 ? 0 : nodec_error_from(res, ERRKIND_MBEDTLS));
+}
+
+void async_ssl_config_add_system_certs(nodec_ssl_config_t* config) {
+#ifdef _WIN32
+#pragma comment(lib, "Crypt32.lib")
+  HCERTSTORE store;
+  PCCERT_CONTEXT cert;
+  if ((store = CertOpenSystemStore(0, L"ROOT")) != NULL) {
+    cert = NULL;
+    while ((cert = CertEnumCertificatesInStore(store, cert)) != NULL) {
+      if (cert->dwCertEncodingType == X509_ASN_ENCODING &&
+        cert->pbCertEncoded != NULL && cert->cbCertEncoded > 0)
+      {
+        uv_buf_t buf = nodec_buf(cert->pbCertEncoded, cert->cbCertEncoded);
+        nodecx_ssl_config_add_ca(config, buf);
+      }
+    }
+    CertCloseStore(store, 0);
+  }
+#else
+// TODO
+#endif
+}
+
+
+#endif // USE_MBEDTLS

@@ -94,83 +94,90 @@ void async_await_owned(uv_req_t* uvreq, void* owner) {
 /*-----------------------------------------------------------------
 Throw on errors
 -----------------------------------------------------------------*/
+nodec_errno_t nodec_error_from(long err, error_kind_t err_kind) {
+  return ((nodec_errno_t)err_kind + err);
+}
 
+long nodec_error_to(nodec_errno_t err, error_kind_t err_kind) {
+  return (err - (nodec_errno_t)err_kind);
+}
 
-// Throw a uv error exception
-void nodec_throw_data(int err, void* data) {
-  lh_exception* exn;
-  if (err < 0) {
-    if (err == UV_ETHROWCANCEL) {
-      exn = lh_exception_alloc_cancel();
-    }
-    else {
-      exn = lh_exception_alloc_strdup(err, uv_strerror(err));
-    }
+bool nodec_is_error_of(nodec_errno_t err, error_kind_t err_kind) {
+  return (err >= (err_kind - 0xFFFF) && err <= (err_kind + 0xFFFF));
+}
+
+#ifdef USE_MBEDTLS
+#include <mbedtls/include/mbedtls/error.h>
+#endif
+
+void nodec_strerror(nodec_errno_t err, const char* msg, uv_buf_t buf) {
+  const char* msgsep = (msg == NULL ? "" : ": ");
+  if (msg == NULL) msg = "";
+  const char* errmsg = "";
+  char errmsg_buf[256];
+  if (err >= 0) {
+    errmsg = "unknown error";
+  }
+#ifdef USE_MBEDTLS
+  else if (nodec_is_error_of(err, ERRKIND_MBEDTLS)) {
+    int tls_err = nodec_error_to(err, ERRKIND_MBEDTLS);
+    mbedtls_strerror(tls_err, errmsg_buf, 256); errmsg_buf[255] = 0;
+    errmsg = errmsg_buf;
+  }
+#endif
+  else if (nodec_is_error_of(err, ERRKIND_HTTP)) {
+    http_status_t status = nodec_error_to(err, ERRKIND_HTTP);
+    errmsg = nodec_http_status_str(status);
   }
   else {
-    char msg[256];
-    lh_strerror(msg, 256, err); 
-    exn = lh_exception_alloc_strdup(err, msg);
+    errmsg = uv_strerror(err);
+  }
+  snprintf(buf.base, buf.len, "%s%s%s", msg, msgsep, errmsg);
+}
+
+void nodec_throw_msg_data(nodec_errno_t err, const char* msg, void* data) {
+  lh_exception* exn;
+  char errmsg[256];
+  if (err == UV_ETHROWCANCEL) {
+    exn = lh_exception_alloc_cancel();
+  }
+  else {
+    nodec_strerror(err, msg, nodec_buf(errmsg, 255));
+    exn = lh_exception_alloc_strdup(err, errmsg);
   }
   exn->data = data;
   lh_throw(exn);
 }
 
-void nodec_throw_msg_data(int err, const char* msg, void* data) {
-  if (msg == NULL) {
-    nodec_throw_data(err, data);
-    return;
-  }
-  lh_exception* exn;
-  char buf[256];
-  if (err < 0) {
-    if (err == UV_ETHROWCANCEL) {
-      exn = lh_exception_alloc_cancel();
-    }
-    else {
-      snprintf(buf, 255, "%s: %s", uv_strerror(err), msg); buf[255] = 0;
-      exn = lh_exception_alloc_strdup(err, buf);
-    }
-  }
-  else {
-    lh_strerror(buf, 256, err); 
-    size_t n = strlen(buf);
-    snprintf(buf + n, 255 - n, ": %s", msg); buf[255] = 0;
-    exn = lh_exception_alloc_strdup(err, buf);
-  }
-  exn->data = data;
-  lh_throw(exn);
+void nodec_throw(nodec_errno_t err) {
+  nodec_throw_msg_data(err, NULL, NULL);
 }
 
-void nodec_throw(int err) {
-  nodec_throw_data(err, NULL);
-}
-
-void nodec_throw_msg(int err, const char* msg) {
+void nodec_throw_msg(nodec_errno_t err, const char* msg) {
   nodec_throw_msg_data(err, msg, NULL);
 }
 
 
 // Check an error result, throwing on error
-void nodec_check(uverr_t err) {
+void nodec_check(nodec_errno_t err) {
   if (err != 0) {
     nodec_throw(err);
   }
 }
 
 // Check an error result, throwing on error
-void nodec_check_msg(uverr_t err, const char* msg) {
+void nodec_check_msg(nodec_errno_t err, const char* msg) {
   if (err != 0) {
     nodec_throw_msg(err, msg);
   }
 }
 
-void nodec_check_data(uverr_t err, void* data) {
+void nodec_check_data(nodec_errno_t err, void* data) {
   if (err != 0) {
-    nodec_throw_data(err, data);
+    nodec_throw_msg_data(err, NULL, data);
   }
 }
-void nodec_check_msg_data(uverr_t err, const char* msg, void* data) {
+void nodec_check_msg_data(nodec_errno_t err, const char* msg, void* data) {
   if (err != 0) {
     nodec_throw_msg_data(err, msg, data);
   }

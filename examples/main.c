@@ -10,8 +10,10 @@
 
 // Main entry point: choose your example here
 static void entry() {
+  //ex_http_connect();
   //ex_http_server_static();
-  ex_https_server_static();
+  ex_https_connect();
+  //ex_https_server_static();
 }
 
 int main() {

@@ -16,6 +16,12 @@
 #include <fcntl.h>
 #include <time.h>
 
+#define USE_TLS
+#define USE_MBEDTLS
+#define USE_ZLIB
+
+typedef int32_t nodec_errno_t;
+
 /*! \mainpage
 
 This is the API documentation of the
@@ -662,7 +668,7 @@ nodec_bstream_t* nodec_bstream_alloc_read(uv_stream_t* stream);
 nodec_bstream_t* nodec_bstream_alloc_read_ex(uv_stream_t* stream, size_t alloc_init, size_t alloc_max);
 
 
-#ifndef NO_ZLIB
+#ifdef USE_ZLIB
 
 /// Create a stream over another stream that is gzip'd.
 /// Reading unzips, while writing zips again.
@@ -909,6 +915,7 @@ void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_h
 
 typedef lh_value (http_connect_fun)(http_in_t* in, http_out_t* out, lh_value arg);
 
+lh_value async_http_connect_on(const char* host, nodec_bstream_t* connection, http_connect_fun* connectfun, lh_value arg);
 lh_value async_http_connect(const char* url, http_connect_fun* connectfun, lh_value arg);
 
 /// \}
@@ -1169,12 +1176,19 @@ void nodec_ssl_config_freev(lh_value configv);
 nodec_ssl_config_t* nodec_ssl_config_server_from(const char* cert_path, const char* key_path, const char* password);
 nodec_ssl_config_t* nodec_ssl_config_server(uv_buf_t cert, uv_buf_t key, const char* password);
 
+nodec_ssl_config_t* nodec_ssl_config_client();
+
+nodec_errno_t nodecx_ssl_config_add_ca(nodec_ssl_config_t* config, uv_buf_t cert);
+void async_ssl_config_add_system_certs(nodec_ssl_config_t* config);
+
+
 typedef struct _nodec_tls_stream_t nodec_tls_stream_t;
 
 nodec_bstream_t* nodec_tls_stream_alloc(nodec_bstream_t* stream, const nodec_ssl_config_t* config);
 
 void async_https_server_at(const char* host, tcp_server_config_t* tcp_config, nodec_ssl_config_t* ssl_config, nodec_http_servefun* servefun);
-  
+lh_value async_https_connect(nodec_ssl_config_t* config, const char* url, http_connect_fun* connectfun, lh_value arg);
+
 /// \} HTTPS
 
 
@@ -1354,5 +1368,26 @@ uv_errno_t nodec_strncpy(char* dest, size_t destsz, const char* src, size_t coun
 #define nodec_zero(tp,ptr)        memset(ptr,0,sizeof(tp));
 
 /// \} 
+
+// Error codes:
+// positive or zero is ok. negative down to -0x10000 are libUV error codes
+// From there we reserve two 64k blocks per external libray to give it
+// error codes. We pick the point right in between the two 64k regions such
+// that we can support both positive and negative error codes.
+
+typedef enum _error_kind_t {
+  ERRKIND_UV = 0,
+  ERRKIND_HTTP = -0x20000,
+  #ifdef USE_MBEDTLS
+  ERRKIND_MBEDTLS = -0x40000,
+  #endif
+  ERRKIND_UNKNOWN = -0xFF0000
+} error_kind_t;
+
+
+nodec_errno_t nodec_error_from(long err, error_kind_t err_kind);
+long       nodec_error_to(nodec_errno_t err, error_kind_t err_kind);
+bool       nodec_is_error_of(nodec_errno_t err, error_kind_t err_kind);
+void       nodec_strerror(nodec_errno_t err, const char* msg, uv_buf_t buf);
 
 #endif // __nodec_h

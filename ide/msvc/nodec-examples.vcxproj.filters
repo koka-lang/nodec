@@ -24,6 +24,12 @@
     <ClCompile Include="..\..\examples\ex-https-server-static.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\examples\ex-http-connect.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ex-https-connect.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\out\msvc-$(Platform)\nodecx\$(Configuration)\lib\nodecx.lib" />

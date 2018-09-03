@@ -75,6 +75,9 @@ int           channel_receive(channel_t* channel, lh_value* data, lh_value* arg)
 bool          channel_is_full(channel_t* channel);
 
 
+uv_errno_t asyncx_write_buf(nodec_stream_t* s, uv_buf_t buf);
+uv_errno_t asyncx_read_into(nodec_bstream_t* s, uv_buf_t buf, size_t* nread);
+
 // ---------------------------------------------------------------------------------
 // Internal stream functions
 // Needed to define custom streams.

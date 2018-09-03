@@ -435,6 +435,49 @@ char* async_read_line(nodec_bstream_t* bstream) {
 }
 
 
+/* ----------------------------------------------------------------------------
+  Some explicit error-returning functions
+-----------------------------------------------------------------------------*/
+
+typedef struct _write_buf_args_t {
+  nodec_stream_t* s;
+  uv_buf_t        buf;
+} write_buf_args_t;
+
+static lh_value _asyncx_write_buf(lh_value argsv) {
+  write_buf_args_t* args = (write_buf_args_t*)lh_ptr_value(argsv);
+  async_write_buf(args->s, args->buf);
+  return lh_value_null;
+}
+
+uv_errno_t asyncx_write_buf(nodec_stream_t* s, uv_buf_t buf) {
+  lh_exception* exn = NULL;
+  write_buf_args_t args = { s, buf };
+  lh_try(&exn, &_asyncx_write_buf, lh_value_any_ptr(&args));
+  return (exn != NULL ? exn->code : 0);
+}
+
+
+typedef struct _read_buf_args_t {
+  nodec_bstream_t* s;
+  uv_buf_t         buf;
+} read_buf_args_t;
+
+static lh_value _asyncx_read_into(lh_value argsv) {
+  read_buf_args_t* args = (read_buf_args_t*)lh_ptr_value(argsv);
+  return lh_value_long((long)(async_read_into(args->s, args->buf)));
+}
+
+uv_errno_t asyncx_read_into(nodec_bstream_t* s, uv_buf_t buf, size_t* nread) {
+  if (nread != NULL) *nread = 0;
+  lh_exception* exn = NULL;
+  read_buf_args_t args = { s, buf };
+  lh_value nreadv = lh_try(&exn, &_asyncx_read_into, lh_value_any_ptr(&args));
+  if (exn != NULL) return exn->code;
+  if (nread != NULL) *nread = (size_t)lh_long_value(nreadv);
+  return 0;
+}
+
 
 /* ----------------------------------------------------------------------------
 Buffer any stream
@@ -836,7 +879,7 @@ nodec_bstream_t* nodec_bstream_alloc_read(uv_stream_t* stream) {
   (G)Zip streams
 -----------------------------------------------------------------------------*/
 
-#ifndef NO_ZLIB
+#ifdef USE_ZLIB
 
 #include <zlib/zlib.h>
 

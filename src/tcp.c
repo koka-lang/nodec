@@ -261,8 +261,6 @@ static lh_value tcp_connection_timeout(lh_value argsv) {
 
 static lh_value tcp_connection_keepalive(lh_value argsv) {
   tcp_connection_args* args = (tcp_connection_args*)lh_ptr_value(argsv);
-  // TODO: is this too late? SSL handshake already occurred..
-  //nodec_uv_stream_read_start(args->uvclient, 8*1024, 0); // initial allocation at 8kb (for the header)
   if (args->timeout_keepalive == 0) {
     return tcp_connection_timeout(argsv);
   }

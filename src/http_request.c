@@ -830,18 +830,28 @@ void async_http_server_at(const char* host, tcp_server_config_t* config, nodec_h
   }}
 }
 
-lh_value async_http_connect(const char* host, http_connect_fun* connectfun, lh_value arg) {
+lh_value async_http_connect_on(const char* host, nodec_bstream_t* connection, http_connect_fun* connectfun, lh_value arg) {
+  lh_value result;
+  http_in_t in;
+  http_in_init(&in, connection, false);
+  {defer(http_in_clearv, lh_value_any_ptr(&in)) {
+    http_out_t out;
+    http_out_init_client(&out, as_stream(connection), host);
+    {defer(http_out_clearv, lh_value_any_ptr(&out)) {
+      result = connectfun(&in, &out, arg);
+    }}
+  }}
+  return result;
+}
+
+lh_value async_http_connect(const char* url, http_connect_fun* connectfun, lh_value arg) {
   lh_value result = lh_value_null;
-  nodec_bstream_t* conn = async_tcp_connect(host);
+  nodec_bstream_t* conn = async_tcp_connect(url);
   {using_bstream(conn) {
-    http_in_t in;
-    http_in_init(&in, conn, false);
-    {defer(http_in_clearv, lh_value_any_ptr(&in)) {
-      http_out_t out;
-      http_out_init_client(&out, as_stream(conn), host);
-      {defer(http_out_clearv, lh_value_any_ptr(&out)) {
-        result = connectfun(&in, &out, arg);
-      }}
+    const nodec_url_t* u = nodec_parse_url(url);
+    {using_url(u) {
+      const char* host = nodec_url_host(u);
+      async_http_connect_on(host, conn, connectfun, arg);
     }}
   }}
   return result;
@@ -986,7 +996,7 @@ void http_req_print() {
 }
 
 
-static void http_in_status_print(http_in_t* in) {
-  printf("status: %ui\n headers: \n", http_in_status(in));
+void http_in_status_print(http_in_t* in) {
+  printf("status: %i\n headers: \n", http_in_status(in));
   http_in_headers_print(in);
 }
