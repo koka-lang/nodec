@@ -142,6 +142,7 @@ struct _http_in_t
   bool            is_request;
   const char*     url;            // parsed url (for client request)
   http_status_t   status;         // parsed status (for server response)
+  const char*     status_info;    // status message
   uint64_t        content_length; // real content length from headers
   http_headers_t  headers; // parsed headers; usually pointing into `prefix`
   uv_buf_t        prefix;  // the initially read buffer that holds all initial headers
@@ -195,26 +196,11 @@ static int on_url(http_parser* parser, const char* at, size_t len) {
   return 0;
 }
 
-
-// atoi is not in the C standard so we parse ourselves
-static size_t parse_status(const char* s) {
-  if (s == NULL) return 0;
-  while (*s == ' ') s++;
-  size_t status = 0;
-  while (*s >= '0' && *s <= '9') {
-    status = 10 * status + (*s - '0');
-    s++;
-  }
-  return status;
-}
-
 static int on_status(http_parser* parser, const char* at, size_t len) {
   http_in_t* req = (http_in_t*)parser->data;
   terminate(req, at, len);
-  size_t status = parse_status(at);
-  if (status >= 100 && status < 600) {
-    req->status = (http_status_t)status;
-  }
+  req->status = parser->status_code;
+  req->status_info = at;
   return 0;
 }
 
@@ -363,7 +349,8 @@ static uv_buf_t http_in_read_body_bufx(http_in_stream_t* hs, bool* owned)
 
   // if there is no current body ready: read another one.
   // (there might be an initial body due to the initial parse of the headers.)
-  if (nodec_buf_is_null(hs->req->current_body))
+  // TODO: ensure we break this loop
+  while (nodec_buf_is_null(hs->req->current_body))
   {
     // if we are done already, just return null
     if (hs->req->complete) return nodec_buf_null();
@@ -398,7 +385,7 @@ static uv_buf_t http_in_read_body_bufx(http_in_stream_t* hs, bool* owned)
     // if no body now, something went wrong or we read to the end of the request without further bodies
     if (nodec_buf_is_null(hs->req->current_body)) {
       if (hs->req->complete) return nodec_buf_null();  // done parsing, no more body pieces
-      throw_http_err_str(HTTP_STATUS_BAD_REQUEST, "couldn't parse request body");
+      //throw_http_err_str(HTTP_STATUS_BAD_REQUEST, "couldn't parse request body");
     }
   }
 
@@ -521,6 +508,10 @@ const char* http_in_url(http_in_t* req) {
 // Return the read only HTTP Status (only valid on server responses)
 http_status_t http_in_status(http_in_t* req) {
   return req->status;
+}
+
+const char* http_in_status_info(http_in_t* req) {
+  return req->status_info;
 }
 
 uint16_t http_in_version(http_in_t* req) {
@@ -997,6 +988,8 @@ void http_req_print() {
 
 
 void http_in_status_print(http_in_t* in) {
-  printf("status: %i\n headers: \n", http_in_status(in));
+  const char* info = http_in_status_info(in);
+  if (info == NULL) info = "";
+  printf("status: %i, %s\n", http_in_status(in), info);
   http_in_headers_print(in);
 }

@@ -943,6 +943,7 @@ size_t async_http_in_init(http_in_t* in, uv_stream_t* stream, bool is_request );
 const char*   http_in_url(http_in_t* in);            // server
 http_method_t http_in_method(http_in_t* in);         // server
 http_status_t   http_in_status(http_in_t* in);       // client
+const char* http_in_status_info(http_in_t* in);    // client
 uint64_t      http_in_content_length(http_in_t* in); 
 const char*   http_in_header(http_in_t* in, const char* name);
 const char*   http_in_header_next(http_in_t* in, const char** value, size_t* iter);

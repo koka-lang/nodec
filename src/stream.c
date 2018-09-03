@@ -91,7 +91,10 @@ static void chunks_init(chunks_t* chunks) {
 // push a buffer on the chunks queue
 static uv_errno_t chunksx_push(chunks_t* chunks, const uv_buf_t buf, size_t nread) {
   assert(buf.len >= nread);
-  if (nread == 0) return 0;
+  if(nread == 0) {
+    nodec_buf_free(buf);
+    return 0;
+  }
   chunk_t* chunk = nodecx_alloc(chunk_t);
   if (chunk == NULL) return UV_ENOMEM;
   // initalize
