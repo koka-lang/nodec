@@ -90,6 +90,8 @@ static void chunks_init(chunks_t* chunks) {
 
 // push a buffer on the chunks queue
 static uv_errno_t chunksx_push(chunks_t* chunks, const uv_buf_t buf, size_t nread) {
+  assert(buf.len >= nread);
+  if (nread == 0) return 0;
   chunk_t* chunk = nodecx_alloc(chunk_t);
   if (chunk == NULL) return UV_ENOMEM;
   // initalize
@@ -127,6 +129,7 @@ static void chunks_push(chunks_t* chunks, const uv_buf_t buf, size_t nread) {
 
 // push a buffer on the head of the chunks queue; buf is taken as is and not resized
 static void chunks_push_back(chunks_t* chunks, const uv_buf_t buf) {
+  if (nodec_buf_is_null(buf)) return;
   chunk_t* chunk = nodec_alloc(chunk_t);
   // initalize
   chunk->next = chunks->first;
