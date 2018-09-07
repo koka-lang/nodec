@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2003
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nodec-examples", "nodec-examples.vcxproj", "{17652F3C-BB26-47C1-AABA-45E8FFA006A0}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nodec", "nodec.vcxproj", "{C17F698B-0CF9-4034-9F70-CCB61DE46812}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests-nodec", "tests-nodec.vcxproj", "{55E37DDC-1F27-4D9F-AD95-C1BF83D33EFF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests-nodec-client", "tests-nodec-client.vcxproj", "{55E37DDD-1F27-4D9F-AD95-C1BF83D33EFF}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nodec-examples", "nodec-examples.vcxproj", "{17652F3C-BB26-47C1-AABA-45E8FFA006A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
