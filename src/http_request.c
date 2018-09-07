@@ -325,9 +325,7 @@ size_t async_http_in_read_headers(http_in_t* in )
 }
 
 /*-----------------------------------------------------------------
-  Chunked streams
-  It turns out the http_parser cannot handle partial chunk
-  headers so we use our own chunk parser :-(
+ Chunked streams
 -----------------------------------------------------------------*/
 typedef enum _chunk_parse_state_t{
   CH_HEADER,
@@ -574,6 +572,42 @@ nodec_stream_t* nodec_cstream_alloc(uint64_t* content_len, nodec_stream_t* sourc
   return &cs->stream;
 }
 
+
+
+/*-----------------------------------------------------------------
+Reading the body of a request
+-----------------------------------------------------------------*/
+
+
+nodec_bstream_t* http_in_body(http_in_t* in) {
+  return in->body_stream;
+}
+
+// Read asynchronously the entire body of the request. 
+// The caller is responsible for buffer deallocation.
+// Uses Content-Length is possible to read directly into a continuous buffer without reallocation.
+uv_buf_t async_http_in_read_body(http_in_t* req, size_t read_max) {
+  uv_buf_t  buf = nodec_buf_null();
+  nodec_bstream_t* stream = http_in_body(req);
+  if (req->complete || req->body_stream == NULL) return buf;
+  //{using_bstream(stream) {
+     size_t clen = http_in_content_length(req);
+     if (clen > read_max) clen = read_max;
+     if (clen > 0 && http_in_header(req, "Content-Encoding") == NULL) {
+       buf = nodec_buf_alloc(clen);
+       {using_buf_on_abort_free(&buf){
+          size_t nread = async_read_into(stream, buf);
+          nodec_buf_fit(buf, nread);
+       }}       
+     }
+     else {
+       buf = async_read_buf_all(stream, read_max);
+     }
+  //}}
+  nodec_stream_free(as_stream(req->body_stream));
+  req->body_stream = NULL;
+  return buf;
+}
 
 
 /*-----------------------------------------------------------------

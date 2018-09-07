@@ -26,6 +26,6 @@ void ex_https_connect() {
   nodec_ssl_config_t* ssl_config = nodec_ssl_config_client();
   {using_ssl_config(ssl_config) {
     async_ssl_config_add_system_certs(ssl_config);
-    async_https_connect(ssl_config, "https://www.madoko.net", with_connection, lh_value_null);
+    async_https_connect(ssl_config, "https://www.google.com", with_connection, lh_value_null);
   }}
 }
