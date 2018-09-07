@@ -23,5 +23,5 @@ static lh_value with_connection(http_in_t* in, http_out_t* out, lh_value arg) {
 }
 
 void ex_http_connect() {
-  async_http_connect("www.bing.com", with_connection, lh_value_null);
+  async_http_connect("www.google.com", with_connection, lh_value_null);
 }

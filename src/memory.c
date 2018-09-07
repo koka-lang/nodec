@@ -189,7 +189,7 @@ uv_buf_t nodec_buf_fit(uv_buf_t buf, size_t needed) {
     return nodec_buf_realloc(buf, needed);
   }
   else {
-    return buf;
+    return nodec_buf(buf.base, needed);
   }
 }
 

@@ -153,6 +153,7 @@ struct _http_in_t
 
   bool            headers_complete;  // true if all initial headers have been parsed
   bool            complete;          // true if the whole message has been parsed
+  size_t          body_len;
 
   nodec_bstream_t* body_stream;
 };
@@ -219,6 +220,7 @@ static int on_headers_complete(http_parser* parser) {
   if ((parser->flags & F_CONTENTLENGTH) == F_CONTENTLENGTH) {
     req->content_length = parser->content_length;
   }
+  //http_parser_pause(parser, 1);             // and pause the parser, returning from execute! (with parser->errno set to HPE_PAUSED)
   return 0;
 }
 
@@ -231,7 +233,7 @@ static int on_message_complete(http_parser* parser) {
 // Clear and free all members of a request
 void http_in_clear(http_in_t* req) {
   http_headers_clear(&req->headers);
-  if (req->body_stream != NULL) {
+  if (req->body_stream != NULL && req->body_stream != req->stream) {
     nodec_stream_free(as_stream(req->body_stream));
   }
   if (req->prefix.base != NULL) {
@@ -261,13 +263,14 @@ void http_in_init(http_in_t* in, nodec_bstream_t* stream, bool is_request)
 }
 
 static nodec_bstream_t* http_in_stream_alloc(http_in_t* req);
-
+static nodec_stream_t* nodec_cstream_alloc(uint64_t* content_len, nodec_stream_t* s);
 
 size_t async_http_in_read_headers(http_in_t* in ) 
 {
   // and read until the double empty line is seen  (\r\n\r\n); the end of the headers 
   size_t headers_len = 0;
-  uv_buf_t buf = async_read_buf_including(in->stream, &headers_len, "\r\n\r\n", 4, HTTP_MAX_HEADERS);
+  uv_buf_t buf = async_read_buf_upto(in->stream, "\r\n\r\n", 4, HTTP_MAX_HEADERS);
+  headers_len = (size_t)buf.len;
   if (nodec_buf_is_null(buf) || headers_len > HTTP_MAX_HEADERS) {
     if (!nodec_buf_is_null(buf)) nodec_buf_free(buf);
     if (headers_len == 0) {
@@ -303,197 +306,274 @@ size_t async_http_in_read_headers(http_in_t* in )
 
   // remember where we are at in the current buffer for further body reads 
   in->body_start = nread;
-  if (in->complete) {
-    // potentially push back extra read bytes (due to pipe-lined requests)
-    if (headers_len < buf.len) {
-      size_t n = buf.len - headers_len;
-      uv_buf_t xbuf = nodec_buf_alloc(n);
-      memcpy(xbuf.base, buf.base + headers_len, n);
-      nodec_pushback_buf(in->stream, xbuf);
-      buf.len = (uv_buf_len_t)headers_len;
-    }
-    check_http_errno(&in->parser);
-    in->body_stream = NULL;
-  }
-  else {
-    // allocate body stream, this will point to the `buf` at the `body_start`.
-    in->body_stream = http_in_stream_alloc(in);
-    if (http_in_header_contains(in,"Content-Encoding", "gzip")) {
+  in->body_stream = in->stream;
+  bool chunked = false;
+  if (http_in_header_contains(in, "Transfer-Encoding", "chunked")) {
 #ifndef NDEBUG
-      fprintf(stderr,"use gzip!\n");
+    fprintf(stderr, "use chunked!\n");
 #endif
-      in->body_stream = nodec_zstream_alloc(as_stream(in->body_stream));
-    }
+    chunked = true;
+    in->body_stream = nodec_bstream_alloc_on( nodec_cstream_alloc( &in->content_length, as_stream(in->body_stream)) );
   }
+  if (http_in_header_contains(in, "Content-Encoding", "gzip")) {
+#ifndef NDEBUG
+    fprintf(stderr, "use gzip!\n");
+#endif
+    in->body_stream = nodec_zstream_alloc( as_stream(in->body_stream), chunked);
+  }  
   return headers_len;
 }
 
 /*-----------------------------------------------------------------
-Reading the body of a request
+  Chunked streams
+  It turns out the http_parser cannot handle partial chunk
+  headers so we use our own chunk parser :-(
 -----------------------------------------------------------------*/
+typedef enum _chunk_parse_state_t{
+  CH_HEADER,
+  CH_HEADER_LEN,
+  CH_HEADER_SKIP_EXT,
+  CH_HEADER_LF,
+  CH_DATA,
+  CH_DATA_END,
+  CH_DATA_ENDLF,
+  CH_TRAILER,
+  CH_TRAILER_SKIP,
+  CH_TRAILER_SKIPLF,
+  CH_TRAILER_LF,
+  CH_END
+} chunk_parse_state_t;
 
-typedef struct _http_in_stream_t {
-  nodec_bstream_t  bstream;
-  uv_buf_t         current;        // the last read buffer; starts equal to prefix
-  bool             current_owned;  // should we free the current buffer?
-  size_t           current_offset; // parsed up to this point into the current buffer
-  http_in_t*       req;            // the owning request
-} http_in_stream_t;
+typedef struct _chunk_state_t {
+  chunk_parse_state_t parse;
+  size_t      body_len;
+  uv_buf_t    part;
+  const char* next;
+  const char* end;
+  const char* errormsg;
+} chunk_state_t;
 
+typedef enum _chunk_parse_result_t {
+  CP_EOF,
+  CP_NEEDMORE,
+  CP_BODYPART,
+  CP_ERR
+} chunk_parse_result_t;
 
-// Read asynchronously a piece of the body; the return buffer is valid until
-// the next read. Returns a null buffer when the end of the request is reached.
-static uv_buf_t http_in_read_body_bufx(http_in_stream_t* hs, bool* owned)
-{
-  if (owned != NULL) *owned = false;
+void chunk_parse_add(chunk_state_t* s, uv_buf_t buf) {
+  assert(s->next >= s->end);
+  s->next = buf.base;
+  s->end = s->next + buf.len;
+}
 
-  // if there is no current body ready: read another one.
-  // (there might be an initial body due to the initial parse of the headers.)
-  // TODO: ensure we break this loop
-  while (nodec_buf_is_null(hs->req->current_body))
-  {
-    // if we are done already, just return null
-    if (hs->req->complete) return nodec_buf_null();
+uv_buf_t chunk_parse_part(chunk_state_t* s) {
+  assert(!nodec_buf_is_null(s->part));
+  return s->part;
+}
 
-    // if we exhausted our current buffer, read a new one
-    if (nodec_buf_is_null(hs->current) || hs->current_offset >= hs->current.len) {
-      // deallocate current buffer first
-      if (hs->current.base != NULL && hs->current_owned) {
-        nodec_buf_free(hs->current);
+chunk_parse_result_t chunk_parse(chunk_state_t* s) {
+  if (s->errormsg != NULL) return CP_ERR;
+  while (true) {
+    char c = 0;
+    switch (s->parse) {
+    case CH_HEADER: {
+      s->body_len = 0;
+      s->part = nodec_buf_null();
+      // fall through
+    }
+    case CH_HEADER_LEN: {
+      if (s->next >= s->end) return CP_NEEDMORE;
+      c = *(s->next); s->next++;
+      size_t d = 16;
+      if (c >= '0' && c <= '9') d = (c - '0');
+      else if (c >= 'a' && c <= 'f') d = 10 + (c - 'a');
+      else if (c >= 'A' && c <= 'F') d = 10 + (c - 'A');
+      else if (s->parse == CH_HEADER) return CP_ERR;
+      else if (c == '\r') s->parse = CH_HEADER_LF;
+      else s->parse = CH_HEADER_SKIP_EXT;
+      if (d <= 15) {
+        size_t newlen = s->body_len * 16 + d;
+        if (newlen < s->body_len) {
+          s->errormsg = "chunked part too large";
+          return CP_ERR;
+        }
+        s->body_len = newlen;
+        s->parse = CH_HEADER_LEN;
       }
-      hs->current = nodec_buf_null();
-      hs->current_offset = 0;
-    
-      // and read a fresh buffer async from the stream; use `bufx` variant for efficiency
-      // we may get a NULL buffer back (due to EOF) which is ok; the parser should
-      // be called with a zero length to signal EOF to the parser.
-      hs->current = async_read_bufx(as_stream(hs->req->stream), &hs->current_owned);
-      //if (nodec_buf_is_null(hs->current)) throw_http_err(HTTP_STATUS_BAD_REQUEST);
-      //hs->current.base[hs->current.len] = 0;
-      //printf("\n\nraw body read: %s\n\n\n", hs->current.base);
+      break;
     }
+    case CH_HEADER_SKIP_EXT: {
+      if (s->next >= s->end) return CP_NEEDMORE;
+      c = *(s->next); s->next++;
+      // TODO: should ignore \r inside quoted extension values
+      if (c == '\r') s->parse = CH_HEADER_LF;
+      break;
+    }
+    case CH_HEADER_LF: {
+      if (s->next >= s->end) return CP_NEEDMORE;
+      c = *(s->next); s->next++;
+      if (c != '\n') {
+        s->errormsg = "invalid chunked header (expecting LF)";
+        return CP_ERR;
+      }
+      s->parse = (s->body_len == 0 ? CH_TRAILER : CH_DATA);
+      break;
+    }
+    case CH_DATA: {
+      if (s->body_len == 0) {
+        s->parse = CH_DATA_END;
+        break;
+      }
+      else {
+        if (s->next >= s->end) return CP_NEEDMORE;
+        const char* part = s->next;
+        size_t available = (s->end - s->next);
+        size_t partlen = (available >= s->body_len ? s->body_len : available);
+        s->body_len -= partlen;
+        s->next += partlen;
+        s->part = nodec_buf(part, partlen);
+        return CP_BODYPART;
+      }
+    }
+    case CH_DATA_END: {
+      if (s->next >= s->end) return CP_NEEDMORE;
+      c = *(s->next); s->next++;
+      if (c != '\r') {
+        s->errormsg = "invalid chunked data end (expecting CR)";
+        return CP_ERR;
+      }
+      s->parse = CH_DATA_ENDLF;
+      break;
+    }
+    case CH_DATA_ENDLF: {
+      if (s->next >= s->end) return CP_NEEDMORE;
+      c = *(s->next); s->next++;
+      if (c != '\n') {
+        s->errormsg = "invalid chunked data end (expecting LF)";
+        return CP_ERR;
+      }
+      s->parse = CH_HEADER;
+      break;
+    }
+    case CH_TRAILER: {
+      if (s->next >= s->end) return CP_NEEDMORE;
+      c = *(s->next); s->next++;
+      s->parse = (c == '\r' ? CH_TRAILER_LF : CH_TRAILER_SKIP);
+      break;
+    }
+    case CH_TRAILER_SKIP: {
+      if (s->next >= s->end) return CP_NEEDMORE;
+      c = *(s->next); s->next++;
+      // TODO: ignore \r inside quoted trailer values
+      if (c == '\r') s->parse = CH_TRAILER_SKIPLF;
+      break;
+    }
+    case CH_TRAILER_SKIPLF: {
+      if (s->next >= s->end) return CP_NEEDMORE;
+      c = *(s->next); s->next++;
+      if (c != '\n') {
+        s->errormsg = "invalid chunked trailer (expecting LF)";
+        return CP_ERR;
+      }
+      s->parse = CH_TRAILER;
+      break;
+    }
+    case CH_TRAILER_LF: {
+      if (s->next >= s->end) return CP_NEEDMORE;
+      c = *(s->next); s->next++;
+      if (c != '\n') {
+        s->errormsg = "invalid chunked ending (expecting LF)";
+        return CP_ERR;
+      }
+      s->parse = CH_END;
+      //s->next = NULL;
+      //s->end = NULL;
+      return CP_EOF;
+    }
+    case CH_END: {
+      return CP_EOF;
+    }
+    default: {
+      return CP_ERR;
+    }
+    } // switch
+  } // while
+}
 
-    // we (might) have a current buffer, parse a body piece (or read to eof)
-    assert(hs->current.base == NULL || hs->current_offset < hs->current.len);
-    http_parser_pause(&(hs->req->parser), 0); // unpause
-    size_t nread = http_parser_execute(&(hs->req->parser), &(hs->req->parser_settings), 
-                        (hs->current.base==NULL ? NULL : hs->current.base + hs->current_offset), 
-                        (hs->current.base==NULL ? 0 : hs->current.len - hs->current_offset));
-    hs->current_offset += nread;
-    check_http_errno(&(hs->req->parser));
+#define MAX_CHUNK_HEADER (100)
 
-    // if no body now, something went wrong or we read to the end of the request without further bodies
-    if (nodec_buf_is_null(hs->req->current_body)) {
-      if (hs->req->complete) return nodec_buf_null();  // done parsing, no more body pieces
-      //throw_http_err_str(HTTP_STATUS_BAD_REQUEST, "couldn't parse request body");
+typedef struct _nodec_cstream_t {
+  nodec_stream_t  stream;
+  nodec_stream_t* source;
+  uv_buf_t        current;        // the last read buffer
+  bool            owned;
+  chunk_state_t   parse;
+  uint64_t*       content_len;
+} nodec_cstream_t;
+
+static uv_buf_t async_cstream_read_bufx(nodec_stream_t* stream, bool* owned) {
+  nodec_cstream_t* cs = (nodec_cstream_t*)stream;
+  if (owned != NULL) *owned = false;
+  chunk_parse_result_t res;
+  while ((res = chunk_parse(&cs->parse)) == CP_NEEDMORE) {
+    if (cs->owned) nodec_buf_free(cs->current);
+    cs->current = async_read_bufx(cs->source, &cs->owned);
+    if (nodec_buf_is_null(cs->current)) {
+      return cs->current;
+    }
+    chunk_parse_add(&cs->parse, cs->current);
+  }
+  assert(res != CP_NEEDMORE);
+
+  if (res == CP_EOF) {
+    return nodec_buf_null();
+  }
+  else if (res == CP_BODYPART) {
+    uv_buf_t part = chunk_parse_part(&cs->parse);
+    if (cs->content_len != NULL) *cs->content_len += part.len;
+    if (part.base == cs->current.base && part.len == cs->current.len) {
+      // hand over our current buffer with ownership
+      cs->current = nodec_buf_null();
+      if (owned) *owned = cs->owned;
+      return part;
+    }
+    else {
+      // owned is false
+      return part;
     }
   }
-
-  // We have a body piece ready, return it
-  assert(!nodec_buf_is_null(hs->req->current_body));
-  uv_buf_t body = hs->req->current_body;
-  hs->req->current_body = nodec_buf_null();
-#ifndef NDEBUG
-  size_t len = (size_t)body.len;
-  fprintf(stderr,"read body part: len: %zi\n", len);
-#endif
-  return body;  // a view into our current buffer, valid until the next read
-}
-
-static uv_buf_t http_in_read_bufx(nodec_stream_t* stream, bool* owned) {
-  http_in_stream_t* hs = (http_in_stream_t*)stream;  
-  if (nodec_chunks_available(&hs->bstream) > 0) {
-    if (owned != NULL) *owned = true;
-    return nodec_chunks_read_buf(&hs->bstream);
-  }
   else {
-    return http_in_read_body_bufx(hs, owned);
+    nodec_throw_msg(UV_EINVAL, (cs->parse.errormsg != NULL ? cs->parse.errormsg : "chunked read error"));
+    return nodec_buf_null();
   }
 }
 
-static void http_in_pushback_buf(nodec_bstream_t* bstream, uv_buf_t buf) {
-  if (nodec_chunks_available(bstream) > 0) {
-    // TODO: can this happen? Perhaps in this case we should push
-    // back all chunks back onto the underlying tcp stream?
-    nodec_chunks_pushback_buf(bstream, buf);
-  }
-  else {
-    // if no more data buffered (at end of the request)
-    // push back onto the original tcp stream since it can be the start of 
-    // a subsequent request
-    http_in_stream_t* hs = (http_in_stream_t*)bstream;
-    nodec_pushback_buf(hs->req->stream,buf);
-  }
+static void async_cstream_write_bufs(nodec_stream_t* stream, uv_buf_t bufs[], size_t count) {
+  nodec_cstream_t* cs = (nodec_cstream_t*)stream;
+  async_write_bufs(cs->source, bufs, count);
 }
 
-static bool http_in_read_chunk(nodec_bstream_t* bstream, nodec_chunk_read_t read_mode, size_t read_to_eof_max) {
-  if (read_mode == CREAD_NORMAL && nodec_chunks_available(bstream) > 0) {
-    return false;
-  }
-  else {
-    if (read_mode != CREAD_TO_EOF) read_to_eof_max = 0;
-    http_in_stream_t* hs = (http_in_stream_t*)bstream;
-    uv_buf_t buf;
-    do {
-      buf = async_read_buf(as_stream(hs->req->stream));
-      nodec_chunks_push(&hs->bstream, buf);
-    } while (!nodec_buf_is_null(buf) && nodec_chunks_available(bstream) < read_to_eof_max);
-    return (nodec_buf_is_null(buf));
-  }
+static void async_cstream_shutdown(nodec_stream_t* stream) {
+  // nothing to do
 }
 
-
-static void http_in_stream_free(nodec_stream_t* stream) {
-  http_in_stream_t* hs = (http_in_stream_t*)stream;
-  if (!nodec_buf_is_null(hs->current) && hs->current_owned) {
-    nodec_buf_free(hs->current);
-  }
-  nodec_bstream_release(&hs->bstream);
-  nodec_free(hs);
+static void async_cstream_free(nodec_stream_t* stream) {
+  nodec_cstream_t* cs = (nodec_cstream_t*)stream;
+  if (cs->owned) nodec_buf_free(cs->current);
+  nodec_free(cs);
 }
 
-static nodec_bstream_t* http_in_stream_alloc(http_in_t* req) {
-  //if (req->complete) return NULL;
-  http_in_stream_t* hs = nodec_alloc(http_in_stream_t);
-  hs->current = req->prefix;
-  hs->current_owned = false;
-  hs->current_offset = req->body_start;
-  hs->req = req;
-  nodec_bstream_init(&hs->bstream, 
-    &http_in_read_chunk, &http_in_pushback_buf,
-    &http_in_read_bufx, NULL, NULL, &http_in_stream_free);
-  return &hs->bstream;
+nodec_stream_t* nodec_cstream_alloc(uint64_t* content_len, nodec_stream_t* source) {
+  nodec_cstream_t* cs = nodec_zero_alloc(nodec_cstream_t);
+  nodec_stream_init(&cs->stream,
+    &async_cstream_read_bufx, &async_cstream_write_bufs,
+    &async_cstream_shutdown, &async_cstream_free);
+  cs->source = source;
+  cs->content_len = content_len;
+  if (cs->content_len != NULL) *cs->content_len = 0;
+  return &cs->stream;
 }
 
-nodec_bstream_t* http_in_body(http_in_t* in) {
-  return in->body_stream;
-}
-
-// Read asynchronously the entire body of the request. 
-// The caller is responsible for buffer deallocation.
-// Uses Content-Length is possible to read directly into a continuous buffer without reallocation.
-uv_buf_t async_http_in_read_body(http_in_t* req, size_t read_max) {
-  uv_buf_t  buf = nodec_buf_null();
-  nodec_bstream_t* stream = http_in_body(req);
-  if (req->complete || req->body_stream == NULL) return buf;
-  //{using_bstream(stream) {
-     size_t clen = http_in_content_length(req);
-     if (clen > read_max) clen = read_max;
-     if (clen > 0 && http_in_header(req, "Content-Encoding") == NULL) {
-       buf = nodec_buf_alloc(clen);
-       {using_buf_on_abort_free(&buf){
-          size_t nread = async_read_into(stream, buf);
-          nodec_buf_fit(buf, nread);
-       }}       
-     }
-     else {
-       buf = async_read_buf_all(stream, read_max);
-     }
-  //}}
-  nodec_stream_free(as_stream(req->body_stream));
-  req->body_stream = NULL;
-  return buf;
-}
 
 
 /*-----------------------------------------------------------------
@@ -965,15 +1045,16 @@ static void http_in_headers_print(http_in_t* in) {
     printf(" %s: %s\n", name, value);
   }
   uv_buf_t buf = async_http_in_read_body(in, 4 * NODEC_MB);
+  printf(" computed content-length: %zu\n", (size_t)http_in_content_length(in));
   {using_buf(&buf) {
     if (buf.base != NULL) {
       buf.base[buf.len] = 0;
       if (buf.len <= 80) {
-        printf("body: %s\n", buf.base);
+        printf("body: %zu bytes: %s\n", (size_t)buf.len, buf.base);
       }
       else {
-        buf.base[30] = 0;
-        printf("body: %s ... %s\n", buf.base, buf.base + buf.len - 30);
+        buf.base[40] = 0;
+        printf("body: %zu bytes: %s\n ...\n %s\n", (size_t)buf.len, buf.base, buf.base + buf.len - 40);
       }
     }
   }}

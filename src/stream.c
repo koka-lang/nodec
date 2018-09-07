@@ -895,6 +895,7 @@ typedef struct _nodec_zstream_t {
   z_stream        write_strm;
   uv_buf_t        write_buf;
   nodec_stream_t* source;
+  bool            own_source;
   size_t          chunk_size;
   size_t          nread;
   size_t          nwritten;
@@ -939,29 +940,29 @@ static bool async_zstream_read_chunks(nodec_zstream_t* zs)
 {
   nodec_zstream_init_read(zs);
   bool owned = false;
+  int res = 0;
   uv_buf_t src = async_read_bufx(zs->source, &owned);
-  if (nodec_buf_is_null(src)) return true;  // eof
+  // if (nodec_buf_is_null(src)) return true;  // eof
   {using_buf_owned(owned, &src) {
     zs->read_strm.avail_in = src.len;
     zs->read_strm.next_in = (void*)src.base;
     zs->nread += src.len;
     // decompress while data available into chunks
-    int res = 0;
     do {
       uv_buf_t dest = nodec_buf_alloc(zs->chunk_size);
       zs->read_strm.avail_out = dest.len;
       zs->read_strm.next_out = (void*)dest.base;
-      res = inflate(&zs->read_strm, Z_NO_FLUSH);
-      if (res >= Z_OK) {
+      res = inflate(&zs->read_strm, (src.len==0 ? Z_SYNC_FLUSH: Z_NO_FLUSH));
+      if (res >= Z_OK) { // can be Z_STREAM_END
         size_t nwritten = dest.len - zs->read_strm.avail_out;
         chunks_push(&zs->bstream.chunks, dest, nwritten);
       }
       else {
         nodec_check_msg(UV_EINVAL, "invalid gzip data");
       }
-    } while (res >= Z_OK && zs->read_strm.avail_out == 0);  // while fully written buffers
+    } while (res == Z_OK && zs->read_strm.avail_out == 0);  // while fully written buffers
   }}
-  return false;
+  return (res == Z_STREAM_END);
 }
 
 static uv_buf_t async_zstream_read_bufx(nodec_stream_t* stream, bool* owned) {
@@ -1022,7 +1023,7 @@ static void async_zstream_shutdown(nodec_stream_t* stream) {
   if (zs->nwritten > 0) {
     async_zstream_write_buf(zs, nodec_buf_null(), Z_FINISH);
   }
-  async_shutdown(zs->source);
+  if (zs->own_source) async_shutdown(zs->source);
 }
 
 static void nodec_zstream_free(nodec_stream_t* stream) {
@@ -1030,15 +1031,16 @@ static void nodec_zstream_free(nodec_stream_t* stream) {
   if (zs->read_strm.zalloc != NULL) inflateEnd(&zs->read_strm);
   if (zs->write_strm.zalloc != NULL) deflateEnd(&zs->write_strm);
   nodec_buf_free(zs->write_buf);
-  nodec_stream_free(zs->source);
+  if (zs->own_source) nodec_stream_free(zs->source);
   nodec_free(zs);
 }
 
 
-nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, int compress_level, bool gzip) {
+nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, bool own_stream, int compress_level, bool gzip) {
   int res = 0;
   nodec_zstream_t* zs = nodecx_alloc(nodec_zstream_t);
   if (zs == NULL) { res = UV_ENOMEM; goto err; }
+  zs->own_source = own_stream;
   zs->write_buf = nodec_buf_null();
   zs->chunk_size = 64 * 1024;       // (de)compress in 64kb chunks
   zs->nread = 0;
@@ -1055,13 +1057,13 @@ nodec_bstream_t* nodec_zstream_alloc_ex(nodec_stream_t* stream, int compress_lev
   return &zs->bstream;
 err:
   if (zs != NULL) nodec_free(zs);
-  if (stream != NULL) nodec_stream_free(stream);
+  if (stream != NULL && own_stream) nodec_stream_free(stream);
   nodec_check(res);
   return NULL;
 }
 
-nodec_bstream_t* nodec_zstream_alloc(nodec_stream_t* stream) {
-  return nodec_zstream_alloc_ex(stream, 6, true);
+nodec_bstream_t* nodec_zstream_alloc(nodec_stream_t* stream, bool own_stream) {
+  return nodec_zstream_alloc_ex(stream, own_stream, 6, true);
 }
 
 

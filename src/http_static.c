@@ -112,7 +112,7 @@ static lh_value http_try_send_file(uv_file file, const char* path, lh_value stat
       // TODO: check if <filename>.gz exists and use that if possible instead of zipping at runtime
       // send zipped content in chunks (as we don't know the final length)
       stream = http_resp_send_status_body(HTTP_STATUS_OK, NODEC_CHUNKED, content_type);
-      stream = as_stream(nodec_zstream_alloc(stream)); // gzip'd stream
+      stream = as_stream(nodec_zstream_alloc(stream,true)); // gzip'd stream
     }
     else {
       // send as one body
