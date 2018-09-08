@@ -41,6 +41,7 @@
     <ClCompile Include="..\..\src\http_static.c" />
     <ClCompile Include="..\..\src\http_url.c" />
     <ClCompile Include="..\..\src\interleave.c" />
+    <ClCompile Include="..\..\src\log.c" />
     <ClCompile Include="..\..\src\memory.c" />
     <ClCompile Include="..\..\src\mime.c" />
     <ClCompile Include="..\..\src\stream.c" />

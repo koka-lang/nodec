@@ -232,6 +232,36 @@ void nodec_bufref_nofreev(lh_value pv);
 /// \}
 
 
+/* ----------------------------------------------------------------------------
+  Logging
+-----------------------------------------------------------------------------*/
+
+/// \defgroup log Loggin
+/// Logging information
+/// \{
+
+/// Log level.
+typedef enum _nodec_log_level_t {
+  LOG_ERROR,
+  LOG_WARNING,
+  LOG_INFO,
+  LOG_VERBOSE,
+  LOG_DEBUG,
+  LOG_SILLY
+} nodec_log_level_t;
+
+void nodec_log_set(nodec_log_level_t level);
+void nodec_log(nodec_log_level_t level, const char* msg);
+void nodec_vlogf(nodec_log_level_t level, const char* fmt, va_list args);
+void nodec_logf(nodec_log_level_t level, const char* fmt, ...);
+void nodec_log_error(const char* fmt, ...);
+void nodec_log_warning(const char* fmt, ...);
+void nodec_log_info(const char* fmt, ...);
+void nodec_log_verbose(const char* fmt, ...);
+void nodec_log_debug(const char* fmt, ...);
+void nodec_log_silly(const char* fmt, ...);
+
+/// \}
 
 /* ----------------------------------------------------------------------------
   Cancelation scope

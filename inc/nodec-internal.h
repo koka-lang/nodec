@@ -93,6 +93,20 @@ void     async_tty_shutdown();
 
 
 // ---------------------------------------------------------------------------------
+// Loggin
+// ---------------------------------------------------------------------------------
+
+implicit_declare(log)
+
+lh_value _nodec_log_allocv(nodec_log_level_t level);
+void     _nodec_log_freev(lh_value logv);
+void     nodec_log_shutdown();
+
+#define using_log(level)  \
+    using_implicit_defer_exit(nodec_log_shutdown(),_nodec_log_freev,_nodec_log_allocv(level),log)
+
+
+// ---------------------------------------------------------------------------------
 // LibUV streams 
 // ---------------------------------------------------------------------------------
 
