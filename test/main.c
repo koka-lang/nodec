@@ -159,12 +159,11 @@ static void test_https() {
 
 
 static void wait_tty() {
-  {using_tty() {
-    async_tty_write("press enter to quit the server...");
-    const char* s = async_tty_readline();
-    nodec_free(s);
-    async_tty_write("canceling server...");
-  }}
+  async_tty_write("press enter to quit the server...");
+  const char* s = async_tty_readline();
+  nodec_free(s);
+  async_tty_write("canceling server...");
+
 }
 
 static void test_tcp_tty() {
@@ -179,18 +178,15 @@ static void test_tcp_tty() {
 -----------------------------------------------------------------*/
 
 static void test_tty() {
-  {using_tty() {
-    async_tty_write("\033[41;37m");
-    async_tty_write("what is your name? ");
-    const char* s = async_tty_readline();
-    {using_free(s) {
-      printf("I got: %s\n", s);
-    }}
-    async_tty_write("and your age? ");
-    s = async_tty_readline();
-    {using_free(s) {
-      printf("Now I got: %s\n", s);
-    }}
+  async_tty_write("\033[41;37m" "what is your name?" "\033[0m" " ");
+  const char* s = async_tty_readline();
+  {using_free(s) {
+    async_tty_printf("I got: %s\n", s);
+  }}
+  async_tty_write("\033[41;37m" "and your age?" "\033[0m" " ");
+  s = async_tty_readline();
+  {using_free(s) {
+    async_tty_printf("Now I got: %s\n", s);
   }}
 }
 
@@ -320,13 +316,13 @@ static void test_url() {
 -----------------------------------------------------------------*/
 
 static void entry() {
-  void test_http();
+  //void test_http();
   printf("in the main loop\n");
   //test_files();
   //test_interleave();
   //test_cancel();
   //test_tcp();
-  //test_tty();
+  test_tty();
   //test_scandir();
   //test_dns();
   //test_http();
@@ -334,7 +330,7 @@ static void entry() {
   //test_connect();
   //test_tcp_tty();
   //test_url();
-  test_https();
+  //test_https();
 }
 
 int main() {

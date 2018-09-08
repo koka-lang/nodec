@@ -68,6 +68,41 @@ void async_tty_write(const char* s) {
   async_uv_write_buf(stream_of_tty(tty->_stdout), nodec_buf_str(s));
 }
 
+void async_tty_vprintf(const char* fmt, va_list args) {
+  char buf[512];
+  vsnprintf(buf, 512, fmt, args); buf[511] = 0;
+  async_tty_write(buf);
+}
+
+void async_tty_printf(const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  async_tty_vprintf(fmt, args);
+  va_end(args);
+}
+
+void async_tty_write_err(const char* s) {
+  tty_t* tty = tty_get();
+  if (tty->_stderr == NULL) {
+    tty->_stderr = nodec_zero_alloc(uv_tty_t);
+    nodec_check(uv_tty_init(async_loop(), tty->_stderr, 2, 0));
+  }
+  async_uv_write_buf(stream_of_tty(tty->_stderr), nodec_buf_str(s));
+}
+
+void async_tty_vprintf_err(const char* fmt, va_list args) {
+  char buf[512];
+  vsnprintf(buf, 512, fmt, args); buf[511] = 0;
+  async_tty_write_err(buf);
+}
+
+void async_tty_printf_err(const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  async_tty_vprintf_err(fmt, args);
+  va_end(args);
+}
+
 // Flush any outstanding writes
 void async_tty_shutdown() {
   tty_t* tty = tty_get();
@@ -76,12 +111,10 @@ void async_tty_shutdown() {
 }
 
 static void wait_for_enter() {
-  {using_tty() {
-    async_tty_write("press enter to quit...");
-    const char* s = async_tty_readline();
-    nodec_free(s);
-    async_tty_write("canceling...");
-  }}
+  async_tty_write("press enter to quit...");
+  const char* s = async_tty_readline();
+  nodec_free(s);
+  async_tty_write("canceling...");
 }
 
 void async_stop_on_enter(nodec_actionfun_t* action) {

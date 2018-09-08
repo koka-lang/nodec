@@ -15,6 +15,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <time.h>
+#include <stdarg.h>
 
 #define USE_TLS
 #define USE_MBEDTLS
@@ -554,6 +555,20 @@ void      async_write_buf(nodec_stream_t* stream, uv_buf_t buf);
 /// \param stream stream to write to.
 /// \param s      the string to write.
 void      async_write(nodec_stream_t* stream, const char* s);
+
+/// Write a formatted string to a stream.
+/// Writes at most 511 bytes after formatting.
+/// \param stream stream to write to.
+/// \param fmt    the format string.
+/// \param args   the arguments for the format string.
+void      async_vprintf(nodec_stream_t* stream, const char* fmt, va_list args);
+
+/// Write a formatted string to a stream.
+/// Writes at most 511 bytes after formatting.
+/// \param stream stream to write to.
+/// \param fmt    the format string.
+/// \param ...    the arguments for the format string.
+void      async_printf(nodec_stream_t* stream, const char* fmt, ...);
 
 /// The type of buffered streams. 
 /// Derives from a basic #nodec_stream_t and can be cast to it using as_stream().
@@ -1202,11 +1217,6 @@ lh_value async_https_connect(nodec_ssl_config_t* config, const char* url, http_c
   TTY
 -----------------------------------------------------------------------------*/
 
-implicit_declare(tty)
-
-lh_value _nodec_tty_allocv();
-void     _nodec_tty_freev(lh_value ttyv);
-void     async_tty_shutdown();
 
 /// \defgroup nodec_tty TTY 
 /// Terminal input and output.
@@ -1220,28 +1230,34 @@ char* async_tty_readline();
 /// \param s The string to write to the console. Can contain ANSI escape sequences.
 void  async_tty_write(const char* s);
 
-/// Enable the console in a scope.
-/// Inside the given scope, one can use async_tty_readline() and async_tty_write().
-///
-/// \b Example:
-/// ```
-/// {using_tty() {
-///   async_tty_write("\033[41;37m");         // ANSI escape to set red color
-///   async_tty_write("what is your name? ");
-///   const char* s = async_tty_readline();
-///   {using_free(s) {
-///     printf("I got: %s\n", s);
-///   }}
-/// }}
-/// ```
-#define using_tty()  \
-    using_implicit_defer_exit(async_tty_shutdown(),_nodec_tty_freev,_nodec_tty_allocv(),tty)
+/// Write to the console on stderr.
+/// \param s The string to write to the console on stderr. Can contain ANSI escape sequences.
+void  async_tty_write_err(const char* s);
 
 
 /// Run an action until "enter" is pressed.
 /// \param action The action to run.
 void async_stop_on_enter(nodec_actionfun_t* action);
 
+/// Write a formatted string to the console.
+/// \param fmt The format string to write to the console. Can contain ANSI escape sequences.
+/// \param ... Format arguments.
+void  async_tty_printf(const char* fmt, ...);
+
+/// Write a formatted string to the console.
+/// \param fmt The format string to write to the console. Can contain ANSI escape sequences.
+/// \param args Format arguments.
+void  async_tty_vprintf(const char* fmt, va_list args);
+
+/// Write a formatted string to the console on stderr.
+/// \param fmt The format string to write to the console. Can contain ANSI escape sequences.
+/// \param ... Format arguments.
+void  async_tty_printf_err(const char* fmt, ...);
+
+/// Write a formatted string to the console on stderr.
+/// \param fmt The format string to write to the console. Can contain ANSI escape sequences.
+/// \param args Format arguments.
+void  async_tty_vprintf_err(const char* fmt, va_list args);
 
 /// \}
 

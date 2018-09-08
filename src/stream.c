@@ -77,6 +77,21 @@ void async_write(nodec_stream_t* stream, const char* s) {
 }
 
 
+void async_vprintf(nodec_stream_t* stream, const char* fmt, va_list args) {
+  char buf[512];
+  vsnprintf(buf, 512, fmt, args); 
+  buf[511] = 0;
+  async_write(stream, buf);
+}
+
+void async_printf(nodec_stream_t* stream, const char* fmt, ...) {
+  va_list args;
+  va_start(args, stream);
+  async_vprintf(stream, fmt, args);
+  va_end(args);
+}
+
+
 /* ----------------------------------------------------------------------------
 Read chunks
 

@@ -64,6 +64,33 @@ int          channel_receive_nocancel(channel_t* channel, lh_value* data, lh_val
 
 lh_value async_write_http_exnv(lh_value exnv);
 
+// ---------------------------------------------------------------------------------
+// TTY
+// ---------------------------------------------------------------------------------
+
+implicit_declare(tty)
+
+lh_value _nodec_tty_allocv();
+void     _nodec_tty_freev(lh_value ttyv);
+void     async_tty_shutdown();
+
+/// Enable the console in a scope.
+/// Inside the given scope, one can use async_tty_readline() and async_tty_write().
+///
+/// \b Example:
+/// ```
+/// {using_tty() {
+///   async_tty_write("\033[41;37m");         // ANSI escape to set red color
+///   async_tty_write("what is your name? ");
+///   const char* s = async_tty_readline();
+///   {using_free(s) {
+///     printf("I got: %s\n", s);
+///   }}
+/// }}
+/// ```
+#define using_tty()  \
+    using_implicit_defer_exit(async_tty_shutdown(),_nodec_tty_freev,_nodec_tty_allocv(),tty)
+
 
 // ---------------------------------------------------------------------------------
 // LibUV streams 
@@ -78,5 +105,7 @@ void async_uv_stream_shutdown(uv_stream_t* stream);
 void nodec_uv_stream_free(uv_stream_t* stream);
 
 void nodec_tls_stream_handshake(nodec_tls_stream_t* ts);
+
+
 
 #endif
