@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------
-#  Copyright 2016, Daan Leijen. 
+#  Copyright 2016, Daan Leijen.
 #-------------------------------------------------------------------------
 
 .PHONY : clean dist init tests staticlib main
@@ -46,8 +46,8 @@ VALGRINDX=
 endif
 
 ifeq ($(VALGRINDX),yes)
-VALGRINDX=valgrind --leak-check=full --show-leak-kinds=all --suppressions=./valgrind.supp 
-endif     
+VALGRINDX=valgrind --leak-check=full --show-leak-kinds=all --suppressions=./valgrind.supp
+endif
 
 # Uncomment to generate assembly for nodec
 # SHOWASM    = -Wa,-aln=$@.s
@@ -56,14 +56,14 @@ endif
 # Sources
 # -------------------------------------
 
-SRCFILES = async.c channel.c dns.c fs.c http.c http_request.c \
-           http_static.c http_url.c  \
-           interleave.c memory.c mime.c \
-           stream.c tcp.c timer.c tty.c            
+SRCFILES = async.c interleave.c channel.c memory.c \
+					 dns.c fs.c stream.c tcp.c timer.c tty.c log.c \
+           http.c http_request.c http_static.c http_url.c  mime.c\
+					 https.c tls-mbedtls.c
 
-CTESTS   =  
+CTESTS   =
 
-TESTFILES= main.c	$(CTESTS)				 
+TESTFILES= main.c	$(CTESTS)
 
 BENCHFILES=
 
@@ -79,7 +79,7 @@ LIBS     =  $(NLIBX)
 # for libuv
 EXTRA-LIBS= -lrt -lpthread -lnsl -ldl
 
-TESTSRCS = $(patsubst %,test/%,$(TESTFILES)) 
+TESTSRCS = $(patsubst %,test/%,$(TESTFILES))
 TESTMAIN = $(OUTDIR)/nodec-tests$(EXE)
 
 BENCHSRCS= $(patsubst %,test/%,$(BENCHFILES))
@@ -136,27 +136,27 @@ $(BENCHMAIN): $(BENCHSRCS) $(NLIB)
 staticlib: init $(NLIBX)
 
 $(NLIBX): $(NLIB)
-	@if test -d "$(OUTDIRX)/lib"; then :; else $(MKDIR) "$(OUTDIRX)/lib"; fi	
+	@if test -d "$(OUTDIRX)/lib"; then :; else $(MKDIR) "$(OUTDIRX)/lib"; fi
 	./libmerge.sh $(OUTDIRX)/lib lib$(MAINX).a $(NLIB) deps/libhandler/out/$(CONFIG)/$(VARIANT)/libhandler.a deps/libuv/out/lib/libuv.a deps/zlib/out/lib/libz.a
-	@if test -d "$(OUTDIRX)/include/libhandler/inc"; then :; else $(MKDIR) "$(OUTDIRX)/include/libhandler/inc"; fi	
-	@if test -d "$(OUTDIRX)/include/libuv/include"; then :; else $(MKDIR) "$(OUTDIRX)/include/libuv/include"; fi	
-	@if test -d "$(OUTDIRX)/include/uv"; then :; else $(MKDIR) "$(OUTDIRX)/include/uv"; fi	
-	@if test -d "$(OUTDIRX)/include/http-parser"; then :; else $(MKDIR) "$(OUTDIRX)/include/http-parser"; fi	
+	@if test -d "$(OUTDIRX)/include/libhandler/inc"; then :; else $(MKDIR) "$(OUTDIRX)/include/libhandler/inc"; fi
+	@if test -d "$(OUTDIRX)/include/libuv/include"; then :; else $(MKDIR) "$(OUTDIRX)/include/libuv/include"; fi
+	@if test -d "$(OUTDIRX)/include/uv"; then :; else $(MKDIR) "$(OUTDIRX)/include/uv"; fi
+	@if test -d "$(OUTDIRX)/include/http-parser"; then :; else $(MKDIR) "$(OUTDIRX)/include/http-parser"; fi
 	$(CP) -f deps/libhandler/inc/libhandler.h    $(OUTDIRX)/include/libhandler/inc
 	$(CP) -f deps/http-parser/http_parser.h $(OUTDIRX)/include/http-parser
 	$(CP) -f deps/libuv/out/include/uv.h $(OUTDIRX)/include/libuv/include/uv.h
 	$(CP) -fa deps/libuv/out/include/uv/* $(OUTDIRX)/include/uv
 	$(CP) -f inc/nodec.h $(OUTDIRX)/include
 	$(CP) -f inc/nodec-primitive.h $(OUTDIRX)/include
-	
+
 $(NLIB): $(OBJS)
-	$(AR) $(ARFLAGS)  $(ARFLAGOUT)$@ $(OBJS) 
+	$(AR) $(ARFLAGS)  $(ARFLAGOUT)$@ $(OBJS)
 
 $(OUTDIR)/%$(OBJ): src/%.c
 	$(CC) $(CCFLAGS) $(CCFLAG99) $(CCFLAGOUT)$@ -c $< $(SHOWASM)
 
 $(OUTDIR)/%$(OBJ): src/%$(ASM)
-	$(CC) $(ASMFLAGS)  $(ASMFLAGOUT)$@ -c $< 
+	$(CC) $(ASMFLAGS)  $(ASMFLAGOUT)$@ -c $<
 
 $(OUTDIR)/http_parser$(OBJ): deps/http-parser/http_parser.c
 	$(CC) $(CCFLAGS) $(CCFLAG99) $(CCFLAGOUT)$@ -c $< $(SHOWASM)
@@ -167,7 +167,7 @@ $(OUTDIR)/http_parser$(OBJ): deps/http-parser/http_parser.c
 # other targets
 # -------------------------------------
 
-docs: 
+docs:
 
 clean:
 	rm -rf $(CONFIGDIR)/*/*
@@ -196,7 +196,7 @@ help:
 	@echo "  tests       : Run tests"
 	@echo "  mainxx      : Build a static library for C++"
 	@echo "  testsxx     : Run tests for C++"
-	@echo "  bench       : Run benchmarks, use 'VARIANT=release'"	
+	@echo "  bench       : Run benchmarks, use 'VARIANT=release'"
 	@echo "  clean       : Clean output directory"
 	@echo "  depend      : Generate dependencies"
 	@echo ""

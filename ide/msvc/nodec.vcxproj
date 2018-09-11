@@ -36,7 +36,7 @@
     <ClCompile Include="..\..\src\dns.c" />
     <ClCompile Include="..\..\src\fs.c" />
     <ClCompile Include="..\..\src\http.c" />
-    <ClCompile Include="..\..\src\https.c\https.c" />
+    <ClCompile Include="..\..\src\https.c" />
     <ClCompile Include="..\..\src\http_request.c" />
     <ClCompile Include="..\..\src\http_static.c" />
     <ClCompile Include="..\..\src\http_url.c" />
