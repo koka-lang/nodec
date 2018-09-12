@@ -654,7 +654,7 @@ Main wrapper
 static lh_value uv_main_action(lh_value ventry) {
   nodec_main_fun_t* entry = (nodec_main_fun_t*)lh_fun_ptr_value(ventry);
   {using_tty() {
-    {using_log(LOG_WARNING) {
+    {using_log(LOG_DEFAULT) {
       entry();
     }}
   }}

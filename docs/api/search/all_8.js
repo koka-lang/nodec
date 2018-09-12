@@ -12,6 +12,7 @@ var searchData=
   ['http_5fhead',['HTTP_HEAD',['../group__http__setup.html#gga2fd930fba66817097e73ba9b75800eb2ab547cb50f6792b41c3e7d52ee0f8e442',1,'nodec-extra-doc.h']]],
   ['http_5fin_5fbody',['http_in_body',['../group__http__in__out.html#gaa17e8de265c190884d433e8ef91e3ad4',1,'nodec.h']]],
   ['http_20input_20and_20output_2e',['HTTP Input and Output.',['../group__http__in__out.html',1,'']]],
+  ['http_5fin_5fstatus_5fprint',['http_in_status_print',['../group__http__in__out.html#ga0a71fdfb195b7fe66eadd442e0fbd4e5',1,'nodec.h']]],
   ['http_5fin_5ft',['http_in_t',['../group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df',1,'nodec.h']]],
   ['http_5flink',['HTTP_LINK',['../group__http__setup.html#gga2fd930fba66817097e73ba9b75800eb2a86af7b9dfab558c6d7e77788b0bf9c29',1,'nodec-extra-doc.h']]],
   ['http_5flock',['HTTP_LOCK',['../group__http__setup.html#gga2fd930fba66817097e73ba9b75800eb2aa7119ecfb8aece4bbfb7a261331abddf',1,'nodec-extra-doc.h']]],
@@ -41,6 +42,7 @@ var searchData=
   ['http_5freq_5fmethod',['http_req_method',['../group__http__req__resp.html#ga1bbbf2a9c6763cc8abd61c64e3d56be9',1,'nodec.h']]],
   ['http_5freq_5fparsed_5furl',['http_req_parsed_url',['../group__http__req__resp.html#gaa071ab8ae8e6548f41f3945a3a8944ee',1,'nodec.h']]],
   ['http_5freq_5fpath',['http_req_path',['../group__http__req__resp.html#ga79ccdc504575e50c2c7f7898f9f4e098',1,'nodec.h']]],
+  ['http_5freq_5fprint',['http_req_print',['../group__http__req__resp.html#gabbd2e133173ef6dcbb5ae9f0dd2b8888',1,'nodec.h']]],
   ['http_20server_20requests_20and_20responses_2e',['HTTP Server Requests and Responses.',['../group__http__req__resp.html',1,'']]],
   ['http_5freq_5furl',['http_req_url',['../group__http__req__resp.html#ga453c19b95ff4853887cc38eab789dc0d',1,'nodec.h']]],
   ['http_5fresp',['http_resp',['../group__http__req__resp.html#gafcc54624869b5d7c85b79843901fefd7',1,'nodec.h']]],
@@ -124,5 +126,6 @@ var searchData=
   ['http_5funlink',['HTTP_UNLINK',['../group__http__setup.html#gga2fd930fba66817097e73ba9b75800eb2ab7485b3ada0c697c057054e785b443d4',1,'nodec-extra-doc.h']]],
   ['http_5funlock',['HTTP_UNLOCK',['../group__http__setup.html#gga2fd930fba66817097e73ba9b75800eb2a81202ae84a8fc30e687bc5059958c477',1,'nodec-extra-doc.h']]],
   ['http_5funsubscribe',['HTTP_UNSUBSCRIBE',['../group__http__setup.html#gga2fd930fba66817097e73ba9b75800eb2a930cc3d0451fc715afb07adb2267198f',1,'nodec-extra-doc.h']]],
+  ['https_20secure_20connections',['HTTPS secure connections',['../group__nodec__https.html',1,'']]],
   ['http_20static_20content_20server_2e',['HTTP Static Content Server.',['../group__nodec__static.html',1,'']]]
 ];

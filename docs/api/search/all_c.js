@@ -34,6 +34,7 @@ var searchData=
   ['nodec_5finet_5fdate_5fnow',['nodec_inet_date_now',['../group__nodec__various.html#ga52af212bb34613e5079d1ddf3eb870c0',1,'nodec.h']]],
   ['nodec_5finfo_5ffrom_5fmime',['nodec_info_from_mime',['../group__nodec__mime.html#gaccb1fd0c6fa867bb593a6b58cf8756a4',1,'nodec.h']]],
   ['nodec_5fkb',['NODEC_KB',['../group__nodec__various.html#ga73adc7fccbee908a44707c93620b35b6',1,'nodec.h']]],
+  ['nodec_5flog_5flevel_5ft',['nodec_log_level_t',['../group__log.html#ga397b9a049d0edb35a8c82b5e31908b2e',1,'nodec.h']]],
   ['nodec_5fmain_5ffun_5ft',['nodec_main_fun_t',['../group__nodec__various.html#ga50770568a93c37eaa128d15aefb9ff49',1,'nodec.h']]],
   ['nodec_5fmb',['NODEC_MB',['../group__nodec__various.html#gad8c50b6c480fd1c09e40a5eaa36f87bb',1,'nodec.h']]],
   ['nodec_5fmime_5ffrom_5ffname',['nodec_mime_from_fname',['../group__nodec__mime.html#ga7b0602fccd1407557b341e4d4a5c808b',1,'nodec.h']]],
@@ -47,10 +48,10 @@ var searchData=
   ['nodec_5fstream_5ffree',['nodec_stream_free',['../group__streams.html#ga7a87a30d292c709502440b0d95b9cb0b',1,'nodec.h']]],
   ['nodec_5fstream_5ffreev',['nodec_stream_freev',['../group__streams.html#ga29902a3b1e06b6d1b87e11b12bfbb11a',1,'nodec.h']]],
   ['nodec_5fstream_5ft',['nodec_stream_t',['../group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f',1,'nodec.h']]],
-  ['nodec_5ftcp_5fservefun',['nodec_tcp_servefun',['../group__tcp.html#gad94b4def2662a4a6360144e62a851b3f',1,'nodec.h']]],
+  ['nodec_5ftcp_5fconnection_5ffun_5ft',['nodec_tcp_connection_fun_t',['../group__tcp.html#ga6e7766bd8a316202634ad28c1c2a7d6d',1,'nodec.h']]],
   ['nodec_5fthrow',['nodec_throw',['../group__nodec__various.html#ga21d7c9d7a03822b0263fb3431e7a3e3b',1,'nodec.h']]],
   ['nodec_5fthrow_5fmsg',['nodec_throw_msg',['../group__nodec__various.html#ga43af10da1f49d2ef6fb7af2118ad5960',1,'nodec.h']]],
   ['nodec_5furl_5ft',['nodec_url_t',['../group__nodec__url.html#gaa2a37a3b5cc32bd3cb0c7eebe1eb397f',1,'nodec.h']]],
-  ['nodec_5fzstream_5falloc',['nodec_zstream_alloc',['../group__streams.html#ga8a923b29a649bffb076c7d7c10d14459',1,'nodec.h']]],
-  ['nodec_5fzstream_5falloc_5fex',['nodec_zstream_alloc_ex',['../group__streams.html#ga2e497767efc4c4d27982e5c9771dfb2c',1,'nodec.h']]]
+  ['nodec_5fzstream_5falloc',['nodec_zstream_alloc',['../group__streams.html#gaac0281d255b7277db65d1e3e30d550fa',1,'nodec.h']]],
+  ['nodec_5fzstream_5falloc_5fex',['nodec_zstream_alloc_ex',['../group__streams.html#ga8b99efcef9771afc6fad163fbd51d00b',1,'nodec.h']]]
 ];

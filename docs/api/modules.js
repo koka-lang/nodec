@@ -1,6 +1,7 @@
 var modules =
 [
     [ "Buffer's", "group__buffers.html", "group__buffers" ],
+    [ "Loggin", "group__log.html", "group__log" ],
     [ "Asynchrony", "group__nodec__async.html", "group__nodec__async" ],
     [ "File System", "group__nodec__fs.html", "group__nodec__fs" ],
     [ "Streams", "group__streams.html", "group__streams" ],

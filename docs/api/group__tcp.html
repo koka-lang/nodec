@@ -133,9 +133,9 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:gad94b4def2662a4a6360144e62a851b3f"><td class="memItemLeft" align="right" valign="top">typedef void()&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#gad94b4def2662a4a6360144e62a851b3f">nodec_tcp_servefun</a>(int id, <a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *client, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
-<tr class="memdesc:gad94b4def2662a4a6360144e62a851b3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The server callback when listening on a TCP connection.  <a href="#gad94b4def2662a4a6360144e62a851b3f">More...</a><br /></td></tr>
-<tr class="separator:gad94b4def2662a4a6360144e62a851b3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6e7766bd8a316202634ad28c1c2a7d6d"><td class="memItemLeft" align="right" valign="top">typedef void()&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#ga6e7766bd8a316202634ad28c1c2a7d6d">nodec_tcp_connection_fun_t</a>(int id, <a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *client, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
+<tr class="memdesc:ga6e7766bd8a316202634ad28c1c2a7d6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The server callback when listening on a TCP connection.  <a href="#ga6e7766bd8a316202634ad28c1c2a7d6d">More...</a><br /></td></tr>
+<tr class="separator:ga6e7766bd8a316202634ad28c1c2a7d6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -148,9 +148,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga4e0db7845d0a6de8355c58e172e7d1f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#ga4e0db7845d0a6de8355c58e172e7d1f1">async_tcp_connect</a> (const char *host)</td></tr>
 <tr class="memdesc:ga4e0db7845d0a6de8355c58e172e7d1f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Establish a TCP connection.  <a href="#ga4e0db7845d0a6de8355c58e172e7d1f1">More...</a><br /></td></tr>
 <tr class="separator:ga4e0db7845d0a6de8355c58e172e7d1f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf2f87fdb9879b343523156e08e521184"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#gaf2f87fdb9879b343523156e08e521184">async_tcp_server_at</a> (const struct sockaddr *addr, <a class="el" href="group__tcp.html#structtcp__server__config__t">tcp_server_config_t</a> *config, <a class="el" href="group__tcp.html#gad94b4def2662a4a6360144e62a851b3f">nodec_tcp_servefun</a> *servefun, <a class="el" href="group__effect__value.html#ga5a08b630153ff4e9c2120d0bb2debd89">lh_actionfun</a> *on_exn, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
-<tr class="memdesc:gaf2f87fdb9879b343523156e08e521184"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a TCP server.  <a href="#gaf2f87fdb9879b343523156e08e521184">More...</a><br /></td></tr>
-<tr class="separator:gaf2f87fdb9879b343523156e08e521184"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae3b5fdace85b868927f9d7eed5b661d0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__tcp.html#gae3b5fdace85b868927f9d7eed5b661d0">async_tcp_server_at</a> (const struct sockaddr *addr, <a class="el" href="group__tcp.html#structtcp__server__config__t">tcp_server_config_t</a> *config, <a class="el" href="group__tcp.html#ga6e7766bd8a316202634ad28c1c2a7d6d">nodec_tcp_connection_fun_t</a> *servefun, <a class="el" href="group__effect__value.html#ga5a08b630153ff4e9c2120d0bb2debd89">lh_actionfun</a> *on_exn, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td></tr>
+<tr class="memdesc:gae3b5fdace85b868927f9d7eed5b661d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a TCP server.  <a href="#gae3b5fdace85b868927f9d7eed5b661d0">More...</a><br /></td></tr>
+<tr class="separator:gae3b5fdace85b868927f9d7eed5b661d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Communication over the TCP protocol (reliable streaming). </p>
@@ -198,14 +198,14 @@ total allowed connection time in ms; 0 = infinite, default 0. </td></tr>
 </div>
 </div>
 <h2 class="groupheader">Typedef Documentation</h2>
-<a id="gad94b4def2662a4a6360144e62a851b3f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gad94b4def2662a4a6360144e62a851b3f">&#9670;&nbsp;</a></span>nodec_tcp_servefun</h2>
+<a id="ga6e7766bd8a316202634ad28c1c2a7d6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga6e7766bd8a316202634ad28c1c2a7d6d">&#9670;&nbsp;</a></span>nodec_tcp_connection_fun_t</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef void() nodec_tcp_servefun(int id, <a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *client, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td>
+          <td class="memname">typedef void() nodec_tcp_connection_fun_t(int id, <a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *client, <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> arg)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -215,7 +215,7 @@ total allowed connection time in ms; 0 = infinite, default 0. </td></tr>
   <table class="params">
     <tr><td class="paramname">id</td><td>The identity of the current asynchronous strand. </td></tr>
     <tr><td class="paramname">client</td><td>The connecting client data stream. </td></tr>
-    <tr><td class="paramname">arg</td><td>The <code>lh_value</code> passed from <a class="el" href="group__tcp.html#gaf2f87fdb9879b343523156e08e521184" title="Create a TCP server. ">async_tcp_server_at()</a>. </td></tr>
+    <tr><td class="paramname">arg</td><td>The <code>lh_value</code> passed from <a class="el" href="group__tcp.html#gae3b5fdace85b868927f9d7eed5b661d0" title="Create a TCP server. ">async_tcp_server_at()</a>. </td></tr>
   </table>
   </dd>
 </dl>
@@ -323,8 +323,8 @@ total allowed connection time in ms; 0 = infinite, default 0. </td></tr>
 
 </div>
 </div>
-<a id="gaf2f87fdb9879b343523156e08e521184"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaf2f87fdb9879b343523156e08e521184">&#9670;&nbsp;</a></span>async_tcp_server_at()</h2>
+<a id="gae3b5fdace85b868927f9d7eed5b661d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae3b5fdace85b868927f9d7eed5b661d0">&#9670;&nbsp;</a></span>async_tcp_server_at()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -344,7 +344,7 @@ total allowed connection time in ms; 0 = infinite, default 0. </td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="group__tcp.html#gad94b4def2662a4a6360144e62a851b3f">nodec_tcp_servefun</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="group__tcp.html#ga6e7766bd8a316202634ad28c1c2a7d6d">nodec_tcp_connection_fun_t</a> *&#160;</td>
           <td class="paramname"><em>servefun</em>, </td>
         </tr>
         <tr>

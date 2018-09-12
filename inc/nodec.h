@@ -250,6 +250,12 @@ typedef enum _nodec_log_level_t {
   LOG_SILLY
 } nodec_log_level_t;
 
+#ifdef NDEBUG
+# define LOG_DEFAULT LOG_WARNING
+#else
+# define LOG_DEFAULT LOG_DEBUG
+#endif
+
 void nodec_log_set(nodec_log_level_t level);
 void nodec_log(nodec_log_level_t level, const char* msg);
 void nodec_vlogf(nodec_log_level_t level, const char* fmt, va_list args);

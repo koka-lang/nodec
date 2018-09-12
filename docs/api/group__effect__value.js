@@ -9,6 +9,7 @@ var group__effect__value =
     [ "lh_uint64_t_value", "group__effect__value.html#gabe964e091840d37f8cb46a747452cee5", null ],
     [ "lh_value_any_ptr", "group__effect__value.html#gab30af45b5f41cca5a1287d2bfa1d39a5", null ],
     [ "lh_value_bool", "group__effect__value.html#ga817d2d4a6080a05db53ef154a6218205", null ],
+    [ "lh_value_fun_ptr", "group__effect__value.html#ga7f44e7912be4eabc993a976069056b79", null ],
     [ "lh_value_int", "group__effect__value.html#gac14a78aec4be59be7a920507f0e61a32", null ],
     [ "lh_value_lh_string", "group__effect__value.html#gaa42c543224030e5080188cb11b5b27bb", null ],
     [ "lh_value_lh_voidptr", "group__effect__value.html#gacdfc1731e309c33e055ac88b459bdcad", null ],
@@ -23,5 +24,7 @@ var group__effect__value =
     [ "lh_resultfun", "group__effect__value.html#ga540551bfce3a27024092a782553ceddf", null ],
     [ "lh_string", "group__effect__value.html#ga1f24f3a2029820ca75484a67853370a3", null ],
     [ "lh_value", "group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83", null ],
-    [ "lh_voidptr", "group__effect__value.html#ga7b4439b7ec3223634778002ea318acea", null ]
+    [ "lh_voidfun", "group__effect__value.html#ga58b182dd21feb550d40436ef31d09614", null ],
+    [ "lh_voidptr", "group__effect__value.html#ga7b4439b7ec3223634778002ea318acea", null ],
+    [ "lh_fun_ptr_value", "group__effect__value.html#gaada7a7ceaab9a482320d4cfc904a4da6", null ]
 ];

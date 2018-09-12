@@ -15,7 +15,6 @@ var searchData=
   ['using_5ffs_5fscandir',['using_fs_scandir',['../group__nodec__fs.html#ga6dd6912567933b893bc5d548f7c93b6e',1,'nodec.h']]],
   ['using_5fimplicit',['using_implicit',['../group__effect__implicit.html#gaea88b12f476f8d029fe6043febecae19',1,'libhandler.h']]],
   ['using_5fstream',['using_stream',['../group__streams.html#gaf8015d9228ada99910bc414d748536e8',1,'nodec.h']]],
-  ['using_5ftty',['using_tty',['../group__nodec__tty.html#ga2ec7f543abd32db9eca229e13e13d4a4',1,'nodec.h']]],
   ['uv_5fbuf_5ft',['uv_buf_t',['../group__buffers.html#structuv__buf__t',1,'']]],
   ['uv_5fdirent_5fblock',['UV_DIRENT_BLOCK',['../group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335aa070fc602168c3bf34807eba51cd48a2',1,'nodec-extra-doc.h']]],
   ['uv_5fdirent_5fchar',['UV_DIRENT_CHAR',['../group__nodec__fs.html#ggab17cb1a692145e20d98e980c343a1335a3ab846891d83853555d15168a01d37c1',1,'nodec-extra-doc.h']]],

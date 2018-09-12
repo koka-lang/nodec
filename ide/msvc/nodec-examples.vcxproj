@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\examples\ex-fs-search.c" />
     <ClCompile Include="..\..\examples\ex-http-connect.c" />
     <ClCompile Include="..\..\examples\ex-http-server-static.c" />
     <ClCompile Include="..\..\examples\ex-https-connect.c" />

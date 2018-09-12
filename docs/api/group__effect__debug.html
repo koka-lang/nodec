@@ -127,10 +127,10 @@ typedef void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 typedef void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__debug.html#ga647046150553dd8b90064a8f2b94c9f9">lh_reallocfun</a>(void *p, size_t size)</td></tr>
 <tr class="memdesc:ga647046150553dd8b90064a8f2b94c9f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type of <code>realloc</code> functions. <br /></td></tr>
 <tr class="separator:ga647046150553dd8b90064a8f2b94c9f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga94f4a1fbb37936e9e0b126beef72dfe3"><td class="memItemLeft" align="right" valign="top"><a id="ga94f4a1fbb37936e9e0b126beef72dfe3"></a>
-typedef void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__debug.html#ga94f4a1fbb37936e9e0b126beef72dfe3">lh_freefun</a>(void *p)</td></tr>
-<tr class="memdesc:ga94f4a1fbb37936e9e0b126beef72dfe3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type of <code>free</code> functions. <br /></td></tr>
-<tr class="separator:ga94f4a1fbb37936e9e0b126beef72dfe3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabd736ee0a830b88c25a6e577e1afc273"><td class="memItemLeft" align="right" valign="top"><a id="gabd736ee0a830b88c25a6e577e1afc273"></a>
+typedef void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__debug.html#gabd736ee0a830b88c25a6e577e1afc273">lh_freefun</a>(const void *p)</td></tr>
+<tr class="memdesc:gabd736ee0a830b88c25a6e577e1afc273"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type of <code>free</code> functions. <br /></td></tr>
+<tr class="separator:gabd736ee0a830b88c25a6e577e1afc273"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -146,7 +146,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="grou
 <tr class="memdesc:ga56ae0b80ee63d88b8e547974f8f790dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a function that is called on fatal errors.  <a href="#ga56ae0b80ee63d88b8e547974f8f790dd">More...</a><br /></td></tr>
 <tr class="separator:ga56ae0b80ee63d88b8e547974f8f790dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2640fed6ccd08b9f0c14b3bff1808413"><td class="memItemLeft" align="right" valign="top"><a id="ga2640fed6ccd08b9f0c14b3bff1808413"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__debug.html#ga2640fed6ccd08b9f0c14b3bff1808413">lh_register_malloc</a> (<a class="el" href="group__effect__debug.html#gad6a1f6b1a5962f31b8a3d00fc134f190">lh_mallocfun</a> *malloc, <a class="el" href="group__effect__debug.html#gae07f635b592d37224a693c4b96c3ca8b">lh_callocfun</a> *calloc, <a class="el" href="group__effect__debug.html#ga647046150553dd8b90064a8f2b94c9f9">lh_reallocfun</a> *realloc, <a class="el" href="group__effect__debug.html#ga94f4a1fbb37936e9e0b126beef72dfe3">lh_freefun</a> *free)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__debug.html#ga2640fed6ccd08b9f0c14b3bff1808413">lh_register_malloc</a> (<a class="el" href="group__effect__debug.html#gad6a1f6b1a5962f31b8a3d00fc134f190">lh_mallocfun</a> *malloc, <a class="el" href="group__effect__debug.html#gae07f635b592d37224a693c4b96c3ca8b">lh_callocfun</a> *calloc, <a class="el" href="group__effect__debug.html#ga647046150553dd8b90064a8f2b94c9f9">lh_reallocfun</a> *realloc, <a class="el" href="group__effect__debug.html#gabd736ee0a830b88c25a6e577e1afc273">lh_freefun</a> *free)</td></tr>
 <tr class="memdesc:ga2640fed6ccd08b9f0c14b3bff1808413"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register custom allocation functions. <br /></td></tr>
 <tr class="separator:ga2640fed6ccd08b9f0c14b3bff1808413"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga72b06ce360f76629e77a23da18b71f49"><td class="memItemLeft" align="right" valign="top"><a id="ga72b06ce360f76629e77a23da18b71f49"></a>

@@ -2,7 +2,7 @@ var group__effect__debug =
 [
     [ "lh_callocfun", "group__effect__debug.html#gae07f635b592d37224a693c4b96c3ca8b", null ],
     [ "lh_fatalfun", "group__effect__debug.html#gaaa958e853fd8e039d2bd95a3589d05d8", null ],
-    [ "lh_freefun", "group__effect__debug.html#ga94f4a1fbb37936e9e0b126beef72dfe3", null ],
+    [ "lh_freefun", "group__effect__debug.html#gabd736ee0a830b88c25a6e577e1afc273", null ],
     [ "lh_mallocfun", "group__effect__debug.html#gad6a1f6b1a5962f31b8a3d00fc134f190", null ],
     [ "lh_reallocfun", "group__effect__debug.html#ga647046150553dd8b90064a8f2b94c9f9", null ],
     [ "lh_calloc", "group__effect__debug.html#ga92212c836a97fbe9678c97093bded2c8", null ],

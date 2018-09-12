@@ -6,6 +6,7 @@ var group__streams =
     [ "nodec_stream_t", "group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f", null ],
     [ "uv_stream_t", "group__streams.html#gaa1b461b8603be0c65dbf1e6037b01668", null ],
     [ "as_stream", "group__streams.html#ga5086fb89c05a1dc0ecf923af3e953403", null ],
+    [ "async_printf", "group__streams.html#ga0d8f8fb4145849530ac2e9c7cdef8ec5", null ],
     [ "async_read", "group__streams.html#ga1285146007f649dc4afab2d4c97ed0a8", null ],
     [ "async_read_all", "group__streams.html#ga8406e8a53fce782cb90557358c6290c3", null ],
     [ "async_read_buf", "group__streams.html#ga3c8beb53a775b37e696fdf5e8e31d6d6", null ],
@@ -17,6 +18,7 @@ var group__streams =
     [ "async_read_into", "group__streams.html#gae0d28422e33ff8ba269b4982ec7160aa", null ],
     [ "async_read_line", "group__streams.html#gaf1b8928176f1a3e88f2683c66324bab0", null ],
     [ "async_shutdown", "group__streams.html#ga530b49b85b811a2377209a55b2e670cb", null ],
+    [ "async_vprintf", "group__streams.html#ga4f53610d2e3294ec02084a8c618828aa", null ],
     [ "async_write", "group__streams.html#ga333329e70821cc682fdeaa333f210260", null ],
     [ "async_write_buf", "group__streams.html#ga025bb7d59c9dae3b4899e0874d08dc68", null ],
     [ "async_write_bufs", "group__streams.html#ga254f878556059c35448ad927ab982f36", null ],
@@ -27,6 +29,6 @@ var group__streams =
     [ "nodec_pushback_buf", "group__streams.html#gaa2323dea0f12493ae97032fe7e6dcd55", null ],
     [ "nodec_stream_free", "group__streams.html#ga7a87a30d292c709502440b0d95b9cb0b", null ],
     [ "nodec_stream_freev", "group__streams.html#ga29902a3b1e06b6d1b87e11b12bfbb11a", null ],
-    [ "nodec_zstream_alloc", "group__streams.html#ga8a923b29a649bffb076c7d7c10d14459", null ],
-    [ "nodec_zstream_alloc_ex", "group__streams.html#ga2e497767efc4c4d27982e5c9771dfb2c", null ]
+    [ "nodec_zstream_alloc", "group__streams.html#gaac0281d255b7277db65d1e3e30d550fa", null ],
+    [ "nodec_zstream_alloc_ex", "group__streams.html#ga8b99efcef9771afc6fad163fbd51d00b", null ]
 ];

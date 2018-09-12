@@ -163,6 +163,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="grou
 <tr class="memitem:ga333329e70821cc682fdeaa333f210260"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga333329e70821cc682fdeaa333f210260">async_write</a> (<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream, const char *s)</td></tr>
 <tr class="memdesc:ga333329e70821cc682fdeaa333f210260"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a string to a stream.  <a href="#ga333329e70821cc682fdeaa333f210260">More...</a><br /></td></tr>
 <tr class="separator:ga333329e70821cc682fdeaa333f210260"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4f53610d2e3294ec02084a8c618828aa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga4f53610d2e3294ec02084a8c618828aa">async_vprintf</a> (<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream, const char *fmt, va_list args)</td></tr>
+<tr class="memdesc:ga4f53610d2e3294ec02084a8c618828aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a formatted string to a stream.  <a href="#ga4f53610d2e3294ec02084a8c618828aa">More...</a><br /></td></tr>
+<tr class="separator:ga4f53610d2e3294ec02084a8c618828aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0d8f8fb4145849530ac2e9c7cdef8ec5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga0d8f8fb4145849530ac2e9c7cdef8ec5">async_printf</a> (<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream, const char *fmt,...)</td></tr>
+<tr class="memdesc:ga0d8f8fb4145849530ac2e9c7cdef8ec5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a formatted string to a stream.  <a href="#ga0d8f8fb4145849530ac2e9c7cdef8ec5">More...</a><br /></td></tr>
+<tr class="separator:ga0d8f8fb4145849530ac2e9c7cdef8ec5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5086fb89c05a1dc0ecf923af3e953403"><td class="memItemLeft" align="right" valign="top"><a id="ga5086fb89c05a1dc0ecf923af3e953403"></a>
 <a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga5086fb89c05a1dc0ecf923af3e953403">as_stream</a> (<a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *stream)</td></tr>
 <tr class="memdesc:ga5086fb89c05a1dc0ecf923af3e953403"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safely cast a buffered stream to a basic stream. <br /></td></tr>
@@ -206,12 +212,12 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
 <tr class="memitem:ga46bab5d4f8f6d45e6eb3587b796683a2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga46bab5d4f8f6d45e6eb3587b796683a2">nodec_bstream_alloc_read_ex</a> (<a class="el" href="group__streams.html#gaa1b461b8603be0c65dbf1e6037b01668">uv_stream_t</a> *stream, size_t alloc_init, size_t alloc_max)</td></tr>
 <tr class="memdesc:ga46bab5d4f8f6d45e6eb3587b796683a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Low level: Create a buffered stream from an internal <code>uv_stream_t</code> for reading.  <a href="#ga46bab5d4f8f6d45e6eb3587b796683a2">More...</a><br /></td></tr>
 <tr class="separator:ga46bab5d4f8f6d45e6eb3587b796683a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8a923b29a649bffb076c7d7c10d14459"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga8a923b29a649bffb076c7d7c10d14459">nodec_zstream_alloc</a> (<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream)</td></tr>
-<tr class="memdesc:ga8a923b29a649bffb076c7d7c10d14459"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a stream over another stream that is gzip'd.  <a href="#ga8a923b29a649bffb076c7d7c10d14459">More...</a><br /></td></tr>
-<tr class="separator:ga8a923b29a649bffb076c7d7c10d14459"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga2e497767efc4c4d27982e5c9771dfb2c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga2e497767efc4c4d27982e5c9771dfb2c">nodec_zstream_alloc_ex</a> (<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream, int compress_level, bool gzip)</td></tr>
-<tr class="memdesc:ga2e497767efc4c4d27982e5c9771dfb2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a stream over another stream that is gzip'd.  <a href="#ga2e497767efc4c4d27982e5c9771dfb2c">More...</a><br /></td></tr>
-<tr class="separator:ga2e497767efc4c4d27982e5c9771dfb2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaac0281d255b7277db65d1e3e30d550fa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#gaac0281d255b7277db65d1e3e30d550fa">nodec_zstream_alloc</a> (<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream, bool own_stream)</td></tr>
+<tr class="memdesc:gaac0281d255b7277db65d1e3e30d550fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a stream over another stream that is gzip'd.  <a href="#gaac0281d255b7277db65d1e3e30d550fa">More...</a><br /></td></tr>
+<tr class="separator:gaac0281d255b7277db65d1e3e30d550fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8b99efcef9771afc6fad163fbd51d00b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__streams.html#ga8b99efcef9771afc6fad163fbd51d00b">nodec_zstream_alloc_ex</a> (<a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream, bool own_stream, int compress_level, bool gzip)</td></tr>
+<tr class="memdesc:ga8b99efcef9771afc6fad163fbd51d00b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a stream over another stream that is gzip'd.  <a href="#ga8b99efcef9771afc6fad163fbd51d00b">More...</a><br /></td></tr>
+<tr class="separator:ga8b99efcef9771afc6fad163fbd51d00b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Streaming data. </p>
@@ -305,6 +311,50 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="ga0d8f8fb4145849530ac2e9c7cdef8ec5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga0d8f8fb4145849530ac2e9c7cdef8ec5">&#9670;&nbsp;</a></span>async_printf()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void async_printf </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td>
+          <td class="paramname"><em>stream</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fmt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Write a formatted string to a stream. </p>
+<p>Writes at most 511 bytes after formatting. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">stream</td><td>stream to write to. </td></tr>
+    <tr><td class="paramname">fmt</td><td>the format string. </td></tr>
+    <tr><td class="paramname">...</td><td>the arguments for the format string. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="ga8406e8a53fce782cb90557358c6290c3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga8406e8a53fce782cb90557358c6290c3">&#9670;&nbsp;</a></span>async_read_all()</h2>
 
@@ -616,6 +666,50 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
 
 </div>
 </div>
+<a id="ga4f53610d2e3294ec02084a8c618828aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga4f53610d2e3294ec02084a8c618828aa">&#9670;&nbsp;</a></span>async_vprintf()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void async_vprintf </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td>
+          <td class="paramname"><em>stream</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fmt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">va_list&#160;</td>
+          <td class="paramname"><em>args</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Write a formatted string to a stream. </p>
+<p>Writes at most 511 bytes after formatting. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">stream</td><td>stream to write to. </td></tr>
+    <tr><td class="paramname">fmt</td><td>the format string. </td></tr>
+    <tr><td class="paramname">args</td><td>the arguments for the format string. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="ga333329e70821cc682fdeaa333f210260"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga333329e70821cc682fdeaa333f210260">&#9670;&nbsp;</a></span>async_write()</h2>
 
@@ -869,8 +963,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
 
 </div>
 </div>
-<a id="ga8a923b29a649bffb076c7d7c10d14459"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga8a923b29a649bffb076c7d7c10d14459">&#9670;&nbsp;</a></span>nodec_zstream_alloc()</h2>
+<a id="gaac0281d255b7277db65d1e3e30d550fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaac0281d255b7277db65d1e3e30d550fa">&#9670;&nbsp;</a></span>nodec_zstream_alloc()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -879,8 +973,18 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
           <td class="memname"><a class="el" href="group__streams.html#gadaf4d5e2ac9a12cc14da8fa006d85916">nodec_bstream_t</a>* nodec_zstream_alloc </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td>
-          <td class="paramname"><em>stream</em></td><td>)</td>
+          <td class="paramname"><em>stream</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>own_stream</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -888,7 +992,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
 <p>Create a stream over another stream that is gzip'd. </p>
 <p>Reading unzips, while writing zips again. Uses a default compression level of 6 and gzip format (instead of deflate). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">stream</td><td>the gzipped stream &ndash; after allocation the returned stream owns this stream and takes care of shutdown and free. </td></tr>
+    <tr><td class="paramname">stream</td><td>the gzipped stream </td></tr>
+    <tr><td class="paramname">own_stream</td><td>If true, then the returned stream owns the input <code>stream</code> and takes care of shutdown and free. </td></tr>
   </table>
   </dd>
 </dl>
@@ -896,8 +1001,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
 
 </div>
 </div>
-<a id="ga2e497767efc4c4d27982e5c9771dfb2c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga2e497767efc4c4d27982e5c9771dfb2c">&#9670;&nbsp;</a></span>nodec_zstream_alloc_ex()</h2>
+<a id="ga8b99efcef9771afc6fad163fbd51d00b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8b99efcef9771afc6fad163fbd51d00b">&#9670;&nbsp;</a></span>nodec_zstream_alloc_ex()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -907,6 +1012,12 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
           <td>(</td>
           <td class="paramtype"><a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *&#160;</td>
           <td class="paramname"><em>stream</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>own_stream</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -932,6 +1043,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gr
 <p>Reading unzips automatically, while writing zips again. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">stream</td><td>the gzipped stream &ndash; after allocation the returned stream owns this stream and takes care of shutdown and free. </td></tr>
+    <tr><td class="paramname">own_stream</td><td>If true, then the returned stream owns the input <code>stream</code> and takes care of shutdown and free. </td></tr>
     <tr><td class="paramname">compress_level</td><td>the compression level to use between 1 and 9 (6 by default, which is a good balance between speed and compression ratio). </td></tr>
     <tr><td class="paramname">gzip</td><td>if <code>true</code> uses the gzip format for compression while reading both deflate and gzip streams. If false, uses deflate for both compression and decompression. </td></tr>
   </table>

@@ -178,7 +178,7 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:gaf267253e98651befea51ad8ca0163551"><td class="memItemLeft" align="right" valign="top"><a id="gaf267253e98651befea51ad8ca0163551"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_register_malloc</b> (<a class="el" href="group__effect__debug.html#gad6a1f6b1a5962f31b8a3d00fc134f190">lh_mallocfun</a> *_malloc, <a class="el" href="group__effect__debug.html#gae07f635b592d37224a693c4b96c3ca8b">lh_callocfun</a> *_calloc, <a class="el" href="group__effect__debug.html#ga647046150553dd8b90064a8f2b94c9f9">lh_reallocfun</a> *_realloc, <a class="el" href="group__effect__debug.html#ga94f4a1fbb37936e9e0b126beef72dfe3">lh_freefun</a> *_free)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_register_malloc</b> (<a class="el" href="group__effect__debug.html#gad6a1f6b1a5962f31b8a3d00fc134f190">lh_mallocfun</a> *_malloc, <a class="el" href="group__effect__debug.html#gae07f635b592d37224a693c4b96c3ca8b">lh_callocfun</a> *_calloc, <a class="el" href="group__effect__debug.html#ga647046150553dd8b90064a8f2b94c9f9">lh_reallocfun</a> *_realloc, <a class="el" href="group__effect__debug.html#gabd736ee0a830b88c25a6e577e1afc273">lh_freefun</a> *_free)</td></tr>
 <tr class="separator:gaf267253e98651befea51ad8ca0163551"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaa9b853ec7bd913ad16161c083c9e3458"><td class="memItemLeft" align="right" valign="top"><a id="gaa9b853ec7bd913ad16161c083c9e3458"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_check_memory</b> ()</td></tr>
@@ -219,6 +219,15 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_strndup</b> (
 <tr class="memitem:gab667f14ceb44b5cc4e6c15c10fa79700"><td class="memItemLeft" align="right" valign="top"><a id="gab667f14ceb44b5cc4e6c15c10fa79700"></a>
 const void *&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_memmem</b> (const void *src, size_t src_len, const void *pat, size_t pat_len)</td></tr>
 <tr class="separator:gab667f14ceb44b5cc4e6c15c10fa79700"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae8e7008a09e9220f1b3e8c41e7b28e47"><td class="memItemLeft" align="right" valign="top"><a id="gae8e7008a09e9220f1b3e8c41e7b28e47"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_strnicmp</b> (const char *s, const char *t, size_t n)</td></tr>
+<tr class="separator:gae8e7008a09e9220f1b3e8c41e7b28e47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad6d79f65e6e9dde61674ca40349ee64c"><td class="memItemLeft" align="right" valign="top"><a id="gad6d79f65e6e9dde61674ca40349ee64c"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_stricmp</b> (const char *s, const char *t)</td></tr>
+<tr class="separator:gad6d79f65e6e9dde61674ca40349ee64c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga252df24cd58c11093d7c619c3fe1fc6c"><td class="memItemLeft" align="right" valign="top"><a id="ga252df24cd58c11093d7c619c3fe1fc6c"></a>
+uv_errno_t&#160;</td><td class="memItemRight" valign="bottom"><b>nodec_strncpy</b> (char *dest, size_t destsz, const char *src, size_t count)</td></tr>
+<tr class="separator:ga252df24cd58c11093d7c619c3fe1fc6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Routines for safe memory allocation based on <code>using</code>. </p>

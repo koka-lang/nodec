@@ -150,6 +150,9 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_url</
 <tr class="memitem:gacfdc89c1437e76e3855f8a4fa2ab6472"><td class="memItemLeft" align="right" valign="top"><a id="gacfdc89c1437e76e3855f8a4fa2ab6472"></a>
 <a class="el" href="group__http__setup.html#gaf5ffe69ea1b5908893c7eddf74c8151b">http_status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_status</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
 <tr class="separator:gacfdc89c1437e76e3855f8a4fa2ab6472"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga396d1c537d0f1d75ac923300d62e5e71"><td class="memItemLeft" align="right" valign="top"><a id="ga396d1c537d0f1d75ac923300d62e5e71"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_status_info</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
+<tr class="separator:ga396d1c537d0f1d75ac923300d62e5e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4647440d49724b66fb24f6afcc8d611b"><td class="memItemLeft" align="right" valign="top"><a id="ga4647440d49724b66fb24f6afcc8d611b"></a>
 uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>http_in_content_length</b> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
 <tr class="separator:ga4647440d49724b66fb24f6afcc8d611b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -174,6 +177,10 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><b>async_http_in_read_
 <tr class="memitem:ga65fe57df6004b40a189295c418a68273"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__buffers.html#structuv__buf__t">uv_buf_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__in__out.html#ga65fe57df6004b40a189295c418a68273">async_http_in_read_body</a> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in, size_t read_max)</td></tr>
 <tr class="memdesc:ga65fe57df6004b40a189295c418a68273"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the full body; the returned buf should be deallocated by the caller.  <a href="#ga65fe57df6004b40a189295c418a68273">More...</a><br /></td></tr>
 <tr class="separator:ga65fe57df6004b40a189295c418a68273"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0a71fdfb195b7fe66eadd442e0fbd4e5"><td class="memItemLeft" align="right" valign="top"><a id="ga0a71fdfb195b7fe66eadd442e0fbd4e5"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__in__out.html#ga0a71fdfb195b7fe66eadd442e0fbd4e5">http_in_status_print</a> (<a class="el" href="group__http__in__out.html#ga9c23d2a40e3792bf162f3a3e7bcb40df">http_in_t</a> *in)</td></tr>
+<tr class="memdesc:ga0a71fdfb195b7fe66eadd442e0fbd4e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print a response for debugging purposes;. <br /></td></tr>
+<tr class="separator:ga0a71fdfb195b7fe66eadd442e0fbd4e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5b7cffd9f53f40b3413493859386fb78"><td class="memItemLeft" align="right" valign="top"><a id="ga5b7cffd9f53f40b3413493859386fb78"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>http_out_init</b> (<a class="el" href="group__http__in__out.html#ga71b82996867f08b9f7aaed6d10f507bf">http_out_t</a> *out, <a class="el" href="group__streams.html#gaee920c8bd173ce7bf3b57f42cbcf3f5f">nodec_stream_t</a> *stream)</td></tr>
 <tr class="separator:ga5b7cffd9f53f40b3413493859386fb78"><td class="memSeparator" colspan="2">&#160;</td></tr>

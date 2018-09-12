@@ -36,6 +36,6 @@ var searchData=
   ['nodec_5fstream_5ffreev',['nodec_stream_freev',['../group__streams.html#ga29902a3b1e06b6d1b87e11b12bfbb11a',1,'nodec.h']]],
   ['nodec_5fthrow',['nodec_throw',['../group__nodec__various.html#ga21d7c9d7a03822b0263fb3431e7a3e3b',1,'nodec.h']]],
   ['nodec_5fthrow_5fmsg',['nodec_throw_msg',['../group__nodec__various.html#ga43af10da1f49d2ef6fb7af2118ad5960',1,'nodec.h']]],
-  ['nodec_5fzstream_5falloc',['nodec_zstream_alloc',['../group__streams.html#ga8a923b29a649bffb076c7d7c10d14459',1,'nodec.h']]],
-  ['nodec_5fzstream_5falloc_5fex',['nodec_zstream_alloc_ex',['../group__streams.html#ga2e497767efc4c4d27982e5c9771dfb2c',1,'nodec.h']]]
+  ['nodec_5fzstream_5falloc',['nodec_zstream_alloc',['../group__streams.html#gaac0281d255b7277db65d1e3e30d550fa',1,'nodec.h']]],
+  ['nodec_5fzstream_5falloc_5fex',['nodec_zstream_alloc_ex',['../group__streams.html#ga8b99efcef9771afc6fad163fbd51d00b',1,'nodec.h']]]
 ];

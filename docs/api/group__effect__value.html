@@ -185,6 +185,10 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__value.html#gacdfc1731e309c33e055ac88b459bdcad">lh_value_lh_voidptr</a>(p)</td></tr>
 <tr class="memdesc:gacdfc1731e309c33e055ac88b459bdcad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a <code>void*</code> to an <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83" title="Generic values are represented by an lh_value. ">lh_value</a>. <br /></td></tr>
 <tr class="separator:gacdfc1731e309c33e055ac88b459bdcad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7f44e7912be4eabc993a976069056b79"><td class="memItemLeft" align="right" valign="top"><a id="ga7f44e7912be4eabc993a976069056b79"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__value.html#ga7f44e7912be4eabc993a976069056b79">lh_value_fun_ptr</a>(f)</td></tr>
+<tr class="memdesc:ga7f44e7912be4eabc993a976069056b79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a function pointer into a <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83" title="Generic values are represented by an lh_value. ">lh_value</a>. <br /></td></tr>
+<tr class="separator:ga7f44e7912be4eabc993a976069056b79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -199,6 +203,10 @@ typedef const char *&#160;</td><td class="memItemRight" valign="bottom"><a class
 typedef void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__value.html#ga7b4439b7ec3223634778002ea318acea">lh_voidptr</a></td></tr>
 <tr class="memdesc:ga7b4439b7ec3223634778002ea318acea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type definition for void pointers to aid with macros. <br /></td></tr>
 <tr class="separator:ga7b4439b7ec3223634778002ea318acea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga58b182dd21feb550d40436ef31d09614"><td class="memItemLeft" align="right" valign="top"><a id="ga58b182dd21feb550d40436ef31d09614"></a>
+typedef void()&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__value.html#ga58b182dd21feb550d40436ef31d09614">lh_voidfun</a>()</td></tr>
+<tr class="memdesc:ga58b182dd21feb550d40436ef31d09614"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic function pointer. <br /></td></tr>
+<tr class="separator:ga58b182dd21feb550d40436ef31d09614"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5a08b630153ff4e9c2120d0bb2debd89"><td class="memItemLeft" align="right" valign="top"><a id="ga5a08b630153ff4e9c2120d0bb2debd89"></a>
 typedef <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>()&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__value.html#ga5a08b630153ff4e9c2120d0bb2debd89">lh_actionfun</a>(<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>)</td></tr>
 <tr class="memdesc:ga5a08b630153ff4e9c2120d0bb2debd89"><td class="mdescLeft">&#160;</td><td class="mdescRight">A generic action working on generic <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83" title="Generic values are represented by an lh_value. ">lh_value</a> s. <br /></td></tr>
@@ -221,6 +229,10 @@ Functions</h2></td></tr>
 <tr class="memitem:ga6ba6e0c4072d5e3d660f6c05004f90c1"><td class="memItemLeft" align="right" valign="top"><a id="ga6ba6e0c4072d5e3d660f6c05004f90c1"></a>
 <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>lh_check_value_ptr</b> (const void *p)</td></tr>
 <tr class="separator:ga6ba6e0c4072d5e3d660f6c05004f90c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaada7a7ceaab9a482320d4cfc904a4da6"><td class="memItemLeft" align="right" valign="top"><a id="gaada7a7ceaab9a482320d4cfc904a4da6"></a>
+<a class="el" href="group__effect__value.html#ga58b182dd21feb550d40436ef31d09614">lh_voidfun</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__effect__value.html#gaada7a7ceaab9a482320d4cfc904a4da6">lh_fun_ptr_value</a> (<a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83">lh_value</a> v)</td></tr>
+<tr class="memdesc:gaada7a7ceaab9a482320d4cfc904a4da6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert an <a class="el" href="group__effect__value.html#ga18d15281353b7e38984b0ef2e36abb83" title="Generic values are represented by an lh_value. ">lh_value</a> back to a function pointer. <br /></td></tr>
+<tr class="separator:gaada7a7ceaab9a482320d4cfc904a4da6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Generic value representations. </p>

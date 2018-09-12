@@ -12,6 +12,7 @@ var group__effect__exn =
     [ "lh_exception_alloc_ex", "group__effect__exn.html#gab7825b03a6de262e4477626f8a4eba9b", null ],
     [ "lh_exception_alloc_strdup", "group__effect__exn.html#gad10ff668cc67eba82069135e11fd0a22", null ],
     [ "lh_exception_free", "group__effect__exn.html#ga0e7009f79fe092da3a57d5fc75fcf162", null ],
+    [ "lh_strerror", "group__effect__exn.html#gafe25913497ef882eb7a2a5b4c501ce32", null ],
     [ "lh_throw", "group__effect__exn.html#ga1383c391fc3f472b7e80c5ab48036cd3", null ],
     [ "lh_try", "group__effect__exn.html#ga777f696b7d834b82d13aada6f35f4187", null ]
 ];
