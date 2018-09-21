@@ -12,7 +12,7 @@ endif
 
 # NodeC library
 MAIN       = nodec
-CONFIGDIR  = out
+CONFIGDIR  = out/$(CONFIG)
 OUTDIR 		 = $(CONFIGDIR)/$(MAIN)/$(VARIANT)
 INCLUDES   = -Iinc -I$(CONFIGDIR) -Ideps -Ideps/libuv/include
 
@@ -61,9 +61,12 @@ SRCFILES = async.c interleave.c channel.c memory.c \
            http.c http_request.c http_static.c http_url.c  mime.c\
 					 https.c tls-mbedtls.c
 
-CTESTS   =
+CEXAMPLES= main.c \
+           ex-http-connect.c ex-http-server-static.c \
+           ex-https-connect.c ex-https-server-static.c \
+					 ex-fs-search.c
 
-TESTFILES= main.c	$(CTESTS)
+TESTFILES= main.c
 
 BENCHFILES=
 
@@ -76,6 +79,9 @@ NLIBX    = $(OUTDIRX)/lib/lib$(MAINX)$(LIB)
 # link statically
 LIBS     =  $(NLIBX)
 
+DEPSLIBS = deps/libhandler/out/$(CONFIG)/$(VARIANT)/libhandler.a deps/libuv/out/lib/libuv.a deps/zlib/out/lib/libz.a \
+					 deps/mbedtls/library/libmbedcrypto.a deps/mbedtls/library/libmbedx509.a deps/mbedtls/library/libmbedtls.a
+
 # for libuv
 EXTRA-LIBS= -lrt -lpthread -lnsl -ldl
 
@@ -85,13 +91,21 @@ TESTMAIN = $(OUTDIR)/nodec-tests$(EXE)
 BENCHSRCS= $(patsubst %,test/%,$(BENCHFILES))
 BENCHMAIN= $(OUTDIR)/nodec-bench$(EXE)
 
-
+EXAMPLEOUT = $(CONFIGDIR)/nodec-examples/$(VARIANT)
+EXAMPLESRCS= $(patsubst %,examples/%,$(CEXAMPLES))
+EXAMPLEMAIN= $(EXAMPLEOUT)/nodec-examples$(EXE)
 
 # -------------------------------------
 # Main targets
 # -------------------------------------
 
 main: init staticlib
+
+examples: init staticlib examplemain
+		@echo ""
+		@echo "run example"
+		$(EXAMPLEMAIN)
+
 
 tests: init staticlib testmain
 	@echo ""
@@ -104,6 +118,14 @@ bench: init staticlib benchmain
 	$(BENCHMAIN)
 
 
+# -------------------------------------
+# build example
+# -------------------------------------
+
+examplemain: $(EXAMPLEMAIN)
+
+$(EXAMPLEMAIN): $(EXAMPLESRCS) $(NLIBX)
+	$(CC) $(CCFLAGSX)  $(LINKFLAGOUT)$@ $(EXAMPLESRCS) $(LIBS) $(EXTRA-LIBS)
 
 
 # -------------------------------------
@@ -135,9 +157,9 @@ $(BENCHMAIN): $(BENCHSRCS) $(NLIB)
 
 staticlib: init $(NLIBX)
 
-$(NLIBX): $(NLIB)
+$(NLIBX): $(NLIB) $(DEPSLIBS)
 	@if test -d "$(OUTDIRX)/lib"; then :; else $(MKDIR) "$(OUTDIRX)/lib"; fi
-	./libmerge.sh $(OUTDIRX)/lib lib$(MAINX).a $(NLIB) deps/libhandler/out/$(CONFIG)/$(VARIANT)/libhandler.a deps/libuv/out/lib/libuv.a deps/zlib/out/lib/libz.a
+	./libmerge.sh $(OUTDIRX)/lib lib$(MAINX).a $^
 	@if test -d "$(OUTDIRX)/include/libhandler/inc"; then :; else $(MKDIR) "$(OUTDIRX)/include/libhandler/inc"; fi
 	@if test -d "$(OUTDIRX)/include/libuv/include"; then :; else $(MKDIR) "$(OUTDIRX)/include/libuv/include"; fi
 	@if test -d "$(OUTDIRX)/include/uv"; then :; else $(MKDIR) "$(OUTDIRX)/include/uv"; fi
@@ -162,6 +184,9 @@ $(OUTDIR)/http_parser$(OBJ): deps/http-parser/http_parser.c
 	$(CC) $(CCFLAGS) $(CCFLAG99) $(CCFLAGOUT)$@ -c $< $(SHOWASM)
 
 
+$(EXAMPLEOUT)/%$(OBJ): examples/%.c
+		$(CC) $(CCFLAGS) $(CCFLAG99) $(CCFLAGOUT)$@ -c $< $(SHOWASM)
+
 
 # -------------------------------------
 # other targets
@@ -179,6 +204,7 @@ init:
 	@if test "$(VARIANTUNKNOWN)" = "1"; then echo ""; echo "Error: unknown build variant: $(VARIANT)"; echo "Use one of 'debug', 'release', or 'testopt'"; false; fi
 	@if test -d "$(OUTDIR)/asm"; then :; else $(MKDIR) "$(OUTDIR)/asm"; fi
 	@if test -d "$(OUTDIRX)"; then :; else $(MKDIR) "$(OUTDIRX)"; $(MKDIR) "$(OUTDIRX)/lib"; $(MKDIR) "$(OUTDIRX)/include"; fi
+	@if test -d "$(EXAMPLEOUT)"; then :; else $(MKDIR) "$(EXAMPLEOUT)"; fi
 
 
 help:

@@ -2,13 +2,14 @@
 # Copyright 2018, Microsoft Research, Daan Leijen
 echo "--- Building NodeC dependencies ---"
 curdir=`pwd`
- 
+
 export curdir
 
 echo $curdir
 build_libhandler="yes"
 build_libuv="yes"
-build_libz="yes"
+build_zlib="yes"
+build_mbedtls="yes"
 
 # Parse command-line arguments
 while : ; do
@@ -19,7 +20,7 @@ while : ; do
   esac
   # echo "option: $flag, arg: $flag_arg"
   case "$flag" in
-    "") break;;    
+    "") break;;
     --libuv)
         build_libuv="yes";;
     --no-libuv)
@@ -32,14 +33,18 @@ while : ; do
         build_zlib="yes";;
     --no-zlib)
         build_zlib="no";;
+    --mbedtls)
+        build_mbedtls="yes";;
+    --no-mbedtls)
+        build_mbedtls="no";;
     -h|--help|-\?|help|\?)
         echo "./configure [options]"
         echo "  --libuv                        build libuv (default)"
-        echo "  --no-libuv                     skip libuv" 
+        echo "  --no-libuv                     skip libuv"
         echo "  --libhandler                   build libhandler (default)"
-        echo "  --no-libhandler                skip libhandler" 
+        echo "  --no-libhandler                skip libhandler"
         echo "  --zlib                         build zlib (default)"
-        echo "  --no-zlib                      skip zlib" 
+        echo "  --no-zlib                      skip zlib"
         exit 0;;
     *) echo "warning: unknown option \"$1\"." 1>&2
   esac
@@ -75,18 +80,18 @@ if test "$build_libuv" = "yes"; then
   if test -f "./config.status"; then
     echo "found previous config.status; skip configure"
   else
-    if test -f "./configure"; then 
+    if test -f "./configure"; then
       echo "found previous configure; skip autogen.sh"
-    else 
+    else
       echo "--- LibUV: autogen..."
       ./autogen.sh
     fi
     echo "--- LibUV: configure..."
     config_cmd="./configure --prefix=$curdir/deps/libuv/out --enable-static --config-cache"
     echo "$config_cmd"
-    $config_cmd    
+    $config_cmd
   fi
-  echo 
+  echo
   echo "--- LibUV: release build..."
   make install
   echo ""
@@ -94,7 +99,7 @@ if test "$build_libuv" = "yes"; then
   cd "$curdir"
 fi
 
-if test "$build_libz" = "yes"; then
+if test "$build_zlib" = "yes"; then
   echo "--- Building ZLib ---"
   cd deps/zlib
   if test -f "./configure.log"; then
@@ -110,6 +115,15 @@ if test "$build_libz" = "yes"; then
   make install
   echo ""
   echo "--- ZLib: done ---"
+  cd "$curdir"
+fi
+
+if test "$build_mbedtls" = "yes"; then
+  echo "--- Building mbedTLS ---"
+  cd deps/mbedtls
+  make lib
+  echo ""
+  echo "--- mbedTLS: done ---"
   cd "$curdir"
 fi
 

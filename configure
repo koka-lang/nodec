@@ -24,7 +24,7 @@ while : ; do
   esac
   # echo "option: $flag, arg: $flag_arg"
   case "$flag" in
-    "") break;;    
+    "") break;;
     -cc-opts*|--cc-opts*)
         ccflags=$flag_arg;;
     -asm-opts*|--asm-opts*)
@@ -91,7 +91,7 @@ else
 fi
 ccname="$(basename $cc)"
 
-if test -z "$cxx"; then 
+if test -z "$cxx"; then
   case "$ccname" in
     gcc) cxx=${cc/%gcc/g++};;
     clang) cxx=${cc/%clang/clang++};;
@@ -112,13 +112,13 @@ esac
 
 
 # Determine the target OS
-if test -z "$target_os"; then	
+if test -z "$target_os"; then
 	# check for 32bit compilation on x64 platform.
 	cctarget=`$cc $ccflags -v 2>&1 | grep -o '^[Tt]arget: *[^ ]*'`
   cctarget="${cctarget#*: }"
   if test -z "$cctarget"; then
 	  target_os=`uname -s || uname -o`
-    target_arch=`uname -m || uname -p`	  
+    target_arch=`uname -m || uname -p`
     echo "Host is $target_arch-$target_os"
 	else
     echo "Compiler target: $cctarget"
@@ -147,7 +147,7 @@ esac
 
 # Determine ABI
 if test -z "$target_abi"; then
-  if test -z "$target_arch"; then 
+  if test -z "$target_arch"; then
     target_abi=`uname -m`
   else
     target_abi="$target_arch"
@@ -173,26 +173,26 @@ case "$target_abi,$target_os" in
     target_abi="amd64";;
   i[3456]86,windows)
     echo "Normalize target ABI from $target_abi to x86 (as used on Win32)"
-    target_abi="x86";;  
+    target_abi="x86";;
   i[3456]86,*)
     echo "Normalize target ABI from $target_abi to amd32 (used on Linux, etc)"
-    target_abi="amd32";;  
+    target_abi="amd32";;
   armv[67]*,*)
     echo "Normalize target ABI from $target_abi to arm (32-bit)"
-    target_abi="arm";;     
+    target_abi="arm";;
   armv[89]*,*)
     echo "Normalize target ABI from $target_abi to arm (32-bit)"
-    target_abi="arm";;     
+    target_abi="arm";;
   x86pc,*|i86pc,*|x86at,*)
     echo "Normalize target ABI from $target_abi to amd32 (32-bit)"
-    target_abi="amd32";;  
+    target_abi="amd32";;
 esac
 
 # Configure the c compiler for the runtime system
 
-if test -z "$link"; then 
+if test -z "$link"; then
   link=$cc
-fi 
+fi
 linkflags=""
 linkflagout="-o "
 arflags="rcs"
@@ -235,7 +235,7 @@ case "$ccname" in
     ccflagopt="-O2"  # fiber-safe optimize
     ccflagdebug="-Z7"
     ccdepend="clang -MM "
-    if test -z "$ar"; then 
+    if test -z "$ar"; then
       ar="${cc/%clang-cl/llvm-lib}"
     fi
     arflags=""
@@ -252,7 +252,7 @@ case "$ccname" in
     ccflags="-TC -nologo -W3 -Za $ccflags"
     ccflagopt="-O2"  # fiber-safe optimize
     ccflagdebug="-Zi"
-    if test -z "$ar"; then 
+    if test -z "$ar"; then
       ar="lib"
     fi
     arflags=""
@@ -263,32 +263,32 @@ case "$ccname" in
     lib=".lib"
     obj=".obj"
     asm=".asm";;
-  gcc*)   
+  gcc*)
     ccflags="-Wall $ccflags"
     ccflag99="-std=gnu99 -pedantic"
     cxxflags="-std=c++11 $ccflags"
     asmflags="-Wall $asmflags";;
   clang*)
-    if test -z "$ar"; then 
+    if test -z "$ar"; then
       ar="${cc/clang/llvm-ar}"
     fi
     ccflags="-Wall $ccflags"
     ccflag99="-std=c99"
-    cxxflags="-std=c++11 $ccflags" 
+    cxxflags="-std=c++11 $ccflags"
     asmflags="-Wall $asmflags";;
   *)
-    echo "warning: unknown c-compiler '$ccname' -- command options might be wrong";;        
+    echo "warning: unknown c-compiler '$ccname' -- command options might be wrong";;
 esac
 
-if test -z "$ar"; then 
+if test -z "$ar"; then
   ar="ar"
 fi
 
-case "$ccname,$target_os" in 
+case "$ccname,$target_os" in
   clang*,windows)
     ccversion=`$cc -v 2>&1 | grep -o '^clang version [0-9]*'`
     echo "$ccversion"
-    case "$ccversion" in 
+    case "$ccversion" in
       "clang version [0-3]")
         echo "warning: this clang version does not work correctly on windows 32-bit."
         echo " please upgrade to version 4.0.0 or higher!"
@@ -452,12 +452,12 @@ echo "MKDIR=mkdir -p" >> makefile.inc
 cd ..
 
 # initialize out directory
-rm -rf "out"
-mkdir -p "out"
-echo "# run 'make depend' to generate dependencies" > out/makefile.depend
-mv config/cenv.h out/cenv.h
-mv config/makefile.inc out/makefile.inc
-echo "include out/makefile.inc" > out/makefile.config
+rm -rf "out/$config"
+mkdir -p "out/$config"
+echo "# run 'make depend' to generate dependencies" > out/$config/makefile.depend
+mv config/cenv.h out/$config/cenv.h
+mv config/makefile.inc out/$config/makefile.inc
+echo "include out/$config/makefile.inc" > out/makefile.config
 
 
 # Print a summary
@@ -476,10 +476,10 @@ echo
 echo "Use the following commands to build:"
 echo "> make depend"
 echo "> make"
-echo 
-echo "To run tests:"
-echo "> make tests"
-echo 
+echo
+echo "To run examples:"
+echo "> make examples"
+echo
 echo "Test release version:"
-echo "> make tests VARIANT=release"
+echo "> make examples VARIANT=release"
 echo
