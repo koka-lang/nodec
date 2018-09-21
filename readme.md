@@ -152,7 +152,7 @@ By default it will build the x64 debug version.
 once for a checkout).
 
 After it builds successfully, you can use the Microsoft Visual Studio solution at 
-`ide\msvc\nodec.sln` to play with examples.
+`ide\msvc\nodec.sln` to play with examples in the `nodec-examples` project.
 
 
 ## Building on Unix's
@@ -185,9 +185,9 @@ This has been tested on Ubuntu Linux (amd64), and on a Raspberry PI (Raspbian, A
    > make VARIANT=release
    ```
 
-4. Make and run the test program:
+4. Make and run the example program:
    ```
-   > make tests
+   > make examples
    ```
 
 
