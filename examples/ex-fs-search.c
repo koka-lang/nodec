@@ -15,6 +15,9 @@
 // ref: linux sys/stat.h
 #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#else
+#include <linux/limits.h>
+#define MAX_PATH PATH_MAX
 #endif
 
 /*-----------------------------------------------------------------
