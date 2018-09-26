@@ -214,7 +214,7 @@ void nodec_ssl_config_free(nodec_ssl_config_t* config) {
     nodec_free(config->drbg);
   }
   if (config->entropy != NULL) {
-    (config->entropy);
+    //(config->entropy);
     nodec_free(config->entropy);
   }
   mbedtls_ssl_config_free(&config->mbedtls_config);
@@ -241,7 +241,7 @@ nodec_ssl_config_t* nodec_ssl_config_server(uv_buf_t cert, uv_buf_t key, const c
     mbedtls_ctr_drbg_init(config->drbg);
     config->entropy = nodec_alloc(mbedtls_entropy_context);
     mbedtls_entropy_init(config->entropy);
-    res = mbedtls_ctr_drbg_seed(config->drbg, &mbedtls_entropy_func, config->entropy, "", 0);
+    res = mbedtls_ctr_drbg_seed(config->drbg, &mbedtls_entropy_func, config->entropy, (unsigned char*) "", 0);
     if (res != 0) nodec_throw_tls(res, "cannot initialize random number generator");
     mbedtls_ssl_conf_rng(&config->mbedtls_config, mbedtls_ctr_drbg_random, config->drbg);
 
@@ -291,7 +291,7 @@ nodec_ssl_config_t* nodec_ssl_config_client() {
     config->entropy = nodec_alloc(mbedtls_entropy_context);
     mbedtls_entropy_init(config->entropy);
     static const char* client_seed = "nodec_client";
-    res = mbedtls_ctr_drbg_seed(config->drbg, &mbedtls_entropy_func, config->entropy, client_seed, strlen(client_seed));
+    res = mbedtls_ctr_drbg_seed(config->drbg, &mbedtls_entropy_func, config->entropy, (unsigned char*) client_seed, strlen(client_seed));
     if (res != 0) nodec_throw_tls(res, "cannot initialize random number generator");
     mbedtls_ssl_conf_rng(&config->mbedtls_config, mbedtls_ctr_drbg_random, config->drbg);
 
@@ -311,6 +311,160 @@ nodec_errno_t nodecx_ssl_config_add_ca(nodec_ssl_config_t* config, uv_buf_t cert
   return (res == 0 ? 0 : nodec_error_from(res, ERRKIND_MBEDTLS));
 }
 
+#ifndef _WIN32 // Adding system certificates on Unix systems
+
+#include <sys/stat.h>         // S_ISREG, S_ISDIR
+#include <limits.h>           // PATH_MAX
+
+#define countof(X) (sizeof(X)/sizeof(X[0]))
+
+typedef enum _fs_type_t {
+  FS_OTHER = 0,
+  FS_FILE = 1,
+  FS_DIR = 2
+} fs_type_t;
+
+static const char* cert_file_paths[] = {
+  "/etc/ssl/certs/ca-certificates.crt",               // Debian, Ubuntu, Gentoo, ...
+  "/etc/pki/tls/certs/ca-bundle.crt",                 // Fedora, RHEL
+  "/etc/ssl/ca-bundle.pem",                           // OpenSUSE
+  "/etc/pki/tls/cacert.pem",                          // OpenELEC
+  "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem" // CentOS, RHEL
+};
+
+static const char* cert_dir_paths[] = {
+  "/etc/ssl/certs",                                   // SLES10, SLES11
+  "/system/etc/security/cacerts",                     // Android
+  "/usr/local/share/certs",                           // FreeBSD
+  "/etc/pki/tls/certs",                               // Fedora, RHEL
+  "/etc/openssl/certs"                                // NetBSD
+};
+
+static const char* cert_endings[] = {
+  ".crt", ".cert", ".pem"
+};
+
+static fs_type_t get_type(const char* path) {
+  uv_stat_t uv_stat;
+  uv_errno_t uv_errno;
+  fs_type_t ans = FS_OTHER;
+  if ((uv_errno = asyncx_fs_stat(path, &uv_stat)) == 0) {
+    if (S_ISREG(uv_stat.st_mode)) {
+      ans = FS_FILE;
+    }
+    else if (S_ISDIR(uv_stat.st_mode)) {
+      ans = FS_DIR;
+    }
+  }
+  return ans;
+}
+
+static bool ends_with(const char* str, const char* end) {
+  if (str && end) {
+    size_t str_len = strlen(str);
+    size_t end_len = strlen(end);
+    if (end_len <= str_len) {
+      return strncmp(str + str_len - end_len, end, end_len) == 0;
+    }
+  }
+  return false;
+}
+
+static bool is_ending_ok(const char* path) {
+  size_t i;
+  for (i = 0; i < countof(cert_endings); i++) {
+    if (ends_with(path, cert_endings[i])) {
+      return true;
+    }
+  }
+  return  false;
+}
+
+static bool add_certificate_old_fashioned(nodec_ssl_config_t* config, const char* path) {
+  return mbedtls_x509_crt_parse_file(config->chain, path) != 0; 
+}
+
+#if 0
+/* this doesn't work -- don't know why*/
+static bool add_certificate_new_way(nodec_ssl_config_t* config, const char* cert_path) {
+  int res = 1;
+  uv_buf_t cert = async_fs_read_buf_from(cert_path);
+  {
+    using_buf(&cert) 
+    {
+      const unsigned char* const buf = (const unsigned char*) cert.base;
+      size_t const buflen = (size_t) cert.len;
+      res = mbedtls_x509_crt_parse(config->chain, buf, buflen);
+    }
+  }
+  return res == 0;
+}
+#endif
+
+static bool add_certificate(nodec_ssl_config_t* config, const char* path) {
+  return add_certificate_old_fashioned(config, path);
+}
+
+static bool search_files(nodec_ssl_config_t* config) {
+  size_t i;
+  for (i = 0; i < countof(cert_file_paths); i++) {
+    const char* path = cert_file_paths[i];
+    if (get_type(path) == FS_FILE) {
+      return add_certificate(config, path);
+    }
+  }
+  return false;
+}
+
+static bool search_directory(nodec_ssl_config_t* config, const char* dir_path) {
+  bool ans = false;
+  char file_path[PATH_MAX + 1];
+  nodec_scandir_t* scandir = async_fs_scandir(dir_path);  // what if this throws?
+  {using_fs_scandir(scandir) {
+    uv_dirent_t dirent;
+    while (async_fs_scandir_next(scandir, &dirent) && !ans) {
+      if (is_ending_ok(dirent.name)) {
+        file_path[PATH_MAX] = '\0';
+        int n = snprintf(file_path, PATH_MAX, "%s/%s", dir_path, dirent.name);
+        if (0 < n && n <= PATH_MAX) {
+          ans = add_certificate(config, file_path);
+          // libhandler can't just return from here, must exit loop gracfully
+          // by setting ans to true which is checked at the top of the loop
+        }
+      }
+    }
+  }}
+  return ans;
+}
+
+static bool search_directories(nodec_ssl_config_t* config) {
+  size_t i;
+  for (i = 0; i < countof(cert_dir_paths); i++) {
+    const char* dir_path = cert_dir_paths[i];
+    if (get_type(dir_path) == FS_DIR) {
+      if (search_directory(config, dir_path)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+static void async_ssl_config_add_unix_system_certs(nodec_ssl_config_t* config) {
+  bool ans;
+  if (!(ans = search_files(config))) {
+    ans = search_directories(config);
+  }
+  if (ans) {
+    nodec_log_debug("Successfully added certificate");
+  }
+  else {
+    nodec_log_debug("Failed to add certificate");
+  }
+}
+
+#endif
+
 void async_ssl_config_add_system_certs(nodec_ssl_config_t* config) {
 #ifdef _WIN32
 #pragma comment(lib, "Crypt32.lib")
@@ -329,9 +483,10 @@ void async_ssl_config_add_system_certs(nodec_ssl_config_t* config) {
     CertCloseStore(store, 0);
   }
 #else
-// TODO
+  async_ssl_config_add_unix_system_certs(config);
 #endif
 }
 
 
 #endif // USE_MBEDTLS
+
