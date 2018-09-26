@@ -438,7 +438,7 @@ static bool search_directories(nodec_ssl_config_t* config) {
   return false;
 }
 
-static void async_ssl_config_add_unix_system_certs(nodec_ssl_config_t* config) {
+static bool async_ssl_config_add_unix_system_certs(nodec_ssl_config_t* config) {
   bool ans;
   if (!(ans = search_files(config))) {
     ans = search_directories(config);
