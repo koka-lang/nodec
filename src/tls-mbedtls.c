@@ -443,12 +443,7 @@ static void async_ssl_config_add_unix_system_certs(nodec_ssl_config_t* config) {
   if (!(ans = search_files(config))) {
     ans = search_directories(config);
   }
-  if (ans) {
-    nodec_log_debug("Successfully added certificate");
-  }
-  else {
-    nodec_log_debug("Failed to add certificate");
-  }
+  return ans;
 }
 
 #endif
