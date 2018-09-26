@@ -381,7 +381,7 @@ static bool is_ending_ok(const char* path) {
 }
 
 static bool add_certificate_old_fashioned(nodec_ssl_config_t* config, const char* path) {
-  return mbedtls_x509_crt_parse_file(config->chain, path) != 0; 
+  return mbedtls_x509_crt_parse_file(config->chain, path) == 0; 
 }
 
 #if 0
