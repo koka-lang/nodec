@@ -318,11 +318,11 @@ nodec_errno_t nodecx_ssl_config_add_ca(nodec_ssl_config_t* config, uv_buf_t cert
 
 #define countof(X) (sizeof(X)/sizeof(X[0]))
 
-typedef enum _fs_type_t {
+typedef enum _cert_file_type_t {
   FS_OTHER = 0,
   FS_FILE = 1,
   FS_DIR = 2
-} fs_type_t;
+} cert_file_type_t;
 
 static const char* cert_file_paths[] = {
   "/etc/ssl/certs/ca-certificates.crt",               // Debian, Ubuntu, Gentoo, ...
@@ -344,10 +344,10 @@ static const char* cert_endings[] = {
   ".crt", ".cert", ".pem"
 };
 
-static fs_type_t get_type(const char* path) {
+static cert_file_type_t cert_get_type(const char* path) {
   uv_stat_t uv_stat;
   uv_errno_t uv_errno;
-  fs_type_t ans = FS_OTHER;
+  cert_file_type_t ans = FS_OTHER;
   if ((uv_errno = asyncx_fs_stat(path, &uv_stat)) == 0) {
     if (S_ISREG(uv_stat.st_mode)) {
       ans = FS_FILE;
@@ -359,7 +359,7 @@ static fs_type_t get_type(const char* path) {
   return ans;
 }
 
-static bool ends_with(const char* str, const char* end) {
+static bool cert_ends_with(const char* str, const char* end) {
   if (str && end) {
     size_t str_len = strlen(str);
     size_t end_len = strlen(end);
@@ -370,17 +370,17 @@ static bool ends_with(const char* str, const char* end) {
   return false;
 }
 
-static bool is_ending_ok(const char* path) {
+static bool cert_is_ending_ok(const char* path) {
   size_t i;
   for (i = 0; i < countof(cert_endings); i++) {
-    if (ends_with(path, cert_endings[i])) {
+    if (cert_ends_with(path, cert_endings[i])) {
       return true;
     }
   }
   return  false;
 }
 
-static bool add_certificate(nodec_ssl_config_t* config, const char* cert_path) {
+static bool cert_add(nodec_ssl_config_t* config, const char* cert_path) {
   int res = 1;
   uv_buf_t cert = async_fs_read_buf_from(cert_path);
   {using_buf(&cert) {
@@ -393,29 +393,29 @@ static bool add_certificate(nodec_ssl_config_t* config, const char* cert_path) {
   return res == 0;
 }
 
-static bool search_files(nodec_ssl_config_t* config) {
+static bool cert_search_files(nodec_ssl_config_t* config) {
   size_t i;
   for (i = 0; i < countof(cert_file_paths); i++) {
     const char* path = cert_file_paths[i];
-    if (get_type(path) == FS_FILE) {
-      return add_certificate(config, path);
+    if (cert_get_type(path) == FS_FILE) {
+      return cert_add(config, path);
     }
   }
   return false;
 }
 
-static bool search_directory(nodec_ssl_config_t* config, const char* dir_path) {
+static bool cert_search_directory(nodec_ssl_config_t* config, const char* dir_path) {
   bool ans = false;
   char file_path[PATH_MAX + 1];
   nodec_scandir_t* scandir = async_fs_scandir(dir_path);  // what if this throws?
   {using_fs_scandir(scandir) {
     uv_dirent_t dirent;
     while (async_fs_scandir_next(scandir, &dirent) && !ans) {
-      if (is_ending_ok(dirent.name)) {
+      if (cert_is_ending_ok(dirent.name)) {
         file_path[PATH_MAX] = '\0';
         int n = snprintf(file_path, PATH_MAX, "%s/%s", dir_path, dirent.name);
         if (0 < n && n <= PATH_MAX) {
-          ans = add_certificate(config, file_path);
+          ans = cert_add(config, file_path);
           // libhandler can't just return from here, must exit loop gracfully
           // by setting ans to true which is checked at the top of the loop
         }
@@ -425,12 +425,12 @@ static bool search_directory(nodec_ssl_config_t* config, const char* dir_path) {
   return ans;
 }
 
-static bool search_directories(nodec_ssl_config_t* config) {
+static bool cert_search_directories(nodec_ssl_config_t* config) {
   size_t i;
   for (i = 0; i < countof(cert_dir_paths); i++) {
     const char* dir_path = cert_dir_paths[i];
-    if (get_type(dir_path) == FS_DIR) {
-      if (search_directory(config, dir_path)) {
+    if (cert_get_type(dir_path) == FS_DIR) {
+      if (cert_search_directory(config, dir_path)) {
         return true;
       }
     }
@@ -440,8 +440,8 @@ static bool search_directories(nodec_ssl_config_t* config) {
 
 static bool async_ssl_config_add_unix_system_certs(nodec_ssl_config_t* config) {
   bool ans;
-  if (!(ans = search_files(config))) {
-    ans = search_directories(config);
+  if (!(ans = cert_search_files(config))) {
+    ans = cert_search_directories(config);
   }
   return ans;
 }
