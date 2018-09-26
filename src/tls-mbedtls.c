@@ -380,29 +380,17 @@ static bool is_ending_ok(const char* path) {
   return  false;
 }
 
-static bool add_certificate_old_fashioned(nodec_ssl_config_t* config, const char* path) {
-  return mbedtls_x509_crt_parse_file(config->chain, path) == 0; 
-}
-
-#if 0
-/* this doesn't work -- don't know why*/
-static bool add_certificate_new_way(nodec_ssl_config_t* config, const char* cert_path) {
+static bool add_certificate(nodec_ssl_config_t* config, const char* cert_path) {
   int res = 1;
   uv_buf_t cert = async_fs_read_buf_from(cert_path);
-  {
-    using_buf(&cert) 
-    {
+  {using_buf(&cert) {
       const unsigned char* const buf = (const unsigned char*) cert.base;
       size_t const buflen = (size_t) cert.len;
-      res = mbedtls_x509_crt_parse(config->chain, buf, buflen);
-    }
-  }
+      // add 1 to buflen to include '\0' terminator
+      // guaranteed by uv_buf to be there
+      res = mbedtls_x509_crt_parse(config->chain, buf, buflen + 1);
+  }}
   return res == 0;
-}
-#endif
-
-static bool add_certificate(nodec_ssl_config_t* config, const char* path) {
-  return add_certificate_old_fashioned(config, path);
 }
 
 static bool search_files(nodec_ssl_config_t* config) {
