@@ -359,21 +359,10 @@ static cert_file_type_t cert_get_type(const char* path) {
   return ans;
 }
 
-static bool cert_ends_with(const char* str, const char* end) {
-  if (str && end) {
-    size_t str_len = strlen(str);
-    size_t end_len = strlen(end);
-    if (end_len <= str_len) {
-      return strncmp(str + str_len - end_len, end, end_len) == 0;
-    }
-  }
-  return false;
-}
-
 static bool cert_is_ending_ok(const char* path) {
   size_t i;
   for (i = 0; i < countof(cert_endings); i++) {
-    if (cert_ends_with(path, cert_endings[i])) {
+    if (nodec_ends_with(path, cert_endings[i])) {
       return true;
     }
   }
