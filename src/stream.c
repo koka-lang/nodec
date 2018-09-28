@@ -86,7 +86,7 @@ void async_vprintf(nodec_stream_t* stream, const char* fmt, va_list args) {
 
 void async_printf(nodec_stream_t* stream, const char* fmt, ...) {
   va_list args;
-  va_start(args, stream);
+  va_start(args, fmt);
   async_vprintf(stream, fmt, args);
   va_end(args);
 }
