@@ -151,6 +151,11 @@ By default it will build the x64 debug version.
 (Unfortunately, the way `libuv` is built means that you can choose `x86` or `x64` only
 once for a checkout).
 
+Depending on your Visual Studio version you might get a build error that the build
+tools have the wrong version (like `1.40`). In that case you need to open the offending 
+solution (usually `deps/zlib/contrib/vstudio/vc14/zlibvc.sln`) and upgrade the solution in
+Visual Studio and save it to fix this.
+
 After it builds successfully, you can use the Microsoft Visual Studio solution at 
 `ide\msvc\nodec.sln` to play with examples in the `nodec-examples` project.
 
