@@ -7,7 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nodec-examples", "nodec-exa
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nodec", "nodec.vcxproj", "{C17F698B-0CF9-4034-9F70-CCB61DE46812}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests-nodec", "tests-nodec.vcxproj", "{55E37DDC-1F27-4D9F-AD95-C1BF83D33EFF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nodec-test", "nodec-test.vcxproj", "{55E37DDC-1F27-4D9F-AD95-C1BF83D33EFF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests-nodec-client", "tests-nodec-client.vcxproj", "{55E37DDD-1F27-4D9F-AD95-C1BF83D33EFF}"
 EndProject

@@ -1,54 +1,63 @@
 
 #include <stdio.h>
 #include <nodec.h>
+#include "test.h"
+
 
 /*-----------------------------------------------------------------
-  Test files
+  Run tests
 -----------------------------------------------------------------*/
-static void test_stat() {
-  const char* path = "cenv.h";
-  printf("stat file %s\n", path);
-  uv_stat_t stat = async_fs_stat(path);
-  printf("file %s last access time: %li\n", path, stat.st_atim.tv_sec);
+
+#define TEST_ENTRYX(name,showoutput)  { #name, &TEST_NAME(name), showoutput },
+
+static const test_info_t tests[] = {
+  TEST_LIST
+  { NULL, false }
+};
+
+static int run_test(int no, const test_info_t* test) {
+  return test->fun();
 }
 
-static void test_fileread() {
-  const char* path = "cenv.h";
-  printf("opening file: %s\n", path);
-  char* contents = async_fs_read_from(path);
-  {using_free(contents) {
-    printf("read %zi bytes from %s:\n...\n", strlen(contents), path);
-  }}
+static void run_tests() {
+  int total = 0;
+  const test_info_t* test;
+  for (test = &tests[0]; test->name != NULL; test++) {
+    total++;
+  }
+  printf("running %i tests...\n\n", total);
+  int ok = 0;
+  int skipped = 0;
+  for (int todo = total; todo > 0; todo--) {
+    test = &tests[total - todo];
+    printf("\n%3i: running %s...\n", todo, test->name);
+    int res = run_test(todo, test);
+    if (res == RES_OK) {
+      ok++;
+      printf("%3i: success.\n", todo);
+    }
+    else if (res == RES_SKIP) {
+      skipped++;
+      printf("%3i: skipped.\n", todo);
+    }
+    else {
+      printf("%3i: FAILED!\n", todo);
+
+    }
+  }
+  int failed = total - ok - skipped;
+  printf("\n---------------------------------\ntotal   : %i\nskipped : %i\nfailed  : %i\n", total, skipped, failed);
 }
 
-static void test_files() {
-  test_stat();
-  test_fileread();
-}
 
 /*-----------------------------------------------------------------
-  Test interleave
+  The following tests are old and need to be moved 
+  to separate files
 -----------------------------------------------------------------*/
 
-lh_value test_statx(lh_value arg) {
-  test_stat();
-  return lh_value_null;
-}
-lh_value test_filereadx(lh_value arg) {
-  test_fileread();
-  return lh_value_null;
-}
-lh_value test_filereads(lh_value arg) {
-  printf("test filereads\n");
-  lh_actionfun* actions[2] = { &test_filereadx, &test_statx };
-  async_interleave(2, actions, NULL);
-  return lh_value_null;
-}
 
-static void test_interleave() {
-  lh_actionfun* actions[3] = { &test_filereadx, &test_statx, &test_filereads };
-  async_interleave(3, actions, NULL);
-}
+
+
 
 
 /*-----------------------------------------------------------------
@@ -274,42 +283,9 @@ void test_as_client() {
   }}
 }
 
-/*-----------------------------------------------------------------
- test url parsing
------------------------------------------------------------------*/
 
-static void url_print(const char* urlstr) {
-  nodec_url_t* url = nodec_parse_url(urlstr);
-  {using_url(url) {
-    printf("url: %s\n schema: %s\n userinfo: %s\n host: %s\n port: %u\n path: %s\n query: %s\n fragment: %s\n\n",
-      urlstr,
-      nodec_url_schema(url), nodec_url_userinfo(url), nodec_url_host(url),
-      nodec_url_port(url),
-      nodec_url_path(url), nodec_url_query(url), nodec_url_fragment(url)
-    );
-  }}
-}
 
-static void host_url_print(const char* urlstr) {
-  nodec_url_t* url = nodec_parse_host(urlstr);
-  {using_url(url) {
-    printf("url: %s\n host: %s\n port: %u\n\n",
-      urlstr, nodec_url_host(url), nodec_url_port(url)
-    );
-  }}
-}
 
-static void test_url() {
-  url_print("http://daan@www.bing.com:72/foo?x=10;y=3#locallink");
-  url_print("https://bing.com:8080");
-  url_print("http://127.0.0.1");
-  host_url_print("localhost:8080");
-  host_url_print("my.server.com:80");
-  host_url_print("127.0.0.1:80");
-  host_url_print("[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443");
-  //host_url_print("http://127.0.0.1"); // invalid
-  //host_url_print("127.0.0.1");        // invalid
-}
 
 /*-----------------------------------------------------------------
   Main
@@ -334,6 +310,6 @@ static void entry() {
 }
 
 int main() {
-  async_main(entry);
+  async_main(run_tests);
   return 0;
 }
