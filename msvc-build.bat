@@ -3,7 +3,7 @@ cd %~dp0
 set curdir=%CD%
 
 @rem The visual studio solutions now target a specific windows SDK :-(
-set winsdk=10.0.17134.0
+set winsdk=10.0.17763.0
 
 @rem Defaults
 set config=Debug
