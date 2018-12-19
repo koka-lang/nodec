@@ -3,12 +3,9 @@
 #include <nodec.h>
 #include "test.h"
 
-/*-----------------------------------------------------------------
-  test static http server
------------------------------------------------------------------*/
-
-#define HOST "127.0.0.1:8080"
-#define OUTPUT_PATH "./out/out.txt"
+static const char* const HOST = "127.0.0.1:8080";
+static const char* const OUTPUT_PATH = "./out/out.txt";
+static const char* const CMD_PATH_ENV_VAR = "ComSpec";
 
 static void http_serve() {
 #ifndef NDEBUG
@@ -26,7 +23,7 @@ static void http_server() {
 
 const char* get_cmd_path() {
 #pragma warning( suppress : 4996 )
-  return getenv("ComSpec");
+  return getenv(CMD_PATH_ENV_VAR);
 }
 
 static void run_curl() {
@@ -37,9 +34,6 @@ static void run_curl() {
   nodec_free(s);
   async_tty_write("canceling...");
 }
-
-#undef OUTPUT_PATH
-#undef HOST
 
 TEST_IMPL(http_serve) {
   async_firstof(&http_server, &run_curl);
