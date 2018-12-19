@@ -52,6 +52,9 @@ typedef int    nodec_open_flags_t;
 /// \addtogroup nodec_various
 /// \{
 
+/// count of elements in a constant array
+#define nodec_countof(xs) (sizeof(xs)/(sizeof(xs[0])))
+
 /// 1 KB.
 #define NODEC_KB  (1024)
 /// 1 MB.

@@ -8,6 +8,7 @@
   Run tests
 -----------------------------------------------------------------*/
 
+#pragma warning( suppress : 4005 )
 #define TEST_ENTRYX(name,showoutput)  { #name, &TEST_NAME(name), showoutput },
 
 static const test_info_t tests[] = {
@@ -55,18 +56,13 @@ static void run_tests() {
   to separate files
 -----------------------------------------------------------------*/
 
-
-
-
-
-
 /*-----------------------------------------------------------------
   Test cancel
 -----------------------------------------------------------------*/
 
 static lh_value test_cancel1(lh_value arg) {
   printf("starting work...\n");
-  test_interleave();
+  //test_interleave();
   printf("and waiting a bit.. (1s)\n");
   async_wait(1000);
   printf("done work\n");
@@ -112,7 +108,7 @@ const char* response_body =
 
 
 
-static void test_http_serve() {
+static void xtest_http_serve() {
   int strand_id = http_strand_id();
   // input
 #ifndef NDEBUG
@@ -165,8 +161,6 @@ static void test_https() {
   }}
 }
 
-
-
 static void wait_tty() {
   async_tty_write("press enter to quit the server...");
   const char* s = async_tty_readline();
@@ -179,8 +173,6 @@ static void test_tcp_tty() {
   async_firstof(&test_tcp, &wait_tty);
   // printf( first ? "http server exited\n" : "http server was terminated by the user\n");
 }
-
-
 
 /*-----------------------------------------------------------------
   TTY
@@ -197,62 +189,6 @@ static void test_tty() {
   {using_free(s) {
     async_tty_printf("Now I got: %s\n", s);
   }}
-}
-
-/*-----------------------------------------------------------------
-Test scandir
------------------------------------------------------------------*/
-
-void test_scandir() {
-  nodec_scandir_t* scan = async_fs_scandir(".");
-  {using_fs_scandir(scan) {
-    uv_dirent_t dirent;
-    while (async_fs_scandir_next(scan, &dirent)) {
-      printf("entry %i: %s\n", dirent.type, dirent.name);
-    }
-  }}
-}
-
-/*-----------------------------------------------------------------
-Test dns
------------------------------------------------------------------*/
-
-void test_dns() {
-  struct addrinfo* info = async_getaddrinfo("iana.org", NULL, NULL);
-  {using_addrinfo(info) {
-    for (struct addrinfo* current = info; current != NULL; current = current->ai_next) {
-      char sockname[128];
-      nodec_sockname(current->ai_addr, sockname, sizeof(sockname));
-      char* host = NULL;
-      async_getnameinfo(current->ai_addr, 0, &host, NULL);
-      {using_free(host) {
-        printf("info: protocol %i at %s, reverse host: %s\n", current->ai_protocol, sockname, host);
-      }}
-    }
-  }}
-}
-
-/*-----------------------------------------------------------------
-  Test connect
------------------------------------------------------------------*/
-const char* http_request =
-"GET / HTTP/1.1\r\n"
-"Host: www.bing.com\r\n"
-"Connection: close\r\n"
-"\r\n";
-
-lh_value test_connection(http_in_t* in, http_out_t* out, lh_value arg) {
-  http_out_add_header(out, "Connection", "close");
-  http_out_add_header(out, "Accept-Encoding", "gzip");
-  http_out_send_request(out, HTTP_GET, "/");
-  async_http_in_read_headers(in); // wait for response
-  printf("received, status: %i, content length: %llu\n", http_in_status(in), (unsigned long long)http_in_content_length(in));
-  http_in_status_print(in);
-  return lh_value_null;
-}
-
-void test_connect() {
-  async_http_connect("www.bing.com", test_connection, lh_value_null);
 }
 
 /*-----------------------------------------------------------------
@@ -282,10 +218,6 @@ void test_as_client() {
     }}
   }}
 }
-
-
-
-
 
 /*-----------------------------------------------------------------
   Main

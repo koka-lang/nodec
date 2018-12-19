@@ -13,6 +13,10 @@
   TEST_ENTRY(file_read) \
   TEST_ENTRY(file_stat) \
   TEST_ENTRY(file_interleave) \
+  TEST_ENTRY(scan_dir) \
+  TEST_ENTRY(dns) \
+  TEST_ENTRY(connect) \
+  TEST_ENTRY(http_serve) \
 
 
 /*-----------------------------------------------------------------
@@ -59,6 +63,7 @@ typedef struct test_info_s {
 #define TEST_IMPL(name)               TEST_FUN(name)
 #define TEST_IMPL_END                 TEST_OK(); test_fail: return RES_FAIL;
 
+#pragma warning(suppress: 4005)
 #define TEST_ENTRYX(name,showoutput)  TEST_IMPL(name);
 TEST_LIST
 

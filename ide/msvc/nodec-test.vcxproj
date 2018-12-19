@@ -146,8 +146,12 @@
     <ClCompile Include="..\..\test\file_interleave.c" />
     <ClCompile Include="..\..\test\file_read.c" />
     <ClCompile Include="..\..\test\file_stat.c" />
+    <ClCompile Include="..\..\test\http_serve.c" />
     <ClCompile Include="..\..\test\main.c" />
-    <ClCompile Include="..\..\test\url_parse.c" />
+    <ClCompile Include="..\..\test\net_url_parse.c" />
+    <ClCompile Include="..\..\test\file_scan_dir.c" />
+    <ClCompile Include="..\..\test\net_dns.c" />
+    <ClCompile Include="..\..\test\http_connect.c" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\out\msvc-$(Platform)\nodecx\$(Configuration)\lib\nodecx.lib" />
