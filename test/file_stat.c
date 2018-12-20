@@ -15,6 +15,7 @@ typedef struct _expected {
 
 static expected_t const EXPECTED[] = {
   {"./examples/data/nodec.crt", 33206, 1342},
+  {"./examples/data/nodec.key", 33206, 1766},
 };
 
 static bool check_expected(const expected_t* const expt) {
