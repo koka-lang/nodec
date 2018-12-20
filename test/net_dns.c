@@ -11,7 +11,6 @@ TEST_IMPL(dns) {
       nodec_sockname(current->ai_addr, sockname, sizeof(sockname));
       char* host = NULL;
       async_getnameinfo(current->ai_addr, 0, &host, NULL);
-      CHECK(host != NULL);
       {using_free(host) {
         nodec_log_debug("info: protocol %i at %s, reverse host: %s", current->ai_protocol, sockname, host);
       }}
