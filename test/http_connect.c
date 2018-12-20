@@ -2,13 +2,11 @@
 #include <nodec.h>
 #include "test.h"
 
-static const char* const URL = "www.bing.com";
-
-// This shows a disparity between the Content-Length and the base.len
-// static const char* const URL = "www.google.com";
-
-// This throws an exception in async_shutdown
-// static const char* const URL = "www.amazon.com";
+static const char* const URLS[] = {
+  "www.bing.com",
+  "www.google.com",   // Content-Length != base.len
+  // "www.amazon.com, // exception thrown in async_shutdown
+};
 
 struct _DATA {
   bool rc;
@@ -92,8 +90,13 @@ static bool test_connect_worker() {
   {using_buf(&buf) {
     struct _DATA* data = (struct _DATA*)buf.base;
     data->rc = false;
-    async_http_connect(URL, test_connection, lh_value_ptr(data));
-    ans = data->rc;
+    for (size_t i = 0; i < nodec_countof(URLS); i++) {
+      const char* const url = URLS[i];
+      async_http_connect(url, test_connection, lh_value_ptr(data));
+      ans = data->rc;
+      if (ans == false)
+        break;
+    }
   }}
   return ans;
 }
