@@ -122,15 +122,6 @@ static bool test_connect_worker(bool gzip, bool secure) {
     struct PARAMS* data = (struct PARAMS*)buf.base;
     data->rc = false;
     data->gzip = gzip;
-
-    //for (size_t i = 0; i < nodec_countof(URLS); i++) {
-    //  const char* const url = URLS[i];
-    //  async_http_connect(url, test_connection, lh_value_ptr(data));
-    //  ans = data->rc;
-    //  if (ans == false)
-    //    break;
-    //}
-
     if (secure) {
       ans = test_secure_connection(data, SECURE_URLS, nodec_countof(SECURE_URLS));
     }
@@ -145,7 +136,7 @@ TEST_IMPL(connect) {
   //                        gzip  secure
   CHECK(test_connect_worker(true, false));      // gzip, not-secure
   CHECK(test_connect_worker(true, true));       // gzip, secure
-  //CHECK(test_connect_worker(false, false));   // not using gzip 
-                                                // throws an exception in async_shutdown
+  //CHECK(test_connect_worker(false, false));   // throws an exception in async_shutdown
+  //CHECK(test_connect_worker(false, true));    // throws an exception in async_shutdown
   TEST_IMPL_END;
 }
