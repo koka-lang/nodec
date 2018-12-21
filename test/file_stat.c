@@ -14,6 +14,7 @@ typedef struct _expected {
 } expected_t;
 
 static expected_t const EXPECTED[] = {
+  //--------- name ----------    mode  size
   {"./examples/data/nodec.crt", 33206, 1342},
   {"./examples/data/nodec.key", 33206, 1766},
 };
