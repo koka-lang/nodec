@@ -8,7 +8,8 @@ static const char* const URLS[] = {
   // "www.amazon.com, // exception thrown in async_shutdown
 };
 
-struct _DATA {
+struct PARAMS {
+  bool gzip;
   bool rc;
 };
 
@@ -70,26 +71,26 @@ static bool check_http_response(http_in_t* in) {
   return true;
 }
 
-static void set_result(lh_value data, bool rc) {
-  ((struct _DATA*) lh_ptr_value(data))->rc = rc;
-}
-
-static lh_value test_connection(http_in_t* in, http_out_t* out, lh_value data) {
+static lh_value test_connection(http_in_t* in, http_out_t* out, lh_value param) {
   bool ans = true;
+  struct PARAMS* const data = (struct PARAMS*) lh_ptr_value(param);
   http_out_add_header(out, "Connection", "close");
-  http_out_add_header(out, "Accept-Encoding", "gzip");
+  if (data->gzip) {
+    http_out_add_header(out, "Accept-Encoding", "gzip");
+  }
   http_out_send_request(out, HTTP_GET, "/");
   size_t const asize = async_http_in_read_headers(in); // wait for response
-  set_result(data, check_http_response(in));
+  data->rc = check_http_response(in);
   return lh_value_null;
 }
 
-static bool test_connect_worker() {
+static bool test_connect_worker(bool gzip) {
   bool ans = false;
-  uv_buf_t buf = nodec_buf_alloc(sizeof(struct _DATA));
+  uv_buf_t buf = nodec_buf_alloc(sizeof(struct PARAMS));
   {using_buf(&buf) {
-    struct _DATA* data = (struct _DATA*)buf.base;
+    struct PARAMS* data = (struct PARAMS*)buf.base;
     data->rc = false;
+    data->gzip = gzip;
     for (size_t i = 0; i < nodec_countof(URLS); i++) {
       const char* const url = URLS[i];
       async_http_connect(url, test_connection, lh_value_ptr(data));
@@ -102,6 +103,8 @@ static bool test_connect_worker() {
 }
 
 TEST_IMPL(connect) {
-  CHECK(test_connect_worker());
+  CHECK(test_connect_worker(true));     // use gzip
+  //CHECK(test_connect_worker(false));  // not using gzip 
+                                        // throws an exception in async_shutdown
   TEST_IMPL_END;
 }
