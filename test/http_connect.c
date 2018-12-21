@@ -8,6 +8,12 @@ static const char* const URLS[] = {
   // "www.amazon.com, // exception thrown in async_shutdown
 };
 
+static const char* const SECURE_URLS[] = {
+  "https://www.google.com",
+  "https://www.bing.com",
+  // "https://www.amazon.com", // this causes a problem
+};
+
 struct PARAMS {
   bool gzip;
   bool rc;
@@ -37,9 +43,6 @@ static bool check_encoding_is_gzip(http_in_t* in) {
 }
 
 static bool check_the_header(http_in_t* in) {
-  const size_t len = http_in_content_length(in);
-  if (len == 0)
-    return false;
   const http_status_t status = http_in_status(in);
   if (status != HTTP_STATUS_FOUND && 
       status != HTTP_STATUS_OK &&
@@ -47,8 +50,6 @@ static bool check_the_header(http_in_t* in) {
     )
     return false;
   print_headers(in);
-  //if (!check_encoding_is_gzip(in))
-  //  return false;
   return true;
 }
 
@@ -84,27 +85,67 @@ static lh_value test_connection(http_in_t* in, http_out_t* out, lh_value param) 
   return lh_value_null;
 }
 
-static bool test_connect_worker(bool gzip) {
+typedef  bool(*connect_fun_t)(struct PARAMS*, const char* const[]);
+
+static bool test_non_secure_connection(struct PARAMS* data, const char* const urls[], size_t count) {
+  bool ans = false;
+  for (size_t i = 0; i < count; i++) {
+    const char* const url = URLS[i];
+    async_http_connect(url, test_connection, lh_value_ptr(data));
+    ans = data->rc;
+    if (ans == false)
+      break;
+  }
+  return ans;
+}
+
+static bool test_secure_connection(struct PARAMS* data, const char* const urls[], size_t count) {
+  bool ans = false;
+  for (size_t i = 0; i < count; i++) {
+    const char* const url = SECURE_URLS[i];
+    nodec_ssl_config_t* ssl_config = nodec_ssl_config_client();
+    {using_ssl_config(ssl_config) {
+      async_ssl_config_add_system_certs(ssl_config);
+      async_https_connect(ssl_config, url, test_connection, lh_value_ptr(data));
+    }}
+    ans = data->rc;
+    if (ans == false)
+      break;
+  }
+  return ans;
+}
+
+static bool test_connect_worker(bool gzip, bool secure) {
   bool ans = false;
   uv_buf_t buf = nodec_buf_alloc(sizeof(struct PARAMS));
   {using_buf(&buf) {
     struct PARAMS* data = (struct PARAMS*)buf.base;
     data->rc = false;
     data->gzip = gzip;
-    for (size_t i = 0; i < nodec_countof(URLS); i++) {
-      const char* const url = URLS[i];
-      async_http_connect(url, test_connection, lh_value_ptr(data));
-      ans = data->rc;
-      if (ans == false)
-        break;
+
+    //for (size_t i = 0; i < nodec_countof(URLS); i++) {
+    //  const char* const url = URLS[i];
+    //  async_http_connect(url, test_connection, lh_value_ptr(data));
+    //  ans = data->rc;
+    //  if (ans == false)
+    //    break;
+    //}
+
+    if (secure) {
+      ans = test_secure_connection(data, SECURE_URLS, nodec_countof(SECURE_URLS));
+    }
+    else {
+      ans = test_non_secure_connection(data, URLS, nodec_countof(URLS));
     }
   }}
   return ans;
 }
 
 TEST_IMPL(connect) {
-  CHECK(test_connect_worker(true));     // use gzip
-  //CHECK(test_connect_worker(false));  // not using gzip 
-                                        // throws an exception in async_shutdown
+  //                        gzip  secure
+  CHECK(test_connect_worker(true, false));      // gzip, not-secure
+  CHECK(test_connect_worker(true, true));       // gzip, secure
+  //CHECK(test_connect_worker(false, false));   // not using gzip 
+                                                // throws an exception in async_shutdown
   TEST_IMPL_END;
 }
